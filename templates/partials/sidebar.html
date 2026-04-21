@@ -1,0 +1,140 @@
+<div
+    x-cloak
+    x-show="sidebarOpen"
+    x-transition.opacity
+    class="fixed inset-0 z-40 bg-slate-950/40 lg:hidden"
+    @click="sidebarOpen = false"
+></div>
+
+<aside
+    class="fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-72 -translate-x-full flex-col border-r border-slate-200 bg-slate-50 transition-all duration-300 lg:w-20 lg:translate-x-0 xl:w-72"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+>
+    <div class="flex-1 overflow-y-auto px-3 py-6 xl:px-4">
+        <div class="mb-6 rounded-2xl border border-brand-100 bg-white p-4 shadow-sm lg:px-3 xl:px-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-700 lg:text-center xl:text-left">Care Hub</p>
+            <p class="mt-2 text-sm text-slate-600 lg:hidden xl:block">Streamline appointments, schedules, and patient flow from one workspace.</p>
+        </div>
+
+        <nav class="space-y-8">
+            {% if request.user.role == 'Patient' %}
+                {% url 'dashboard' as patient_dashboard_url %}
+                {% url 'my_appointments' as my_appointments_url %}
+                {% url 'book_appointment' as book_appointment_url %}
+                {% url 'my_profile' as my_profile_url %}
+
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 lg:text-center xl:text-left">Patient</p>
+                    <a href="{{ patient_dashboard_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == patient_dashboard_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 15 21v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 3 21V10.5Z" /></svg>
+                        <span class="lg:hidden xl:inline">Dashboard</span>
+                    </a>
+                    <a href="{{ my_appointments_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == my_appointments_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 2.25v3m7.5-3v3m-9 3h10.5m-13.5 12h16.5A2.25 2.25 0 0 0 22.5 18V6A2.25 2.25 0 0 0 20.25 3.75H3.75A2.25 2.25 0 0 0 1.5 6v12A2.25 2.25 0 0 0 3.75 20.25Z" /></svg>
+                        <span class="lg:hidden xl:inline">My Appointments</span>
+                    </a>
+                    <a href="{{ book_appointment_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == book_appointment_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
+                        <span class="lg:hidden xl:inline">Book Appointment</span>
+                    </a>
+                    <a href="{{ my_profile_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == my_profile_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.5-1.632Z" /></svg>
+                        <span class="lg:hidden xl:inline">My Profile</span>
+                    </a>
+                </div>
+            {% elif request.user.role == 'Doctor' %}
+                {% url 'dashboard' as doctor_dashboard_url %}
+                {% url 'my_schedule' as my_schedule_url %}
+                {% url 'daily_queue' as daily_queue_url %}
+                {% url 'consultations' as consultations_url %}
+
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 lg:text-center xl:text-left">Doctor</p>
+                    <a href="{{ doctor_dashboard_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == doctor_dashboard_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 15 21v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 3 21V10.5Z" /></svg>
+                        <span class="lg:hidden xl:inline">Dashboard</span>
+                    </a>
+                    <a href="{{ my_schedule_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == my_schedule_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 2.25v3m7.5-3v3m-9 3h10.5m-13.5 12h16.5A2.25 2.25 0 0 0 22.5 18V6A2.25 2.25 0 0 0 20.25 3.75H3.75A2.25 2.25 0 0 0 1.5 6v12A2.25 2.25 0 0 0 3.75 20.25Z" /></svg>
+                        <span class="lg:hidden xl:inline">My Schedule</span>
+                    </a>
+                    <a href="{{ daily_queue_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == daily_queue_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-16.5 5.25h16.5m-16.5 5.25h9" /></svg>
+                        <span class="lg:hidden xl:inline">Daily Queue</span>
+                    </a>
+                    <a href="{{ consultations_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == consultations_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0-4.832 4.141-8.75 9.25-8.75S20.75 7.168 20.75 12s-4.141 8.75-9.25 8.75c-1.54 0-2.992-.355-4.27-.987L2.25 21l1.45-4.4A8.548 8.548 0 0 1 2.25 12Z" /></svg>
+                        <span class="lg:hidden xl:inline">Consultations</span>
+                    </a>
+                </div>
+            {% elif request.user.role == 'Receptionist' %}
+                {% url 'dashboard' as receptionist_dashboard_url %}
+                {% url 'appointments' as appointments_url %}
+                {% url 'manage_schedules' as manage_schedules_url %}
+                {% url 'patient_checkin' as patient_checkin_url %}
+                {% url 'queue' as queue_url %}
+
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 lg:text-center xl:text-left">Reception</p>
+                    <a href="{{ receptionist_dashboard_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == receptionist_dashboard_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 15 21v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 3 21V10.5Z" /></svg>
+                        <span class="lg:hidden xl:inline">Dashboard</span>
+                    </a>
+                    <a href="{{ appointments_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == appointments_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 2.25v3m7.5-3v3m-9 3h10.5m-13.5 12h16.5A2.25 2.25 0 0 0 22.5 18V6A2.25 2.25 0 0 0 20.25 3.75H3.75A2.25 2.25 0 0 0 1.5 6v12A2.25 2.25 0 0 0 3.75 20.25Z" /></svg>
+                        <span class="lg:hidden xl:inline">Appointments</span>
+                    </a>
+                    <a href="{{ manage_schedules_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == manage_schedules_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3m-7.5 6h11.25m-13.5 6H15m6-9.75a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-2.25 11.25a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5Z" /></svg>
+                        <span class="lg:hidden xl:inline">Manage Schedules</span>
+                    </a>
+                    <a href="{{ patient_checkin_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == patient_checkin_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                        <span class="lg:hidden xl:inline">Patient Check-in</span>
+                    </a>
+                    <a href="{{ queue_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == queue_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.75h.008v.008H18v-.008Zm0-4.5h.008v.008H18v-.008Zm0-4.5h.008v.008H18v-.008Zm-6 9h.008v.008H12v-.008Zm0-4.5h.008v.008H12v-.008Zm0-4.5h.008v.008H12v-.008Zm-6 9h.008v.008H6v-.008Zm0-4.5h.008v.008H6v-.008Zm0-4.5h.008v.008H6v-.008Z" /></svg>
+                        <span class="lg:hidden xl:inline">Queue</span>
+                    </a>
+                </div>
+            {% else %}
+                {% url 'dashboard' as admin_dashboard_url %}
+                {% url 'users' as users_url %}
+                {% url 'doctors' as doctors_url %}
+                {% url 'analytics' as analytics_url %}
+                {% url 'reports' as reports_url %}
+
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 lg:text-center xl:text-left">Administration</p>
+                    <a href="{{ admin_dashboard_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == admin_dashboard_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 15 21v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 3 21V10.5Z" /></svg>
+                        <span class="lg:hidden xl:inline">Dashboard</span>
+                    </a>
+                    <a href="{{ users_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == users_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5ZM18 5.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5ZM6 20.25a5.25 5.25 0 1 1 0-10.5 5.25 5.25 0 0 1 0 10.5ZM6 6.75A3 3 0 1 0 6 .75a3 3 0 0 0 0 6Z" /></svg>
+                        <span class="lg:hidden xl:inline">Users</span>
+                    </a>
+                    <a href="{{ doctors_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == doctors_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6m8.25-3a8.25 8.25 0 1 1-16.5 0 8.25 8.25 0 0 1 16.5 0Z" /></svg>
+                        <span class="lg:hidden xl:inline">Doctors</span>
+                    </a>
+                    <a href="{{ analytics_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == analytics_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25 12 12l7.5-7.5M21 6v6h-6" /></svg>
+                        <span class="lg:hidden xl:inline">Analytics</span>
+                    </a>
+                    <a href="{{ reports_url }}" class="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == reports_url %}bg-brand-700 text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-8.25A2.25 2.25 0 0 0 17.25 3.75h-10.5A2.25 2.25 0 0 0 4.5 6v12A2.25 2.25 0 0 0 6.75 20.25h5.25M15 18.75h6m-3-3v6" /></svg>
+                        <span class="lg:hidden xl:inline">Reports</span>
+                    </a>
+                </div>
+            {% endif %}
+        </nav>
+    </div>
+
+    <div class="border-t border-slate-200 bg-white p-3 xl:p-4">
+        <div class="rounded-2xl bg-brand-700 px-4 py-4 text-white shadow-soft lg:px-3 xl:px-4">
+            <p class="text-sm font-semibold lg:text-center xl:text-left">Need quick help?</p>
+            <p class="mt-1 text-xs text-brand-50/90 lg:hidden xl:block">Keep your clinic operations on track with real-time scheduling visibility.</p>
+        </div>
+    </div>
+</aside>

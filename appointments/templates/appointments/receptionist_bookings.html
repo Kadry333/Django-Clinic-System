@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Booking Management | ClinicMS{% endblock %}
+{% block page_name %}Booking Management{% endblock %}
+{% block content %}
+<section class="space-y-6">
+    <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+        {% include "components/cards.html" with title="Pending Requests" value="14" subtitle="Awaiting confirmation" icon="RQ" %}
+        {% include "components/cards.html" with title="Confirmed Today" value="32" subtitle="Front desk approved" icon="CF" %}
+        {% include "components/cards.html" with title="Reschedule Requests" value="5" subtitle="Needs follow-up" icon="RS" %}
+        {% include "components/cards.html" with title="Cancelled" value="3" subtitle="Today only" icon="CX" %}
+    </div>
+    {% include "components/tables.html" with title="Receptionist Booking Queue" subtitle="Review and confirm booking requests quickly." %}
+    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-semibold text-slate-900">Confirmation controls</h2>
+        <div class="mt-4 flex flex-wrap gap-3">
+            {% include "components/buttons.html" with label="Confirm Booking" %}
+            {% include "components/buttons.html" with variant="danger" label="Decline Booking" %}
+            {% include "components/buttons.html" with variant="secondary" label="Send Reminder" %}
+        </div>
+    </div>
+    {% include "components/states.html" with empty_message="No pending booking requests right now." error_message="Unable to fetch booking requests." %}
+</section>
+{% endblock %}

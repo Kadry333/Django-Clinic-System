@@ -1,0 +1,77 @@
+<nav class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-3">
+            <button
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 lg:hidden"
+                @click="sidebarOpen = !sidebarOpen"
+                aria-label="Toggle sidebar"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <a href="/" class="flex items-center gap-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-white shadow-soft">CM</span>
+                <div>
+                    <p class="text-sm font-semibold tracking-tight text-slate-900">ClinicMS</p>
+                    <p class="text-xs text-slate-500">UI Preview System</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="hidden flex-1 justify-center px-8 lg:flex">
+            <div class="w-full max-w-2xl">
+                <label class="relative block">
+                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                        </svg>
+                    </span>
+                    <input type="text" placeholder="Preview search bar UI" class="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-teal-50">
+                </label>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 sm:gap-4" x-data="{ profileOpen: false }">
+            <button type="button" class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.389 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+                </svg>
+                <span class="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white">3</span>
+            </button>
+
+            <div class="relative">
+                <button
+                    type="button"
+                    class="flex max-w-[220px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-left transition hover:bg-slate-50 sm:max-w-[260px]"
+                    @click="profileOpen = !profileOpen"
+                    @click.away="profileOpen = false"
+                >
+                    <span class="hidden min-w-0 flex-1 text-right sm:block">
+                        <span class="block truncate text-sm font-semibold text-slate-900">UI Preview User</span>
+                        <span class="mt-1 inline-flex max-w-full rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-primary">
+                            Frontend Only
+                        </span>
+                    </span>
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-primary">
+                        UI
+                    </span>
+                </button>
+
+                <div x-show="profileOpen" x-transition.origin.top.right class="absolute right-0 mt-3 w-60 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-panel" style="display:none;">
+                    <div class="border-b border-slate-100 px-4 py-3">
+                        <p class="text-sm font-semibold text-slate-900">UI Preview User</p>
+                        <p class="text-xs text-slate-500">Static preview mode</p>
+                    </div>
+                    <div class="p-2">
+                        <a href="/patients/profile/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Patient Preview</a>
+                        <a href="/doctors/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Doctor Preview</a>
+                        <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Admin Preview</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

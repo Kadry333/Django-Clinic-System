@@ -1,0 +1,46 @@
+<div x-cloak x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" @click="sidebarOpen = false"></div>
+<aside class="fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-72 -translate-x-full flex-col border-r border-slate-200 bg-sidebar transition-all duration-300 lg:translate-x-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+    <div class="flex-1 overflow-y-auto px-4 py-5">
+        <div class="mb-6 rounded-panel border border-teal-100 bg-white p-4 shadow-soft">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">UI Preview</p>
+            <p class="mt-2 text-sm text-slate-600">Browse every screen directly without backend conditions or auth state.</p>
+        </div>
+        <nav class="space-y-8">
+            <div class="space-y-1">
+                <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Patient</p>
+                <a href="/appointments/book/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Book Appointment</span></a>
+                <a href="/appointments/mine/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>My Appointments</span></a>
+                <a href="/consultations/summary/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Consultation Summary</span></a>
+                <a href="/patients/profile/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Profile</span></a>
+            </div>
+            <div class="space-y-1">
+                <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Doctor</p>
+                <a href="/doctors/dashboard/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Dashboard</span></a>
+                <a href="/doctors/schedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Schedule</span></a>
+                <a href="/appointments/doctor-management/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Appointments</span></a>
+                <a href="/consultations/doctor/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Consultation</span></a>
+            </div>
+            <div class="space-y-1">
+                <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Receptionist</p>
+                <a href="/receptionists/schedules/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Schedules</span></a>
+                <a href="/appointments/receptionist-bookings/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Bookings</span></a>
+                <a href="/receptionists/checkin/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Check-in Queue</span></a>
+                <a href="/appointments/receptionist-reschedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Reschedule</span></a>
+            </div>
+            <div class="space-y-1">
+                <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Admin</p>
+                <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Dashboard</span></a>
+                <a href="/users/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Users</span></a>
+                <a href="/analytics/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Analytics</span></a>
+                <a href="/analytics/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Reports</span></a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="border-t border-slate-200 bg-white p-4">
+        <div class="rounded-3xl bg-primary px-4 py-4 text-white shadow-soft">
+            <p class="text-sm font-semibold">System status</p>
+            <p class="mt-1 text-xs text-teal-50/90">ClinicMS UI kit is ready for backend integration.</p>
+        </div>
+    </div>
+</aside>

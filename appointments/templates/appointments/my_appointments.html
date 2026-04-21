@@ -1,0 +1,69 @@
+﻿{% extends "base.html" %}
+{% block title %}My Appointments | ClinicMS{% endblock %}
+{% block page_name %}My Appointments{% endblock %}
+{% block content %}
+<section class="space-y-6" x-data="{ tab: 'upcoming', open: false }">
+    <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap gap-3">
+                <button @click="tab='upcoming'" :class="tab === 'upcoming' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-700'" class="rounded-2xl px-4 py-2 text-sm font-semibold transition">Upcoming</button>
+                <button @click="tab='history'" :class="tab === 'history' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-700'" class="rounded-2xl px-4 py-2 text-sm font-semibold transition">History</button>
+            </div>
+            <div class="grid gap-3 md:grid-cols-4">
+                <select class="rounded-2xl border border-slate-200 px-3 py-2.5 text-sm text-slate-500"><option>Status</option></select>
+                <input type="date" class="rounded-2xl border border-slate-200 px-3 py-2.5 text-sm">
+                <select class="rounded-2xl border border-slate-200 px-3 py-2.5 text-sm text-slate-500"><option>Doctor</option></select>
+                <input type="text" placeholder="Appointment ID" class="rounded-2xl border border-slate-200 px-3 py-2.5 text-sm">
+            </div>
+        </div>
+    </div>
+
+    <div x-show="tab === 'upcoming'" class="space-y-4">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-lg font-semibold text-slate-900">APT-2048 with Dr. Omar Hassan</h2>
+                        {% include "components/badges.html" with status="CONFIRMED" %}
+                    </div>
+                    <p class="mt-2 text-sm text-slate-500">14 May 2026 at 11:00 AM - Cardiology Follow-up</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    {% include "components/buttons.html" with variant="secondary" label="Cancel" %}
+                    <button @click="open = true" type="button" class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">Request Reschedule</button>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold text-slate-900">APT-2051 with Dr. Layla Samir</h2>
+                {% include "components/badges.html" with status="REQUESTED" %}
+            </div>
+            <p class="mt-2 text-sm text-slate-500">16 May 2026 at 01:30 PM - Dermatology Consultation</p>
+        </div>
+    </div>
+
+    <div x-show="tab === 'history'" class="space-y-4" style="display:none;">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold text-slate-900">APT-1980 with Dr. Omar Hassan</h2>
+                {% include "components/badges.html" with status="COMPLETED" %}
+            </div>
+            <p class="mt-2 text-sm text-slate-500">02 May 2026 at 10:00 AM - Consultation summary available</p>
+        </div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold text-slate-900">APT-1956 with Dr. Kareem Ali</h2>
+                {% include "components/badges.html" with status="CANCELLED" %}
+            </div>
+            <p class="mt-2 text-sm text-slate-500">28 April 2026 at 09:00 AM - Cancelled by patient</p>
+        </div>
+    </div>
+
+    {% include "components/states.html" with empty_message="No appointments in the selected tab." error_message="Unable to load appointment records." %}
+
+    <div x-data="{ open: open }">
+        {% include "components/modals.html" with modal_title="Reschedule Appointment" %}
+    </div>
+</section>
+{% endblock %}

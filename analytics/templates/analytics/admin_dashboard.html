@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | ClinicMS{% endblock %}
+{% block page_name %}Admin Dashboard{% endblock %}
+{% block content %}
+<section class="space-y-6">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {% include "components/cards.html" with title="Total Appointments" value="4,280" subtitle="This month" icon="AP" %}
+        {% include "components/cards.html" with title="No-show Rate" value="7.4%" subtitle="Current month" icon="NS" %}
+        {% include "components/cards.html" with title="Active Doctors" value="42" subtitle="Available this week" icon="DR" %}
+        {% include "components/cards.html" with title="Reception Team" value="16" subtitle="On active shifts" icon="RC" %}
+    </div>
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <h2 class="text-lg font-semibold text-slate-900">Operations overview</h2>
+            <div class="mt-6 grid gap-4 md:grid-cols-2">
+                <div class="rounded-3xl bg-slate-50 p-5"><p class="text-sm font-semibold text-slate-900">User growth</p><div class="mt-5 h-48 rounded-3xl border border-dashed border-slate-300 bg-white"></div></div>
+                <div class="rounded-3xl bg-slate-50 p-5"><p class="text-sm font-semibold text-slate-900">Department load</p><div class="mt-5 h-48 rounded-3xl border border-dashed border-slate-300 bg-white"></div></div>
+            </div>
+        </div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <h2 class="text-lg font-semibold text-slate-900">Admin shortcuts</h2>
+            <div class="mt-4 grid gap-3">
+                {% include "components/buttons.html" with label="Create User" %}
+                {% include "components/buttons.html" with variant="secondary" label="Open Analytics" %}
+                {% include "components/buttons.html" with variant="danger" label="View Incidents" %}
+            </div>
+        </div>
+    </div>
+    {% include "components/states.html" with empty_message="No admin activity cards are available right now." error_message="Unable to load admin dashboard insights." %}
+</section>
+{% endblock %}

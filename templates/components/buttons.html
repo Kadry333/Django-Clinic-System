@@ -1,0 +1,9 @@
+{% if variant == "secondary" %}
+<button type="{{ type|default:'button' }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50">{{ label|default:"Secondary Action" }}</button>
+{% elif variant == "danger" %}
+<button type="{{ type|default:'button' }}" class="inline-flex items-center justify-center rounded-2xl bg-danger px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50">{{ label|default:"Delete" }}</button>
+{% elif variant == "success" %}
+<button type="{{ type|default:'button' }}" class="inline-flex items-center justify-center rounded-2xl bg-success px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50">{{ label|default:"Save" }}</button>
+{% else %}
+<button type="{{ type|default:'button' }}" class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50">{{ label|default:"Primary Action" }}</button>
+{% endif %}
