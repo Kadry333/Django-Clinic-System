@@ -1,46 +1,53 @@
 <div x-cloak x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" @click="sidebarOpen = false"></div>
 <aside class="fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-72 -translate-x-full flex-col border-r border-slate-200 bg-sidebar transition-all duration-300 lg:translate-x-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
     <div class="flex-1 overflow-y-auto px-4 py-5">
-        <div class="mb-6 rounded-panel border border-teal-100 bg-white p-4 shadow-soft">
+        <!-- <div class="mb-6 rounded-panel border border-teal-100 bg-white p-4 shadow-soft">
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">UI Preview</p>
             <p class="mt-2 text-sm text-slate-600">Browse every screen directly without backend conditions or auth state.</p>
-        </div>
+        </div> -->
         <nav class="space-y-8">
+            {% if request.user.is_authenticated %}
+                {% if request.user.is_patient %}
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Patient</p>
-                <a href="/appointments/book/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Book Appointment</span></a>
-                <a href="/appointments/mine/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>My Appointments</span></a>
-                <a href="/consultations/summary/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Consultation Summary</span></a>
-                <a href="/patients/profile/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Profile</span></a>
+                <a href="/appointments/book/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/appointments/book/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/appointments/book/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Book Appointment</span></a>
+                <a href="/appointments/mine/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/appointments/mine/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/appointments/mine/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>My Appointments</span></a>
+                <a href="/consultations/summary/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/consultations/summary/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/consultations/summary/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Consultation Summary</span></a>
+                <a href="/patients/profile/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/patients/profile/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/patients/profile/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Profile</span></a>
             </div>
+                {% elif request.user.is_doctor %}
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Doctor</p>
-                <a href="/doctors/dashboard/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Dashboard</span></a>
-                <a href="/doctors/schedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Schedule</span></a>
-                <a href="/appointments/doctor-management/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Appointments</span></a>
-                <a href="/consultations/doctor/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Consultation</span></a>
+                <a href="/doctors/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/doctors/dashboard/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/doctors/dashboard/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Dashboard</span></a>
+                <a href="/doctors/schedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/doctors/schedule/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/doctors/schedule/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Schedule</span></a>
+                <a href="/appointments/doctor-management/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/appointments/doctor-management/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/appointments/doctor-management/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Appointments</span></a>
+                <a href="/consultations/doctor/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/consultations/doctor/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/consultations/doctor/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Consultation</span></a>
             </div>
+                {% elif request.user.is_receptionist %}
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Receptionist</p>
-                <a href="/receptionists/schedules/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Schedules</span></a>
-                <a href="/appointments/receptionist-bookings/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Bookings</span></a>
-                <a href="/receptionists/checkin/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Check-in Queue</span></a>
-                <a href="/appointments/receptionist-reschedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Reschedule</span></a>
+                <a href="/receptionists/schedules/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/receptionists/schedules/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/receptionists/schedules/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Schedules</span></a>
+                <a href="/appointments/receptionist-bookings/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/appointments/receptionist-bookings/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/appointments/receptionist-bookings/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Bookings</span></a>
+                <a href="/receptionists/checkin/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/receptionists/checkin/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/receptionists/checkin/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Check-in Queue</span></a>
+                <a href="/appointments/receptionist-reschedule/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/appointments/receptionist-reschedule/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/appointments/receptionist-reschedule/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Reschedule</span></a>
             </div>
+                {% elif request.user.is_admin or request.user.is_superuser %}
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Admin</p>
-                <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-soft"><span class="h-5 w-5 rounded-full bg-white/20"></span><span>Dashboard</span></a>
-                <a href="/users/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Users</span></a>
-                <a href="/analytics/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Analytics</span></a>
-                <a href="/analytics/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"><span class="h-5 w-5 rounded-full bg-slate-200"></span><span>Reports</span></a>
+                <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/analytics/admin-dashboard/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/analytics/admin-dashboard/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Dashboard</span></a>
+                <a href="/users/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/users/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/users/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Users</span></a>
+                <a href="/analytics/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/analytics/dashboard/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/analytics/dashboard/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Analytics</span></a>
+                <a href="/analytics/dashboard/?type=reports" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition {% if request.path == '/analytics/reports/' %}bg-primary text-white shadow-soft{% else %}text-slate-600 hover:bg-white hover:text-slate-900{% endif %}"><span class="h-5 w-5 rounded-full {% if request.path == '/analytics/reports/' %}bg-white/20{% else %}bg-slate-200{% endif %}"></span><span>Reports</span></a>
             </div>
+                {% endif %}
+            {% endif %}
         </nav>
     </div>
 
-    <div class="border-t border-slate-200 bg-white p-4">
+    <!-- <div class="border-t border-slate-200 bg-white p-4">
         <div class="rounded-3xl bg-primary px-4 py-4 text-white shadow-soft">
             <p class="text-sm font-semibold">System status</p>
             <p class="mt-1 text-xs text-teal-50/90">ClinicMS UI kit is ready for backend integration.</p>
         </div>
-    </div>
+    </div> -->
 </aside>
