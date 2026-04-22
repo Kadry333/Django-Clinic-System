@@ -17,7 +17,7 @@
         </div>
 
         <nav class="space-y-8">
-            {% if request.user.role == 'Patient' %}
+            {% if request.user.is_patient %}
                 {% url 'dashboard' as patient_dashboard_url %}
                 {% url 'my_appointments' as my_appointments_url %}
                 {% url 'book_appointment' as book_appointment_url %}
@@ -42,7 +42,7 @@
                         <span class="lg:hidden xl:inline">My Profile</span>
                     </a>
                 </div>
-            {% elif request.user.role == 'Doctor' %}
+            {% elif request.user.is_doctor %}
                 {% url 'dashboard' as doctor_dashboard_url %}
                 {% url 'my_schedule' as my_schedule_url %}
                 {% url 'daily_queue' as daily_queue_url %}
@@ -67,7 +67,7 @@
                         <span class="lg:hidden xl:inline">Consultations</span>
                     </a>
                 </div>
-            {% elif request.user.role == 'Receptionist' %}
+            {% elif request.user.is_receptionist %}
                 {% url 'dashboard' as receptionist_dashboard_url %}
                 {% url 'appointments' as appointments_url %}
                 {% url 'manage_schedules' as manage_schedules_url %}
