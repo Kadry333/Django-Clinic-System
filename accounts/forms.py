@@ -11,4 +11,4 @@ class RegisterForm(UserCreationForm):
         fields = ['first_name', 'last_name', 'email', 'phone', 'password1', 'password2']
 
 class LoginForm(AuthenticationForm):
-    username = forms.EmailField(label='Email', widget=forms.EmailInput())    
+    username = forms.EmailField(label='Email', widget=forms.EmailInput())

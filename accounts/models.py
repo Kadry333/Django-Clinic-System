@@ -13,16 +13,16 @@ class User(AbstractUser):
     
     @property
     def is_patient(self):
-        return self.groups.filter(name='Patient').exists()
+        return self.groups.filter(name='patient').exists()
     
     @property
     def is_doctor(self):
-        return self.groups.filter(name='Doctor').exists()
+        return self.groups.filter(name='doctor').exists()
     
     @property
     def is_receptionist(self):
-        return self.groups.filter(name='Receptionist').exists()
+        return self.groups.filter(name='receptionist').exists()
     
     @property
     def is_admin(self):
-        return self.groups.filter(name='Admin').exists()
+        return self.groups.filter(name='admin').exists()
