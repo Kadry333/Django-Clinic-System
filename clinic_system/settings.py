@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'appointments',
     'consultations',
     'notifications',
+    'receptionists',
     
 ]
 
@@ -118,6 +119,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTH_USER_MODEL = 'accounts.User'
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
 
 
 # Internationalization

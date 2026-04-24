@@ -34,6 +34,13 @@
             </div>
         </div>
 
+        <div class="flex items-center gap-3 sm:gap-4">
+            <button type="button" class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.389 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+                </svg>
+                <span class="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white">3</span>
+            </button>
         <div class="flex items-center gap-3 sm:gap-4" x-data="{ notificationOpen: false, profileOpen: false }">
             <div class="relative">
                 <button
@@ -53,6 +60,11 @@
                 {% include "notifications/partials/dropdown.html" %}
             </div>
 
+            <div class="flex items-center gap-3">
+                <div class="hidden min-w-0 flex-1 text-right sm:block">
+                    <span class="block truncate text-sm font-semibold text-slate-900">{{ request.user.get_full_name|default:request.user.email }}</span>
+                    <span class="mt-1 inline-flex max-w-full rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-primary">
+                        {% if request.user.is_patient %}Patient{% elif request.user.is_doctor %}Doctor{% elif request.user.is_receptionist %}Receptionist{% else %}Admin{% endif %}
             <div class="relative">
                 <button
                     type="button"
@@ -90,6 +102,17 @@
                         <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Admin Preview</a>
                     </div>
                 </div>
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-primary">
+                    {{ request.user.get_full_name|default:"U"|slice:":1"|upper }}
+                </span>
+                
+                <!-- Direct Logout Button -->
+                <a href="{% url 'logout' %}" class="ml-2 inline-flex items-center justify-center rounded-2xl bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                </a>
             </div>
         </div>
     </div>
