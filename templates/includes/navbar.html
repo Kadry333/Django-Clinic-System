@@ -1,9 +1,10 @@
-<nav class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-    <div class="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-3">
+<nav class="fixed inset-x-0 top-0 z-50 border-b border-white/60 bg-white/85 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent"></div>
+    <div class="mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 items-center gap-3">
             <button
                 type="button"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 lg:hidden"
+                class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-primary hover:shadow-soft lg:hidden"
                 @click="sidebarOpen = !sidebarOpen"
                 aria-label="Toggle sidebar"
             >
@@ -12,41 +13,46 @@
                 </svg>
             </button>
 
-            <a href="/" class="flex items-center gap-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-white shadow-soft">CM</span>
-                <div>
-                    <p class="text-sm font-semibold tracking-tight text-slate-900">ClinicMS</p>
-                    <p class="text-xs text-slate-500">UI Preview System</p>
+            <a href="/" class="group flex min-w-0 items-center gap-3">
+                <span class="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-teal-700 via-teal-600 to-emerald-400 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,118,110,0.35)]">
+                    <span class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_55%)]"></span>
+                    <span class="relative">CM</span>
+                </span>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="truncate text-sm font-semibold tracking-tight text-slate-900">ClinicMS</p>
+                        <span class="hidden rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-primary md:inline-flex">Live UI</span>
+                    </div>
+                    <p class="truncate text-xs text-slate-500">Modern clinic workspace</p>
                 </div>
             </a>
         </div>
 
-        <div class="hidden flex-1 justify-center px-8 lg:flex">
+        <div class="hidden flex-1 justify-center px-4 lg:flex">
             <div class="w-full max-w-2xl">
-                <label class="relative block">
-                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                <label class="group relative block">
+                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition group-focus-within:text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
                         </svg>
                     </span>
-                    <input type="text" placeholder="Preview search bar UI" class="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-teal-50">
+                    <input type="text" placeholder="Search appointments, patients, or reports" class="h-11 w-full rounded-2xl border border-slate-200/80 bg-slate-50/90 pl-11 pr-28 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-teal-300 focus:bg-white focus:ring-4 focus:ring-teal-50">
+                    <span class="pointer-events-none absolute inset-y-0 right-3 hidden items-center rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400 xl:flex">Search</span>
                 </label>
             </div>
         </div>
 
-        <div class="flex items-center gap-3 sm:gap-4">
-            <button type="button" class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.389 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
-                </svg>
-                <span class="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white">3</span>
-            </button>
-        <div class="flex items-center gap-3 sm:gap-4" x-data="{ notificationOpen: false, profileOpen: false }">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3" x-data="{ notificationOpen: false }">
+            <div class="hidden items-center rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50 to-emerald-50 px-3 py-2 text-xs font-medium text-primary md:flex">
+                <span class="mr-2 h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                System healthy
+            </div>
+
             <div class="relative">
                 <button
                     type="button"
-                    class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-                    @click="notificationOpen = !notificationOpen; profileOpen = false"
+                    class="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-600 transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-primary hover:shadow-soft"
+                    @click="notificationOpen = !notificationOpen"
                     @click.away="notificationOpen = false"
                     @keydown.escape.window="notificationOpen = false"
                     aria-label="Open notifications"
@@ -60,60 +66,31 @@
                 {% include "notifications/partials/dropdown.html" %}
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="hidden min-w-0 flex-1 text-right sm:block">
-                    <span class="block truncate text-sm font-semibold text-slate-900">{{ request.user.get_full_name|default:request.user.email }}</span>
-                    <span class="mt-1 inline-flex max-w-full rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-primary">
-                        {% if request.user.is_patient %}Patient{% elif request.user.is_doctor %}Doctor{% elif request.user.is_receptionist %}Receptionist{% else %}Admin{% endif %}
-            <div class="relative">
-                <button
-                    type="button"
-                    class="flex max-w-[220px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-left transition hover:bg-slate-50 sm:max-w-[260px]"
-                    @click="profileOpen = !profileOpen; notificationOpen = false"
-                    @click.away="profileOpen = false"
-                >
-                    <span class="hidden min-w-0 flex-1 text-right sm:block">
-                        <span class="block truncate text-sm font-semibold text-slate-900">
-                            {% if request.user.is_authenticated %}{{ request.user }}{% else %}Guest{% endif %}
-                        </span>
-                        {% if request.user.is_authenticated %}
-                        <span class="mt-1 inline-flex max-w-full rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-primary">
-                            {{ request.user.role|default:"Clinic User" }}
-                        </span>
-                        {% endif %}
-                    </span>
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-primary">
-                        {% if request.user.is_authenticated %}{{ request.user|default:'U'|slice:":1"|upper }}{% else %}G{% endif %}
-                    </span>
-                </button>
-
-                <div x-show="profileOpen" x-transition.origin.top.right class="absolute right-0 mt-3 w-60 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-panel" style="display:none;">
-                    <div class="border-b border-slate-100 px-4 py-3">
-                        <p class="text-sm font-semibold text-slate-900">
-                            {% if request.user.is_authenticated %}{{ request.user }}{% else %}Guest{% endif %}
-                        </p>
-                        <p class="text-xs text-slate-500">
-                            {% if request.user.is_authenticated %}Signed in to ClinicMS{% else %}Preview mode{% endif %}
-                        </p>
-                    </div>
-                    <div class="p-2">
-                        <a href="/patients/profile/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Patient Preview</a>
-                        <a href="/doctors/dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Doctor Preview</a>
-                        <a href="/analytics/admin-dashboard/" class="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">Admin Preview</a>
-                    </div>
-                </div>
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-primary">
-                    {{ request.user.get_full_name|default:"U"|slice:":1"|upper }}
+            <div class="hidden min-w-0 text-right sm:block">
+                <span class="block truncate text-sm font-semibold text-slate-900">
+                    {% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.email|default:request.user }}{% else %}Guest{% endif %}
                 </span>
-                
-                <!-- Direct Logout Button -->
-                <a href="{% url 'logout' %}" class="ml-2 inline-flex items-center justify-center rounded-2xl bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                </a>
+                <span class="mt-0.5 block truncate text-xs text-slate-500">
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.is_patient %}Patient{% elif request.user.is_doctor %}Doctor{% elif request.user.is_receptionist %}Receptionist{% else %}Clinic User{% endif %}
+                    {% else %}
+                        Preview mode
+                    {% endif %}
+                </span>
             </div>
+
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-100 via-teal-50 to-emerald-100 text-sm font-semibold text-primary ring-1 ring-teal-100">
+                {% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.email|default:request.user|slice:":1"|upper }}{% else %}G{% endif %}
+            </span>
+
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="inline-flex items-center gap-2 rounded-2xl bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:-translate-y-0.5 hover:bg-rose-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden sm:inline">Logout</span>
+            </a>
+            {% endif %}
         </div>
     </div>
 </nav>
