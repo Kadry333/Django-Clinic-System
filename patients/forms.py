@@ -138,14 +138,50 @@ class PatientAppointmentBookingForm(forms.Form):
 
 
 class PatientRescheduleRequestForm(forms.ModelForm):
+    slot = forms.ChoiceField(
+        choices=[],
+        required=False,
+    )
+
     class Meta:
         model = RescheduleRequest
-        fields = ["preferred_date", "preferred_time", "reason"]
+        fields = ["preferred_date", "reason"]
         widgets = {
             "preferred_date": forms.DateInput(attrs={"type": "date"}),
-            "preferred_time": forms.TimeInput(attrs={"type": "time"}),
             "reason": forms.Textarea(attrs={"rows": 4}),
         }
+
+    def __init__(self, *args, **kwargs):
+        appointment = kwargs.pop("appointment", None)
+        require_slot = kwargs.pop("require_slot", False)
+        super().__init__(*args, **kwargs)
+
+        self.appointment = appointment
+        self.require_slot = require_slot
+        self.selected_preferred_date = None
+        self.available_slots = []
+        self._set_slot_choices([])
+
+        if self.is_bound:
+            raw_preferred_date = self.data.get(self.add_prefix("preferred_date"))
+            if raw_preferred_date:
+                self.selected_preferred_date = parse_date(raw_preferred_date)
+        else:
+            self.selected_preferred_date = self.initial.get("preferred_date")
+
+        if self.appointment and self.selected_preferred_date:
+            self.available_slots = get_available_slots(
+                self.appointment.doctor,
+                self.selected_preferred_date,
+                exclude_appointment=self.appointment,
+            )
+            self._set_slot_choices(self.available_slots)
+
+    def _set_slot_choices(self, slots):
+        self.fields["slot"].choices = [
+            ("", "Select an available slot"),
+            *[(slot.strftime("%H:%M"), slot.strftime("%I:%M %p").lstrip("0")) for slot in slots],
+        ]
 
     def clean_preferred_date(self):
         preferred_date = self.cleaned_data["preferred_date"]
@@ -154,3 +190,39 @@ class PatientRescheduleRequestForm(forms.ModelForm):
             raise forms.ValidationError("You cannot request a past date.")
 
         return preferred_date
+
+    def clean_slot(self):
+        slot = self.cleaned_data.get("slot")
+
+        if not slot:
+            return None
+
+        try:
+            return datetime.strptime(slot, "%H:%M").time()
+        except ValueError as exc:
+            raise forms.ValidationError("Select a valid available slot.") from exc
+
+    def clean(self):
+        cleaned_data = super().clean()
+        preferred_date = cleaned_data.get("preferred_date") or self.selected_preferred_date
+        slot = cleaned_data.get("slot")
+
+        if self.appointment and preferred_date:
+            self.selected_preferred_date = preferred_date
+            self.available_slots = get_available_slots(
+                self.appointment.doctor,
+                preferred_date,
+                exclude_appointment=self.appointment,
+            )
+            self._set_slot_choices(self.available_slots)
+
+        if self.require_slot and preferred_date:
+            if not self.available_slots:
+                raise forms.ValidationError("No available slots for this doctor on the selected date.")
+
+            if not slot:
+                self.add_error("slot", "Select an available slot.")
+            elif slot not in self.available_slots:
+                self.add_error("slot", "This slot is no longer available. Please choose another one.")
+
+        return cleaned_data

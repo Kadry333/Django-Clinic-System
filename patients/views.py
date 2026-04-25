@@ -174,8 +174,7 @@ class PatientCancelAppointmentView(patientRequiredMixins, View):
         return redirect("patients:my_appointments")
 
 
-class PatientRescheduleRequestView(patientRequiredMixins, CreateView):
-    model = RescheduleRequest
+class PatientRescheduleRequestView(patientRequiredMixins, View):
     form_class = PatientRescheduleRequestForm
     template_name = "patients/reschedule_appointment.html"
     success_url = reverse_lazy("patients:my_appointments")
@@ -188,28 +187,59 @@ class PatientRescheduleRequestView(patientRequiredMixins, CreateView):
         )
         return super().dispatch(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        reschedule_request = form.save(commit=False)
-        reschedule_request.appointment = self.appointment
-        reschedule_request.requested_by = self.request.user
-        reschedule_request.status = "pending"
-        reschedule_request.save()
-
-        Notification.objects.create(
-            user=self.request.user,
-            title="Reschedule requested",
-            notification_type=Notification.NotificationType.RESCHEDULED,
-            message="Your reschedule request has been submitted successfully.",
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(
+            data=request.GET or None,
+            appointment=self.appointment,
         )
 
-        messages.success(self.request, "Reschedule request submitted successfully.")
-        return redirect(self.success_url)
+        if request.GET:
+            form.is_valid()
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["current_role"] = "Patient"
-        context["appointment"] = self.appointment
-        return context
+        return self.render_reschedule_page(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(
+            data=request.POST,
+            appointment=self.appointment,
+            require_slot=True,
+        )
+
+        if form.is_valid():
+            reschedule_request = form.save(commit=False)
+            reschedule_request.appointment = self.appointment
+            reschedule_request.requested_by = self.request.user
+            reschedule_request.status = "pending"
+            reschedule_request.preferred_time = form.cleaned_data["slot"]
+            reschedule_request.save()
+
+            Notification.objects.create(
+                user=self.request.user,
+                title="Reschedule requested",
+                notification_type=Notification.NotificationType.RESCHEDULED,
+                message="Your reschedule request has been submitted successfully.",
+            )
+
+            messages.success(self.request, "Reschedule request submitted successfully.")
+            return redirect(self.success_url)
+
+        return self.render_reschedule_page(request, form)
+
+    def render_reschedule_page(self, request, form):
+        availability_checked = bool(form.data.get("preferred_date")) if form.is_bound else False
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "current_role": "Patient",
+                "appointment": self.appointment,
+                "availability_checked": availability_checked,
+                "available_slots": form.available_slots,
+                "selected_preferred_date": form.selected_preferred_date,
+            },
+        )
 
 
 class PatientConsultationSummaryView(patientRequiredMixins, ListView):

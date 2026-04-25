@@ -34,7 +34,7 @@ def _generate_window_slots(start_time, end_time, session_duration, buffer_time):
         current += timedelta(minutes=increment_minutes)
 
 
-def get_available_slots(doctor, appointment_date):
+def get_available_slots(doctor, appointment_date, exclude_appointment=None):
     if not doctor or not appointment_date:
         return []
 
@@ -68,13 +68,15 @@ def get_available_slots(doctor, appointment_date):
         if not working_windows:
             return []
 
-    booked_slots = set(
-        Appointment.objects.filter(
+    booked_appointments = Appointment.objects.filter(
             doctor=doctor,
             appointment_date=appointment_date,
             status__in=UNAVAILABLE_APPOINTMENT_STATUSES,
-        ).values_list("start_time", flat=True)
-    )
+        )
+    if exclude_appointment is not None:
+        booked_appointments = booked_appointments.exclude(pk=exclude_appointment.pk)
+
+    booked_slots = set(booked_appointments.values_list("start_time", flat=True))
 
     available_slots = []
 
