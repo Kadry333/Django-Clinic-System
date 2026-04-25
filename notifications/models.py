@@ -10,7 +10,7 @@ class Notification(models.Model):
         RESCHEDULED = "rescheduled", "Rescheduled"
         APPOINTMENT_REQUESTED = "appointment_requested", "Appointment Requested"
         PROFILE_UPDATED = "profile_updated", "Profile Updated"
-
+        CONSULTATION_READY = "consultation_ready", "Consultation Ready"
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
