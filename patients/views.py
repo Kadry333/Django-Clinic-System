@@ -1,20 +1,22 @@
 from datetime import datetime, timedelta
 
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
+from django.db import IntegrityError, transaction
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import TemplateView, UpdateView, CreateView, ListView
 
 from accounts.mixins import patientRequiredMixins
-from patients.forms import (
-    PatientProfileForm,
-    PatientAppointmentBookingForm,
-    PatientRescheduleRequestForm,
-)
-from notifications.models import Notification
 from appointments.models import Appointment, RescheduleRequest
 from consultations.models import Consultation
+from notifications.models import Notification
+from patients.forms import (
+    PatientAppointmentBookingForm,
+    PatientProfileForm,
+    PatientRescheduleRequestForm,
+)
+from patients.services import get_available_slots
 
 
 class PatientProfileView(patientRequiredMixins, TemplateView):
@@ -55,41 +57,76 @@ class PatientProfileUpdateView(patientRequiredMixins, UpdateView):
         return response
 
 
-class PatientBookAppointmentView(patientRequiredMixins, CreateView):
-    model = Appointment
+class PatientBookAppointmentView(patientRequiredMixins, View):
     form_class = PatientAppointmentBookingForm
     template_name = "patients/book_appointment.html"
     success_url = reverse_lazy("patients:my_appointments")
 
-    def form_valid(self, form):
-        appointment = form.save(commit=False)
-        appointment.patient = self.request.user
-        appointment.status = "requested"
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(data=request.GET or None)
 
-        start_datetime = datetime.combine(
-            appointment.appointment_date,
-            appointment.start_time,
+        if request.GET:
+            form.is_valid()
+
+        return self.render_booking_page(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(data=request.POST, require_slot=True)
+
+        if form.is_valid():
+            doctor = form.cleaned_data["doctor"]
+            appointment_date = form.cleaned_data["appointment_date"]
+            start_time = form.cleaned_data["slot"]
+            end_time = (
+                datetime.combine(appointment_date, start_time)
+                + timedelta(minutes=doctor.session_duration)
+            ).time()
+
+            try:
+                with transaction.atomic():
+                    Appointment.objects.create(
+                        patient=request.user,
+                        doctor=doctor,
+                        appointment_date=appointment_date,
+                        start_time=start_time,
+                        end_time=end_time,
+                        status="requested",
+                    )
+
+                    Notification.objects.create(
+                        user=request.user,
+                        title="Appointment requested",
+                        notification_type=Notification.NotificationType.APPOINTMENT_REQUESTED,
+                        message="Your appointment request has been submitted successfully.",
+                    )
+            except IntegrityError:
+                form.available_slots = get_available_slots(doctor, appointment_date)
+                form._set_slot_choices(form.available_slots)
+                form.add_error("slot", "This slot has just been booked. Please choose another available slot.")
+                return self.render_booking_page(request, form)
+
+            messages.success(request, "Appointment requested successfully.")
+            return redirect(self.success_url)
+
+        return self.render_booking_page(request, form)
+
+    def render_booking_page(self, request, form):
+        availability_checked = bool(
+            form.data.get("doctor") and form.data.get("appointment_date")
+        ) if form.is_bound else False
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "current_role": "Patient",
+                "availability_checked": availability_checked,
+                "available_slots": form.available_slots,
+                "selected_doctor": form.selected_doctor,
+                "selected_appointment_date": form.selected_appointment_date,
+            },
         )
-        appointment.end_time = (
-            start_datetime + timedelta(minutes=appointment.doctor.session_duration)
-        ).time()
-
-        response = super().form_valid(form)
-
-        Notification.objects.create(
-            user=self.request.user,
-            title="Appointment requested",
-            notification_type=Notification.NotificationType.APPOINTMENT_REQUESTED,
-            message="Your appointment request has been submitted successfully.",
-        )
-
-        messages.success(self.request, "Appointment requested successfully.")
-        return response
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["current_role"] = "Patient"
-        return context
 
 
 class PatientAppointmentsView(patientRequiredMixins, ListView):
