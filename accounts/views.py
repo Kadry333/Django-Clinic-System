@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth import login, logout
 from accounts.forms import RegisterForm, LoginForm
 from django.contrib import messages
+from django.contrib.messages import get_messages
 
 class RegisterView(View):
     def get(self,request):
@@ -38,11 +39,14 @@ class LoginView(View):
         return render(request,'accounts/login.html',{'form':form})
     
 class LogoutView(View):
-    def get(self,request):
-        logout(request)
-        # messages.info(request,"You have been logged out")
-        return redirect('login')
+    def post(self, request):
+        # Clear leftover messages
+        storage = get_messages(request)
+        for _ in storage:
+            pass
 
+        logout(request)
+        return redirect('login')
 
 class DashboardView(LoginRequiredMixin,View):
     def get(self,request):
