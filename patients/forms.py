@@ -1,7 +1,10 @@
 from django import forms
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 from accounts.models import User
+from appointments.models import Appointment, RescheduleRequest
+from doctors.models import DoctorProfile
 
 
 name_validator = RegexValidator(
@@ -34,3 +37,45 @@ class PatientProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email", "phone"]
+
+
+class PatientAppointmentBookingForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ["doctor", "appointment_date", "start_time"]
+        widgets = {
+            "appointment_date": forms.DateInput(attrs={"type": "date"}),
+            "start_time": forms.TimeInput(attrs={"type": "time"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["doctor"].queryset = DoctorProfile.objects.select_related("user").all()
+
+    def clean_appointment_date(self):
+        appointment_date = self.cleaned_data["appointment_date"]
+
+        if appointment_date < timezone.localdate():
+            raise forms.ValidationError("You cannot book an appointment in the past.")
+
+        return appointment_date
+
+
+class PatientRescheduleRequestForm(forms.ModelForm):
+    class Meta:
+        model = RescheduleRequest
+        fields = ["preferred_date", "preferred_time", "reason"]
+        widgets = {
+            "preferred_date": forms.DateInput(attrs={"type": "date"}),
+            "preferred_time": forms.TimeInput(attrs={"type": "time"}),
+            "reason": forms.Textarea(attrs={"rows": 4}),
+        }
+
+    def clean_preferred_date(self):
+        preferred_date = self.cleaned_data["preferred_date"]
+
+        if preferred_date and preferred_date < timezone.localdate():
+            raise forms.ValidationError("You cannot request a past date.")
+
+        return preferred_date

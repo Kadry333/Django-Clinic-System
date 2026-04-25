@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Consultation Summary | ClinicMS{% endblock %}
+{% block page_name %}Consultation Summary{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">Consultation Summary</h1>
+                <p class="mt-2 text-sm text-slate-500">Review completed consultation details, doctor notes, prescriptions, and requested medical tests.</p>
+            </div>
+            <div class="inline-flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-600 ring-1 ring-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75h6A2.25 2.25 0 0 1 15.75 6v1.5H18A2.25 2.25 0 0 1 20.25 9.75v8.25A2.25 2.25 0 0 1 18 20.25H7.5A2.25 2.25 0 0 1 5.25 18V6A2.25 2.25 0 0 1 7.5 3.75Zm1.5 8.25h6m-6 3h6" />
+                    </svg>
+                </span>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">{{ consultations|length }} consultation{{ consultations|length|pluralize }}</p>
+                    <p class="text-xs text-slate-500">Completed visits on record</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if consultations %}
+    <div class="space-y-6">
+        {% for consultation in consultations %}
+        <article class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h2 class="text-xl font-semibold text-slate-900">{{ consultation.appointment.doctor.user.get_full_name|default:consultation.appointment.doctor.user.email|default:"Doctor unavailable" }}</h2>
+                        {% include "components/badges.html" with status=consultation.appointment.status|upper %}
+                    </div>
+                    <p class="mt-2 text-sm text-slate-500">{{ consultation.appointment.doctor.specialization|default:"Specialization not specified" }}</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <p class="font-semibold text-slate-900">{{ consultation.appointment.appointment_date|date:"d M Y"|default:"-" }}</p>
+                    <p class="mt-1">
+                        {{ consultation.appointment.start_time|time:"h:i A"|default:"-" }}
+                        {% if consultation.appointment.end_time %}
+                            - {{ consultation.appointment.end_time|time:"h:i A" }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Diagnosis</p>
+                    <p class="mt-3 text-sm leading-6 text-slate-700">{{ consultation.diagnosis|default:"No diagnosis recorded." }}</p>
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Notes</p>
+                    <p class="mt-3 text-sm leading-6 text-slate-700">{{ consultation.notes|default:"No consultation notes recorded." }}</p>
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Prescriptions</p>
+                        <span class="text-xs text-slate-400">{{ consultation.created_at|date:"d M Y"|default:"" }}</span>
+                    </div>
+                    {% with prescriptions=consultation.prescription_set.all %}
+                        {% if prescriptions %}
+                        <ul class="mt-3 space-y-3 text-sm text-slate-700">
+                            {% for prescription in prescriptions %}
+                            <li class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
+                                <p class="font-semibold text-slate-900">{{ prescription.drug_name|default:"Medication" }}</p>
+                                <p class="mt-1 text-slate-600">{{ prescription.dosage|default:"Dosage not specified" }}</p>
+                                <p class="mt-1 text-slate-500">{{ prescription.duration|default:"Duration not specified" }}</p>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="mt-3 text-sm text-slate-500">No prescriptions were added for this consultation.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Medical Tests</p>
+                    {% with tests=consultation.medicaltest_set.all %}
+                        {% if tests %}
+                        <ul class="mt-3 space-y-3 text-sm text-slate-700">
+                            {% for test in tests %}
+                            <li class="rounded-2xl bg-white px-4 py-3 font-medium text-slate-900 ring-1 ring-slate-200">
+                                {{ test.test_name|default:"Unnamed test" }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="mt-3 text-sm text-slate-500">No medical tests were requested for this consultation.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="rounded-panel border border-slate-200 bg-white px-6 py-12 text-center shadow-soft">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75h6A2.25 2.25 0 0 1 15.75 6v1.5H18A2.25 2.25 0 0 1 20.25 9.75v8.25A2.25 2.25 0 0 1 18 20.25H7.5A2.25 2.25 0 0 1 5.25 18V6A2.25 2.25 0 0 1 7.5 3.75Zm1.5 8.25h6m-6 3h6" />
+            </svg>
+        </div>
+        <h2 class="mt-4 text-lg font-semibold text-slate-900">No completed consultations</h2>
+        <p class="mt-2 text-sm text-slate-500">Completed consultations will appear here once your doctor publishes the summary.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

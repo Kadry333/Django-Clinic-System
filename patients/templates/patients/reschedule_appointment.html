@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Request Reschedule | ClinicMS{% endblock %}
+{% block page_name %}Request Reschedule{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'patients:my_appointments' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+    Back to Appointments
+</a>
+{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Current Appointment</p>
+                <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Request Reschedule</h1>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Review your current booking details before submitting a preferred replacement date and time.
+                </p>
+            </div>
+
+            <div class="mt-6 grid gap-4 rounded-3xl bg-slate-50 p-4 text-sm">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Doctor</p>
+                    <p class="mt-1 font-medium text-slate-900">{{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.email|default:"Doctor unavailable" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Date</p>
+                    <p class="mt-1 font-medium text-slate-900">{{ appointment.appointment_date|date:"d M Y"|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Time</p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.start_time|time:"h:i A"|default:"-" }}
+                        {% if appointment.end_time %}
+                            - {{ appointment.end_time|time:"h:i A" }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Status</p>
+                    <div class="mt-2">
+                        {% include "components/badges.html" with status=appointment.status|upper %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div class="border-b border-slate-100 pb-6">
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Reschedule Request</p>
+                <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Choose a new preferred slot</h2>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    Submit a preferred date and time for clinic review. Include a short reason so the team has the right context.
+                </p>
+            </div>
+
+            <form method="post" class="mt-8 space-y-6">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <label for="{{ form.preferred_date.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Preferred date</label>
+                        <input
+                            type="date"
+                            id="{{ form.preferred_date.id_for_label }}"
+                            name="{{ form.preferred_date.html_name }}"
+                            value="{{ form.preferred_date.value|default:'' }}"
+                            class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50 {% if form.preferred_date.errors %}border-rose-400{% else %}border-slate-200{% endif %}"
+                        >
+                        {% if form.preferred_date.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.preferred_date.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.preferred_time.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
+                        <input
+                            type="time"
+                            id="{{ form.preferred_time.id_for_label }}"
+                            name="{{ form.preferred_time.html_name }}"
+                            value="{{ form.preferred_time.value|default:'' }}"
+                            class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50 {% if form.preferred_time.errors %}border-rose-400{% else %}border-slate-200{% endif %}"
+                        >
+                        {% if form.preferred_time.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.preferred_time.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="{{ form.reason.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">Reason</label>
+                        <textarea
+                            id="{{ form.reason.id_for_label }}"
+                            name="{{ form.reason.html_name }}"
+                            rows="4"
+                            class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50 {% if form.reason.errors %}border-rose-400{% else %}border-slate-200{% endif %}"
+                            placeholder="Share why you need to reschedule"
+                        >{{ form.reason.value|default:'' }}</textarea>
+                        {% if form.reason.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.reason.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700">
+                        Submit Request
+                    </button>
+                    <a href="{% url 'patients:my_appointments' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        Back to Appointments
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
