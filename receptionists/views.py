@@ -10,6 +10,7 @@ from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleExceptio
 from .forms import RescheduleForm, DoctorScheduleForm, DoctorScheduleExceptionForm
 
 
+
 class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
     def get(self, request):
         today = timezone.now().date()
@@ -191,3 +192,4 @@ class DeleteScheduleView(ReceptionistRequiredMixins, View):
         schedule.delete()
         messages.success(request, 'Schedule deleted.')
         return redirect('schedules')
+

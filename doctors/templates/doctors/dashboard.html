@@ -3,60 +3,129 @@
 {% block page_name %}Doctor Dashboard{% endblock %}
 {% block content %}
 <section class="space-y-6">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {# ── Stats ── #}
     <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-        {% include "components/cards.html" with title="Today's Queue" value="18" subtitle="Patients checked in" icon="Q" %}
-        {% include "components/cards.html" with title="Average Wait" value="12m" subtitle="Current estimated time" icon="WT" %}
-        {% include "components/cards.html" with title="Completed" value="9" subtitle="Consultations done" icon="OK" %}
-        {% include "components/cards.html" with title="No Shows" value="2" subtitle="For today" icon="NS" %}
+        {% with total=queue|length %}
+        {% include "components/cards.html" with title="Today's Queue" value=total subtitle="Patients checked in" icon="Q" %}
+        {% endwith %}
+        {% with done=queue|length %}
+        {% include "components/cards.html" with title="Completed" value=done subtitle="Consultations done" icon="OK" %}
+        {% endwith %}
     </div>
+
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+
+        {# ── Queue list ── #}
         <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-900">Today's queue</h2>
                     <p class="text-sm text-slate-500">Ordered by check-in time.</p>
                 </div>
-                <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-primary">Live preview</span>
+                {% if queue %}
+                <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-primary">
+                    {{ queue|length }} waiting
+                </span>
+                {% endif %}
             </div>
+
             <div class="mt-6 space-y-4">
-                <div class="rounded-3xl border border-slate-200 p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-semibold text-slate-900">08:45 - Mona Adel</p>
-                            <p class="text-sm text-slate-500">APT-2901 - Waiting 16 minutes</p>
+                {% if queue %}
+                    {% for q in queue %}
+                    <div class="rounded-3xl border border-slate-200 p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-slate-900">
+                                    {{ q.check_in_time|time:"h:i A" }} — {{ q.appointment.patient.get_full_name }}
+                                </p>
+                                <p class="text-sm text-slate-500">APT-{{ q.appointment.id }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                {% include "components/badges.html" with status=q.status|upper %}
+
+                                {% if q.status == 'waiting' %}
+                                <form method="POST" action="{% url 'start_consultation' q.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rounded-2xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-800">
+                                        Start
+                                    </button>
+                                </form>
+                                {% elif q.status == 'in_progress' %}
+                                <form method="POST" action="{% url 'finish_consultation' q.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rounded-2xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700">
+                                        Finish
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </div>
-                        {% include "components/badges.html" with status="CHECKED_IN" %}
                     </div>
-                </div>
-                <div class="rounded-3xl border border-slate-200 p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-semibold text-slate-900">08:52 - Sarah Ahmed</p>
-                            <p class="text-sm text-slate-500">APT-2904 - Waiting 11 minutes</p>
+                    {% endfor %}
+                {% else %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xs font-semibold text-slate-500 ring-1 ring-slate-200">EM</div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Queue is empty</p>
+                                <p class="mt-1 text-sm text-slate-500">No patients are currently waiting in the queue.</p>
+                            </div>
                         </div>
-                        {% include "components/badges.html" with status="CHECKED_IN" %}
                     </div>
-                </div>
-                <div class="rounded-3xl border border-slate-200 p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-semibold text-slate-900">09:03 - Amina Mahmoud</p>
-                            <p class="text-sm text-slate-500">APT-2908 - Waiting 5 minutes</p>
-                        </div>
-                        {% include "components/badges.html" with status="CONFIRMED" %}
-                    </div>
-                </div>
+                {% endif %}
             </div>
         </div>
+
+        {# ── Next in queue actions ── #}
         <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
-            <h2 class="text-lg font-semibold text-slate-900">Queue actions</h2>
-            <div class="mt-4 space-y-3">
-                {% include "components/buttons.html" with label="Start Next Consultation" %}
-                {% include "components/buttons.html" with variant="secondary" label="Mark Delay" %}
-                {% include "components/buttons.html" with variant="danger" label="Close Queue" %}
+            <h2 class="text-lg font-semibold text-slate-900">Next patient</h2>
+
+            {% with next=queue|first %}
+            {% if next and next.status == 'waiting' %}
+            <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Up next</p>
+                <p class="mt-2 text-sm font-semibold text-slate-900">{{ next.appointment.patient.get_full_name }}</p>
+                <p class="mt-1 text-sm text-slate-500">Checked in at {{ next.check_in_time|time:"h:i A" }}</p>
             </div>
+            <form method="POST" action="{% url 'start_consultation' next.id %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full rounded-2xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                    Start Next Consultation
+                </button>
+            </form>
+            {% elif next and next.status == 'in_progress' %}
+            <div class="mt-4 rounded-2xl border border-teal-200 bg-teal-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">In progress</p>
+                <p class="mt-2 text-sm font-semibold text-slate-900">{{ next.appointment.patient.get_full_name }}</p>
+                <p class="mt-1 text-sm text-slate-500">Started consultation</p>
+            </div>
+            <form method="POST" action="{% url 'finish_consultation' next.id %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full rounded-2xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                    Finish Consultation
+                </button>
+            </form>
+            {% else %}
+            <div class="mt-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xs font-semibold text-slate-500 ring-1 ring-slate-200">EM</div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">No patients waiting</p>
+                        <p class="mt-1 text-sm text-slate-500">Queue is currently empty.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
         </div>
+
     </div>
-    {% include "components/states.html" with empty_message="No patients are currently waiting in the queue." error_message="Unable to sync the doctor's live queue." %}
 </section>
 {% endblock %}

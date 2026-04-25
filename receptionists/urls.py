@@ -9,3 +9,4 @@ urlpatterns = [
     path('schedules/',                    views.SchedulesView.as_view(),             name='schedules'),
     path('schedules/delete/<int:schedule_id>/', views.DeleteScheduleView.as_view(), name='delete_schedule'),
 ]
+
