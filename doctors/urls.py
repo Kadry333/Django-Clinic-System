@@ -4,10 +4,28 @@ from . import views
 
 urlpatterns = [
     path("dashboard/", views.dashboard_view, name="doctor_dashboard"),
-
+    path("admin/doctors/", views.DoctorsListView.as_view(), name="doctors.list"),
+    path(
+        "admin/doctors/create/", views.DoctorCreateView.as_view(), name="doctors.create"
+    ),
+    path(
+        "admin/doctors/<int:doctor_id>/",
+        views.DoctorDetailView.as_view(),
+        name="doctors.detail",
+    ),
+    path(
+        "admin/doctors/<int:doctor_id>/edit/",
+        views.DoctorEditView.as_view(),
+        name="doctors.edit",
+    ),
+    path(
+        "admin/doctors/<int:doctor_id>/delete/",
+        views.DoctorDeleteView.as_view(),
+        name="doctors.delete",
+    ),
     path("start/<int:queue_id>/", views.start_consultation, name="start_consultation"),
-    path("finish/<int:queue_id>/", views.finish_consultation, name="finish_consultation"),
-    
-    
+    path(
+        "finish/<int:queue_id>/", views.finish_consultation, name="finish_consultation"
+    ),
     path("schedule/", views.schedule_view, name="my_schedule"),
 ]
