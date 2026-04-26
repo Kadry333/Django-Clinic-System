@@ -21,8 +21,8 @@ VALUES
 -- Create appointments
 INSERT INTO appointments_appointment (id, patient_id, doctor_id, appointment_date, start_time, end_time, status, check_in_time, created_at)
 VALUES
-  (1, 1, 3, '2026-05-02', '10:00:00', '10:30:00', 'CONFIRMED', '2026-05-02 09:55:00', '2026-04-25 09:00:00'),
-  (2, 4, 3, '2026-05-03', '14:00:00', '14:30:00', 'REQUESTED', NULL, '2026-04-25 09:10:00');
+  (1, 1, 3, '2026-05-02', '10:00:00', '10:30:00', 'confirmed', '2026-05-02 09:55:00', '2026-04-25 09:00:00'),
+  (2, 4, 3, '2026-05-03', '14:00:00', '14:30:00', 'requested', NULL, '2026-04-25 09:10:00');
 
 -- Create appointment reschedule history
 INSERT INTO appointments_appointmentreschedule (id, appointment_id, old_date, old_time, new_date, new_time, changed_by_id, reason, created_at)
