@@ -6,17 +6,43 @@
     <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div><h1 class="text-2xl font-semibold text-slate-900">Weekly schedule</h1><p class="mt-2 text-sm text-slate-500">Medical schedule UI with availability blocks and session details.</p></div>
-            <div class="flex gap-3">{% include "components/buttons.html" with label="Add Session" %}{% include "components/buttons.html" with variant="secondary" label="Sync Calendar" %}</div>
+            <a href="{% url 'doctors.schedule.edit' %}" class="flex gap-3">{% include "components/buttons.html" with label="Edit" %}
+                </a>
         </div>
         <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <div class="rounded-3xl bg-slate-50 p-4"><p class="text-sm font-semibold text-slate-900">Sunday</p><p class="mt-2 text-sm text-slate-500">09:00 - 01:00</p><p class="text-sm text-slate-500">03:00 - 06:00</p></div>
-            <div class="rounded-3xl bg-slate-50 p-4"><p class="text-sm font-semibold text-slate-900">Monday</p><p class="mt-2 text-sm text-slate-500">10:00 - 02:00</p><p class="text-sm text-slate-500">Available</p></div>
-            <div class="rounded-3xl border border-dashed border-slate-300 bg-white p-4"><p class="text-sm font-semibold text-slate-900">Tuesday</p><p class="mt-2 text-sm text-slate-500">Day off</p></div>
-            <div class="rounded-3xl bg-slate-50 p-4"><p class="text-sm font-semibold text-slate-900">Wednesday</p><p class="mt-2 text-sm text-slate-500">09:00 - 01:00</p></div>
-            <div class="rounded-3xl bg-slate-50 p-4"><p class="text-sm font-semibold text-slate-900">Thursday</p><p class="mt-2 text-sm text-slate-500">11:00 - 04:00</p></div>
-        </div>
+{% for day, data in schedule_map.items %}
+
+  <div class="rounded-3xl p-4
+    {% if data.off %}
+      border border-dashed border-slate-300 bg-white
+    {% else %}
+      bg-slate-50
+    {% endif %}
+  ">
+
+    <!-- Day name -->
+    <p class="text-sm font-semibold text-slate-900">{{ day }}</p>
+
+    {% if data.off %}
+      <!-- OFF state -->
+      <p class="mt-2 text-sm text-slate-500">Day off</p>
+
+    {% else %}
+      <!-- Working hours -->
+      <p class="mt-2 text-sm text-slate-600">
+        {{ data.start }} - {{ data.end }}
+      </p>
+
+      <p class="text-xs text-slate-400 mt-1">
+        Available
+      </p>
+    {% endif %}
+
+  </div>
+
+{% endfor %}        </div>
     </div>
-    {% include "components/tables.html" with title="Schedule Exceptions" subtitle="Manage blocked dates, vacations, and overrides." %}
-    {% include "components/states.html" with empty_message="No schedule exceptions were added yet." error_message="Unable to load schedule data." %}
+    {% comment %} {% include "components/tables.html" with title="Schedule Exceptions" subtitle="Manage blocked dates, vacations, and overrides." %}
+    {% include "components/states.html" with empty_message="No schedule exceptions were added yet." error_message="Unable to load schedule data." %} {% endcomment %}
 </section>
 {% endblock %}
