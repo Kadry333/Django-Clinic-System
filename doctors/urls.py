@@ -33,4 +33,29 @@ urlpatterns = [
         views.DoctorScheduleEditView.as_view(),
         name="doctors.schedule.edit",
     ),
+    path(
+        "schedule/exceptions/",
+        views.DoctorScheduleExceptionView.as_view(),
+        name="doctors.schedule.exceptions",
+    ),
+    path(
+        "schedule/exceptions/new/",
+        views.DoctorScheduleExceptionCreateView.as_view(),
+        name="doctors.schedule.exceptions.new",
+    ),
+    path(
+        "schedule/exceptions/<int:exception_id>/edit",
+        views.DoctorScheduleExceptionEditView.as_view(),
+        name="doctors.schedule.exceptions.edit",
+    ),
+    path(
+        "schedule/exceptions/<int:exception_id>/delete/",
+        views.DoctorScheduleExceptionDeleteView.as_view(),
+        name="doctors.schedule.exceptions.delete",
+    ),
+    path(
+        "schedule/exceptions/<int:exception_id>/",
+        views.DoctorScheduleExceptionDetailView.as_view(),
+        name="doctors.schedule.exceptions.detail",
+    ),
 ]

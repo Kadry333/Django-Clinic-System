@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.utils import timezone
@@ -13,7 +13,7 @@ from django.contrib.auth.models import Group
 from accounts.mixins import AdminRequiredMixins, DoctorRequiredMixins
 from appointments.models import AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
-from .forms import DoctorProfileForm, UserForm
+from .forms import DoctorProfileForm, DoctorScheduleExceptionForm, UserForm
 
 
 def dashboard_view(request):
@@ -401,7 +401,7 @@ class DoctorScheduleEditView(DoctorRequiredMixins, View):
                 )
 
         messages.success(request, "Schedule updated successfully.")
-        return redirect("my_schedule")
+        return redirect("doctors.schedule")
 
 
 class DoctorScheduleView(DoctorRequiredMixins, View):
@@ -443,5 +443,136 @@ class DoctorScheduleView(DoctorRequiredMixins, View):
             {
                 "schedule_map": schedule_map,
                 "current_role": "Doctor",
+            },
+        )
+
+
+class DoctorScheduleExceptionView(DoctorRequiredMixins, View):
+    def get(self, request):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        exceptions = DoctorScheduleException.objects.filter(doctor=doctor).order_by(
+            "-date"
+        )
+        exception_type = request.GET.get("type", "all")
+        if exception_type == "day_off":
+            exceptions = exceptions.filter(is_day_off=True)
+        elif exception_type == "time":
+            exceptions = exceptions.filter(is_day_off=False)
+
+        sort = request.GET.get("sort", "date")
+        direction = request.GET.get("direction", "asc")
+        if direction == "desc":
+            sort = f"-{sort}"
+        else:
+            sort = f"{sort}"
+        exceptions = exceptions.order_by(sort)
+
+        paginator = Paginator(exceptions, 1)
+        page_number = request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+
+        return render(
+            request,
+            "doctors/exceptions-list.html",
+            {
+                "exceptions": page_obj,
+                "page_obj": page_obj,
+                "current_role": "Doctor",
+                "type": exception_type,
+                "current_sort": sort,
+                "current_direction": direction,
+            },
+        )
+
+
+class DoctorScheduleExceptionCreateView(DoctorRequiredMixins, View):
+    def get(self, request):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        return render(
+            request,
+            "doctors/exception-form.html",
+            {
+                "form": DoctorScheduleExceptionForm(doctor=doctor),
+                "current_role": "Doctor",
+            },
+        )
+
+    def post(self, request):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        form = DoctorScheduleExceptionForm(request.POST, doctor=doctor)
+
+        if form.is_valid():
+            exception = form.save(commit=False)
+            exception.doctor = doctor
+            exception.save()
+
+            messages.success(request, "Exception added successfully.")
+            return redirect("doctors.schedule.exceptions")
+
+        return render(
+            request,
+            "doctors/exception-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+
+class DoctorScheduleExceptionEditView(DoctorRequiredMixins, View):
+    def get(self, request, exception_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        exception = get_object_or_404(DoctorScheduleException, id=exception_id)
+
+        return render(
+            request,
+            "doctors/exception-form.html",
+            {
+                "form": DoctorScheduleExceptionForm(instance=exception, doctor=doctor),
+                "current_role": "Doctor",
+            },
+        )
+
+    def post(self, request, exception_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        exception = get_object_or_404(DoctorScheduleException, pk=exception_id)
+        form = DoctorScheduleExceptionForm(
+            request.POST, instance=exception, doctor=doctor
+        )
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Exception updated successfully.")
+            return redirect("doctors.schedule.exceptions")
+
+        return render(
+            request,
+            "doctors/exception-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+
+class DoctorScheduleExceptionDeleteView(DoctorRequiredMixins, View):
+    def post(self, request, exception_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        exception = get_object_or_404(DoctorScheduleException, pk=exception_id)
+        exception.delete()
+        messages.success(request, "Exception deleted successfully.")
+        return redirect("doctors.schedule.exceptions")
+
+
+class DoctorScheduleExceptionDetailView(DoctorRequiredMixins, View):
+    def get(self, request, exception_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        exception = get_object_or_404(DoctorScheduleException, id=exception_id)
+
+        return render(
+            request,
+            "doctors/exception-detail.html",
+            {
+                "exception": exception,
             },
         )
