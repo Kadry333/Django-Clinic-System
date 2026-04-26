@@ -76,6 +76,17 @@
                         <span class="block text-xs {% if request.path == '/doctors/schedule/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Plan and manage availability</span>
                     </span>
                 </a>
+                <a href="/doctors/exceptions/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/doctors/exceptions/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
+<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/doctors/exceptions/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+</span>                    <span class="min-w-0">
+                        <span class="block">Exceptions</span>
+                        <span class="block text-xs {% if request.path == '/doctors/exceptions/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Plan and manage exceptions</span>
+                    </span>
+                </a>
+
                 <a href="/appointments/doctor-management/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/appointments/doctor-management/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/appointments/doctor-management/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M7.5 3.75v6m9-6v6M6.75 21h10.5A2.25 2.25 0 0 0 19.5 18.75V8.25A2.25 2.25 0 0 0 17.25 6H6.75A2.25 2.25 0 0 0 4.5 8.25v10.5A2.25 2.25 0 0 0 6.75 21Z" /></svg>

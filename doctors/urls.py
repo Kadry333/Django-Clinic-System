@@ -27,5 +27,10 @@ urlpatterns = [
     path(
         "finish/<int:queue_id>/", views.finish_consultation, name="finish_consultation"
     ),
-    path("schedule/", views.schedule_view, name="my_schedule"),
+    path("schedule/", views.DoctorScheduleView.as_view(), name="doctors.schedule"),
+    path(
+        "schedule/edit/",
+        views.DoctorScheduleEditView.as_view(),
+        name="doctors.schedule.edit",
+    ),
 ]
