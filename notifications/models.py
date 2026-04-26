@@ -8,7 +8,9 @@ class Notification(models.Model):
         CONFIRMED = "confirmed", "Confirmed"
         CANCELLED = "cancelled", "Cancelled"
         RESCHEDULED = "rescheduled", "Rescheduled"
-
+        APPOINTMENT_REQUESTED = "appointment_requested", "Appointment Requested"
+        PROFILE_UPDATED = "profile_updated", "Profile Updated"
+        CONSULTATION_READY = "consultation_ready", "Consultation Ready"
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -17,7 +19,7 @@ class Notification(models.Model):
     title = models.CharField(max_length=255)
     message = models.TextField()
     notification_type = models.CharField(
-        max_length=20,
+        max_length=40,
         choices=NotificationType.choices
     )
     is_read = models.BooleanField(default=False)
