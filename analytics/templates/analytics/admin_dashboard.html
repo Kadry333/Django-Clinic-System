@@ -1,31 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard | ClinicMS{% endblock %}
-{% block page_name %}Admin Dashboard{% endblock %}
+{% block title %}Admin Analytics | ClinicMS{% endblock %}
+
 {% block content %}
-<section class="space-y-6">
+<section class="space-y-6 text-slate-900">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold">Clinic Operations Analytics</h1>
+            <p class="mt-2 text-sm text-slate-500">Real-time insights from the database</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {% include "components/cards.html" with title="Total Appointments" value="4,280" subtitle="This month" icon="AP" %}
-        {% include "components/cards.html" with title="No-show Rate" value="7.4%" subtitle="Current month" icon="NS" %}
-        {% include "components/cards.html" with title="Active Doctors" value="42" subtitle="Available this week" icon="DR" %}
-        {% include "components/cards.html" with title="Reception Team" value="16" subtitle="On active shifts" icon="RC" %}
+        {% include "components/cards.html" with title="Total Appointments" value=total_appointments subtitle="All time" icon="AP" %}
+        {% include "components/cards.html" with title="No-show Rate" value=no_show_rate|stringformat:".2f"|add:"%" subtitle="Target: <5%" icon="NS" %}
+        {% include "components/cards.html" with title="Total Revenue" value="$"|add:total_revenue|stringformat:"s" subtitle="Completed visits" icon="OK" %}
+        {% include "components/cards.html" with title="Active Doctors" value=active_doctors subtitle="Medical staff" icon="DR" %}
     </div>
-    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+
+    <div class="grid gap-6 xl:grid-cols-2">
+        <!-- Peak Hours Section -->
         <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
-            <h2 class="text-lg font-semibold text-slate-900">Operations overview</h2>
-            <div class="mt-6 grid gap-4 md:grid-cols-2">
-                <div class="rounded-3xl bg-slate-50 p-5"><p class="text-sm font-semibold text-slate-900">User growth</p><div class="mt-5 h-48 rounded-3xl border border-dashed border-slate-300 bg-white"></div></div>
-                <div class="rounded-3xl bg-slate-50 p-5"><p class="text-sm font-semibold text-slate-900">Department load</p><div class="mt-5 h-48 rounded-3xl border border-dashed border-slate-300 bg-white"></div></div>
+            <h2 class="text-lg font-semibold">Peak Hours Analysis</h2>
+            <p class="text-sm text-slate-500 mb-4">Most busy hours based on booking start times</p>
+            <div class="space-y-3">
+                {% for peak in peak_hours %}
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <span class="font-medium">Time Slot: {{ peak.hour }}:00</span>
+                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">
+                        {{ peak.count }} bookings
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-slate-400 italic">No booking data available yet.</p>
+                {% endfor %}
             </div>
         </div>
+
+        <!-- Team Overview -->
         <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
-            <h2 class="text-lg font-semibold text-slate-900">Admin shortcuts</h2>
-            <div class="mt-4 grid gap-3">
-                {% include "components/buttons.html" with label="Create User" %}
-                {% include "components/buttons.html" with variant="secondary" label="Open Analytics" %}
-                {% include "components/buttons.html" with variant="danger" label="View Incidents" %}
+            <h2 class="text-lg font-semibold">Staff Overview</h2>
+            <div class="mt-6 grid grid-cols-2 gap-4">
+                <div class="p-4 bg-indigo-50 rounded-2xl">
+                    <p class="text-xs text-indigo-600 font-bold uppercase">Receptionists</p>
+                    <p class="text-2xl font-bold text-indigo-900">{{ reception_team }}</p>
+                </div>
+                <div class="p-4 bg-emerald-50 rounded-2xl">
+                    <p class="text-xs text-emerald-600 font-bold uppercase">Active Doctors</p>
+                    <p class="text-2xl font-bold text-emerald-900">{{ active_doctors }}</p>
+                </div>
             </div>
         </div>
     </div>
-    {% include "components/states.html" with empty_message="No admin activity cards are available right now." error_message="Unable to load admin dashboard insights." %}
 </section>
 {% endblock %}
