@@ -1,9 +1,12 @@
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
-    path("schedules/", views.schedule_management_view, name="manage_schedules"),
-    path("checkin/", views.checkin_view, name="patient_checkin"),
-    path("checkin/<int:appointment_id>/", views.check_in_patient, name="check_in"),
+    path('',                              views.ReceptionistDashboardView.as_view(), name='receptionist_dashboard'),
+    path('bookings/',                     views.BookingsView.as_view(),              name='bookings'),
+    path('checkin-queue/',                views.CheckInQueueView.as_view(),          name='checkin_queue'),
+    path('reschedule/<int:appointment_id>/', views.RescheduleView.as_view(),         name='reschedule'),
+    path('schedules/',                    views.SchedulesView.as_view(),             name='schedules'),
+    path('schedules/delete/<int:schedule_id>/', views.DeleteScheduleView.as_view(), name='delete_schedule'),
 ]
+

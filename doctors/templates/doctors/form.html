@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | ClinicMS{% endblock %}
+{% block page_name %}{{ page_heading }}{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-4xl">
+    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+
+        <div class="border-b border-slate-100 pb-5">
+            <h1 class="text-2xl font-semibold text-slate-900">{{ page_heading }}</h1>
+            <p class="mt-2 text-sm text-slate-500">
+                Manage the doctor account information and profile settings.
+            </p>
+        </div>
+
+        <form method="post" class="mt-6 space-y-6">
+            {% csrf_token %}
+
+            {% if user_form.non_field_errors or doctor_form.non_field_errors %}
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {{ user_form.non_field_errors }}
+                {{ doctor_form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid gap-5 md:grid-cols-2">
+
+                <!-- USER FORM -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">First name</label>
+                    <input type="text"
+                           name="{{ user_form.first_name.html_name }}"
+                           id="{{ user_form.first_name.id_for_label }}"
+                           value="{{ user_form.first_name.value|default:'' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in user_form.first_name.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Last name</label>
+                    <input type="text"
+                           name="{{ user_form.last_name.html_name }}"
+                           id="{{ user_form.last_name.id_for_label }}"
+                           value="{{ user_form.last_name.value|default:'' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in user_form.last_name.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Email</label>
+                    <input type="email"
+                           name="{{ user_form.email.html_name }}"
+                           id="{{ user_form.email.id_for_label }}"
+                           value="{{ user_form.email.value|default:'' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in user_form.email.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Phone</label>
+                    <input type="text"
+                           name="{{ user_form.phone.html_name }}"
+                           id="{{ user_form.phone.id_for_label }}"
+                           value="{{ user_form.phone.value|default:'' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in user_form.phone.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {% if user_form.password %}
+                <div class="md:col-span-2">
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        Password
+                    </label>
+                    <input type="password"
+                           name="{{ user_form.password.html_name }}"
+                           id="{{ user_form.password.id_for_label }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% if doctor %}
+<p class="mt-1 text-xs text-slate-500">Leave blank to keep the current password.</p>
+{% endif %}
+
+                                  {% for error in user_form.password.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- DOCTOR FORM -->
+
+                <div class="md:col-span-2">
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Specialization</label>
+                    <input type="text"
+                           name="{{ doctor_form.specialization.html_name }}"
+                           id="{{ doctor_form.specialization.id_for_label }}"
+                           value="{{ doctor_form.specialization.value|default:'' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in doctor_form.specialization.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Session duration (minutes)</label>
+                    <input type="number"
+                           name="{{ doctor_form.session_duration.html_name }}"
+                           id="{{ doctor_form.session_duration.id_for_label }}"
+                           value="{{ doctor_form.session_duration.value|default:'' }}"
+                           min="1"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in doctor_form.session_duration.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Buffer time (minutes)</label>
+                    <input type="number"
+                           name="{{ doctor_form.buffer_time.html_name }}"
+                           id="{{ doctor_form.buffer_time.id_for_label }}"
+                           value="{{ doctor_form.buffer_time.value|default:'' }}"
+                           min="0"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition
+                                  focus:border-primary focus:ring-4 focus:ring-teal-50">
+                    {% for error in doctor_form.buffer_time.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <!-- ACTIONS -->
+
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+
+                {% if doctor %}
+                <a href="{% url 'doctors.detail' doctor.id %}"
+                   class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300">
+                    Cancel
+                </a>
+                {% else %}
+                <a href="{% url 'doctors.list' %}"
+                   class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300">
+                    Cancel
+                </a>
+                {% endif %}
+
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                    {{ submit_label }}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</section>
+{% endblock %}
+
