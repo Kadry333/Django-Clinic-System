@@ -19,6 +19,8 @@ class Appointment(models.Model):
 
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_appointments')
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
+    
+    fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     appointment_date = models.DateField()
     start_time = models.TimeField()

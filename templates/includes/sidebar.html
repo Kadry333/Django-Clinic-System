@@ -2,7 +2,7 @@
 <aside class="fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-72 -translate-x-full flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950 text-slate-100 shadow-[18px_0_50px_rgba(15,23,42,0.28)] transition-all duration-300 lg:translate-x-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
     <div class="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.22),transparent_52%)]"></div>
     <div class="relative flex-1 overflow-y-auto px-4 py-5">
-        <div class="mb-6 rounded-[1.75rem] border border-white/10 bg-white/5 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.24)] backdrop-blur">
+        <!-- <div class="mb-6 rounded-[1.75rem] border border-white/10 bg-white/5 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.24)] backdrop-blur">
             <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-teal-200/80">Navigation</p>
             <p class="mt-2 text-lg font-semibold text-white">Clinic Workspace</p>
             <p class="mt-2 text-sm leading-6 text-slate-300">Move between the main screens and manage the flow of your clinic from one place.</p>
@@ -11,7 +11,7 @@
                 {% if request.user.is_patient %}Patient access{% elif request.user.is_doctor %}Doctor access{% elif request.user.is_receptionist %}Reception desk{% else %}Admin access{% endif %}
             </div>
             {% endif %}
-        </div>
+        </div> -->
 
         <nav class="space-y-8">
             {% if request.user.is_authenticated %}
