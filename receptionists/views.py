@@ -15,9 +15,9 @@ class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
         today = timezone.now().date()
         context = {
             'total_today':     Appointment.objects.filter(appointment_date=today).count(),
-            'confirmed_today': Appointment.objects.filter(appointment_date=today, status__in=['confirmed', 'CONFIRMED']).count(),
-            'checked_in':      Appointment.objects.filter(appointment_date=today, status__in=['checked_in', 'CHECKED_IN']).count(),
-            'requested':       Appointment.objects.filter(status__in=['requested', 'REQUESTED']).count(),
+            'confirmed_today': Appointment.objects.filter(appointment_date=today, status='confirmed').count(),
+            'checked_in':      Appointment.objects.filter(appointment_date=today, status='checked_in').count(),
+            'requested':       Appointment.objects.filter(status='requested').count(),
         }
         return render(request, 'receptionists/dashboard.html', context)
 
@@ -27,10 +27,10 @@ class BookingsView(ReceptionistRequiredMixins, View):
         status = request.GET.get('status', '')
         date   = request.GET.get('date', '')
 
-        appointments = Appointment.objects.select_related('patient', 'doctor').all()
+        appointments = Appointment.objects.select_related('patient', 'doctor__user').all()
 
         if status:
-            appointments = appointments.filter(status=status)
+            appointments = appointments.filter(status=status.lower())
         if date:
             appointments = appointments.filter(appointment_date=date)
 
@@ -49,9 +49,10 @@ class BookingsView(ReceptionistRequiredMixins, View):
         appointment_id = request.POST.get('appointment_id')
         action         = request.POST.get('action')
         appointment    = get_object_or_404(Appointment, id=appointment_id)
+        status         = appointment.status.lower()
 
         if action == 'confirm':
-            if appointment.status == 'requested':
+            if status == 'requested':
                 appointment.status = 'confirmed'
                 appointment.save()
                 messages.success(request, 'Appointment confirmed.')
@@ -59,7 +60,7 @@ class BookingsView(ReceptionistRequiredMixins, View):
                 messages.error(request, 'Only requested appointments can be confirmed.')
 
         elif action == 'cancel':
-            if appointment.status in ['requested', 'REQUESTED', 'confirmed', 'CONFIRMED']:
+            if status in ['requested', 'confirmed']:
                 appointment.status = 'cancelled'
                 appointment.save()
                 messages.success(request, 'Appointment cancelled.')
@@ -74,15 +75,15 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
         today = timezone.now().date()
 
         appointments = Appointment.objects.select_related(
-            'patient', 'doctor'
+            'patient', 'doctor__user'
         ).filter(
             appointment_date=today,
-            status__in=['confirmed', 'CONFIRMED', 'checked_in', 'CHECKED_IN']
+            status__in=['confirmed', 'checked_in']
         ).order_by('start_time')
 
         queue = AppointmentQueue.objects.select_related(
             'appointment__patient',
-            'appointment__doctor',
+            'appointment__doctor__user',
         ).filter(
             appointment__appointment_date=today
         ).order_by('check_in_time')
@@ -101,7 +102,7 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
             messages.error(request, "This appointment is not for today.")
             return redirect('checkin_queue')
 
-        if appointment.status not in ['confirmed', 'CONFIRMED']:
+        if appointment.status.lower() != 'confirmed':
             messages.error(request, "Only confirmed appointments can be checked in.")
             return redirect('checkin_queue')
 
@@ -117,7 +118,7 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
         AppointmentQueue.objects.create(
             appointment   = appointment,
             check_in_time = appointment.check_in_time,
-            status        = 'WAITING',
+            status        = 'waiting',
         )
 
         messages.success(request, f'{appointment.patient.get_full_name()} checked in.')
