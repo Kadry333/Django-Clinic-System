@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "consultations",
     "notifications",
     "receptionists",
-    "django_extensions",
+    # "django_extensions",
 ]
 
 MIDDLEWARE = [

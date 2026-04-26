@@ -5,10 +5,9 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 
 from accounts.mixins import ReceptionistRequiredMixins
-from appointments.models import Appointment, AppointmentReschedule
+from appointments.models import Appointment, AppointmentReschedule, AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
 from .forms import RescheduleForm, DoctorScheduleForm, DoctorScheduleExceptionForm
-
 
 
 class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
@@ -16,9 +15,9 @@ class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
         today = timezone.now().date()
         context = {
             'total_today':     Appointment.objects.filter(appointment_date=today).count(),
-            'confirmed_today': Appointment.objects.filter(appointment_date=today, status='CONFIRMED').count(),
-            'checked_in':      Appointment.objects.filter(appointment_date=today, status='CHECKED_IN').count(),
-            'requested':       Appointment.objects.filter(appointment_date=today, status='REQUESTED').count(),
+            'confirmed_today': Appointment.objects.filter(appointment_date=today, status__in=['confirmed', 'CONFIRMED']).count(),
+            'checked_in':      Appointment.objects.filter(appointment_date=today, status__in=['checked_in', 'CHECKED_IN']).count(),
+            'requested':       Appointment.objects.filter(status__in=['requested', 'REQUESTED']).count(),
         }
         return render(request, 'receptionists/dashboard.html', context)
 
@@ -36,9 +35,8 @@ class BookingsView(ReceptionistRequiredMixins, View):
             appointments = appointments.filter(appointment_date=date)
 
         appointments = appointments.order_by('-appointment_date')
-
-        paginator = Paginator(appointments, 10)
-        page_obj  = paginator.get_page(request.GET.get('page', 1))
+        paginator    = Paginator(appointments, 10)
+        page_obj     = paginator.get_page(request.GET.get('page', 1))
 
         context = {
             'appointments':   page_obj,
@@ -53,23 +51,20 @@ class BookingsView(ReceptionistRequiredMixins, View):
         appointment    = get_object_or_404(Appointment, id=appointment_id)
 
         if action == 'confirm':
-            if appointment.status == 'REQUESTED':
-                appointment.status = 'CONFIRMED'
+            if appointment.status == 'requested':
+                appointment.status = 'confirmed'
                 appointment.save()
                 messages.success(request, 'Appointment confirmed.')
             else:
                 messages.error(request, 'Only requested appointments can be confirmed.')
 
         elif action == 'cancel':
-            if appointment.status in ['REQUESTED', 'CONFIRMED']:
-                appointment.status = 'CANCELLED'
+            if appointment.status in ['requested', 'REQUESTED', 'confirmed', 'CONFIRMED']:
+                appointment.status = 'cancelled'
                 appointment.save()
                 messages.success(request, 'Appointment cancelled.')
             else:
                 messages.error(request, 'This appointment cannot be cancelled.')
-
-        else:
-            messages.error(request, 'Invalid action.')
 
         return redirect('bookings')
 
@@ -77,25 +72,54 @@ class BookingsView(ReceptionistRequiredMixins, View):
 class CheckInQueueView(ReceptionistRequiredMixins, View):
     def get(self, request):
         today = timezone.now().date()
-        queue = Appointment.objects.filter(
-            appointment_date=today,
-            status__in=['CONFIRMED', 'CHECKED_IN']
-        ).select_related('patient', 'doctor').order_by('start_time')
 
-        return render(request, 'receptionists/checkin_queue.html', {'queue': queue})
+        appointments = Appointment.objects.select_related(
+            'patient', 'doctor'
+        ).filter(
+            appointment_date=today,
+            status__in=['confirmed', 'CONFIRMED', 'checked_in', 'CHECKED_IN']
+        ).order_by('start_time')
+
+        queue = AppointmentQueue.objects.select_related(
+            'appointment__patient',
+            'appointment__doctor',
+        ).filter(
+            appointment__appointment_date=today
+        ).order_by('check_in_time')
+
+        return render(request, 'receptionists/checkin_queue.html', {
+            'appointments': appointments,
+            'queue':        queue,
+        })
 
     def post(self, request):
         appointment_id = request.POST.get('appointment_id')
         appointment    = get_object_or_404(Appointment, id=appointment_id)
         today          = timezone.now().date()
 
-        if appointment.appointment_date != today or appointment.status != 'CONFIRMED':
-            messages.error(request, "Only today's confirmed appointments can be checked in.")
+        if appointment.appointment_date != today:
+            messages.error(request, "This appointment is not for today.")
             return redirect('checkin_queue')
 
-        appointment.status        = 'CHECKED_IN'
+        if appointment.status not in ['confirmed', 'CONFIRMED']:
+            messages.error(request, "Only confirmed appointments can be checked in.")
+            return redirect('checkin_queue')
+
+
+        if AppointmentQueue.objects.filter(appointment=appointment).exists():
+            messages.warning(request, "Patient is already checked in.")
+            return redirect('checkin_queue')
+
+        appointment.status        = 'checked_in'
         appointment.check_in_time = timezone.now()
         appointment.save()
+
+        AppointmentQueue.objects.create(
+            appointment   = appointment,
+            check_in_time = appointment.check_in_time,
+            status        = 'WAITING',
+        )
+
         messages.success(request, f'{appointment.patient.get_full_name()} checked in.')
         return redirect('checkin_queue')
 
@@ -114,6 +138,7 @@ class RescheduleView(ReceptionistRequiredMixins, View):
         form        = RescheduleForm(request.POST, instance=appointment)
 
         if form.is_valid():
+
             AppointmentReschedule.objects.create(
                 appointment = appointment,
                 old_date    = appointment.appointment_date,
@@ -124,7 +149,7 @@ class RescheduleView(ReceptionistRequiredMixins, View):
                 reason      = form.cleaned_data['reason'],
             )
             form.save()
-            messages.success(request, 'Appointment rescheduled successfully.')
+            messages.success(request, 'Appointment rescheduled.')
             return redirect('bookings')
 
         return render(request, 'receptionists/reschedule.html', {
@@ -135,29 +160,25 @@ class RescheduleView(ReceptionistRequiredMixins, View):
 
 class SchedulesView(ReceptionistRequiredMixins, View):
     def get(self, request):
-        doctors  = DoctorProfile.objects.select_related('user').all()
+        doctors   = DoctorProfile.objects.select_related('user').all()
         schedules = DoctorSchedule.objects.select_related('doctor__user').all()
-
         paginator = Paginator(schedules, 10)
         page_obj  = paginator.get_page(request.GET.get('page', 1))
 
-        context = {
+        return render(request, 'receptionists/schedules.html', {
             'doctors':   doctors,
             'schedules': page_obj,
             'page_obj':  page_obj,
             'form':      DoctorScheduleForm(),
             'exc_form':  DoctorScheduleExceptionForm(),
-        }
-        return render(request, 'receptionists/schedules.html', context)
+        })
 
     def post(self, request):
         action    = request.POST.get('action')
         doctors   = DoctorProfile.objects.select_related('user').all()
         schedules = DoctorSchedule.objects.select_related('doctor__user').all()
-
-        # Start with empty forms
-        form     = DoctorScheduleForm()
-        exc_form = DoctorScheduleExceptionForm()
+        form      = DoctorScheduleForm()
+        exc_form  = DoctorScheduleExceptionForm()
 
         if action == 'add_schedule':
             form = DoctorScheduleForm(request.POST)
@@ -173,7 +194,6 @@ class SchedulesView(ReceptionistRequiredMixins, View):
                 messages.success(request, 'Exception added.')
                 return redirect('schedules')
 
-        # Re-render with errors if form was invalid
         paginator = Paginator(schedules, 10)
         page_obj  = paginator.get_page(request.GET.get('page', 1))
 
@@ -192,4 +212,3 @@ class DeleteScheduleView(ReceptionistRequiredMixins, View):
         schedule.delete()
         messages.success(request, 'Schedule deleted.')
         return redirect('schedules')
-
