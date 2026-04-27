@@ -42,8 +42,7 @@ def get_available_slots(doctor, appointment_date, exclude_appointment=None):
         return []
 
     exception = (
-        DoctorScheduleException.objects
-        .filter(doctor=doctor, date=appointment_date)
+        DoctorScheduleException.objects.filter(doctor=doctor, date=appointment_date)
         .order_by("-id")
         .first()
     )
@@ -60,19 +59,19 @@ def get_available_slots(doctor, appointment_date, exclude_appointment=None):
         weekday_code = WEEKDAY_TO_SCHEDULE_DAY[appointment_date.weekday()]
 
         working_windows = list(
-            DoctorSchedule.objects
-            .filter(doctor=doctor, day_of_week=weekday_code)
-            .values_list("start_time", "end_time")
+            DoctorSchedule.objects.filter(
+                doctor=doctor, day_of_week=weekday_code
+            ).values_list("start_time", "end_time")
         )
 
         if not working_windows:
             return []
 
     booked_appointments = Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=appointment_date,
-            status__in=UNAVAILABLE_APPOINTMENT_STATUSES,
-        )
+        doctor=doctor,
+        appointment_date=appointment_date,
+        status__in=UNAVAILABLE_APPOINTMENT_STATUSES,
+    )
     if exclude_appointment is not None:
         booked_appointments = booked_appointments.exclude(pk=exclude_appointment.pk)
 

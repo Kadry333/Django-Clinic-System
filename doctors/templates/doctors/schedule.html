@@ -1,48 +1,190 @@
 {% extends "base.html" %}
+
 {% block title %}Doctor Schedule | ClinicMS{% endblock %}
 {% block page_name %}Doctor Schedule{% endblock %}
+
 {% block content %}
 <section class="space-y-6">
+
     <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+
+        <!-- HEADER -->
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><h1 class="text-2xl font-semibold text-slate-900">Weekly schedule</h1><p class="mt-2 text-sm text-slate-500">Medical schedule UI with availability blocks and session details.</p></div>
-            <a href="{% url 'doctors.schedule.edit' %}" class="flex gap-3">{% include "components/buttons.html" with label="Edit" %}
-                </a>
+
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">Weekly schedule</h1>
+                <p class="mt-2 text-sm text-slate-500">
+                    Manage working hours and availability sessions.
+                </p>
+            </div>
+
+            <!-- CREATE BUTTON -->
+            <a href="{% url 'doctors.schedule.create' %}"
+               class="inline-flex items-center rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition">
+                + Create
+            </a>
+
         </div>
-        <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-{% for day, data in schedule_map.items %}
 
-  <div class="rounded-3xl p-4
-    {% if data.off %}
-      border border-dashed border-slate-300 bg-white
+<!-- GRID -->
+<div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+
+    {% if schedules %}
+
+        {% for schedule in schedules %}
+
+        <div class="rounded-3xl bg-slate-50 p-4 border border-slate-100">
+
+            <!-- TOP ROW -->
+            <div class="flex items-start justify-between">
+
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">
+                        {{ schedule.get_day_of_week_display }}
+                    </p>
+
+                    <p class="mt-2 text-sm text-slate-600">
+                        {{ schedule.start_time }} - {{ schedule.end_time }}
+                    </p>
+
+                    <p class="text-xs text-slate-400 mt-1">
+                        Available session
+                    </p>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="flex gap-2">
+
+                    <!-- EDIT -->
+                    <a href="{% url 'doctors.schedule.edit' schedule.id %}"
+                       class="text-slate-500 hover:text-teal-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="h-5 w-5"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                        </svg>
+                    </a>
+
+                    <!-- DELETE -->
+                    <button
+                        type="button"
+                        onclick="openDeleteModal({{ schedule.id }})"
+                        class="text-slate-500 hover:text-red-600 transition">
+
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="h-5 w-5"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
     {% else %}
-      bg-slate-50
+
+        <!-- EMPTY STATE -->
+        <div class="col-span-full">
+            <div class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white py-16 text-center">
+
+                <!-- ICON -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-10 w-10 text-slate-300"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.5">
+                    <path d="M9 2v2M15 2v2M4 7h16M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7"/>
+                </svg>
+
+                <h3 class="mt-4 text-lg font-semibold text-slate-900">
+                    No schedules yet
+                </h3>
+
+                <p class="mt-2 text-sm text-slate-500">
+                    Start by creating your weekly working schedule.
+                </p>
+
+                <a href="{% url 'doctors.schedule.create' %}"
+                   class="mt-6 inline-flex items-center rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition">
+                    + Create schedule
+                </a>
+
+            </div>
+        </div>
+
     {% endif %}
-  ">
 
-    <!-- Day name -->
-    <p class="text-sm font-semibold text-slate-900">{{ day }}</p>
-
-    {% if data.off %}
-      <!-- OFF state -->
-      <p class="mt-2 text-sm text-slate-500">Day off</p>
-
-    {% else %}
-      <!-- Working hours -->
-      <p class="mt-2 text-sm text-slate-600">
-        {{ data.start }} - {{ data.end }}
-      </p>
-
-      <p class="text-xs text-slate-400 mt-1">
-        Available
-      </p>
-    {% endif %}
-
-  </div>
-
-{% endfor %}        </div>
+</div>
     </div>
-    {% comment %} {% include "components/tables.html" with title="Schedule Exceptions" subtitle="Manage blocked dates, vacations, and overrides." %}
-    {% include "components/states.html" with empty_message="No schedule exceptions were added yet." error_message="Unable to load schedule data." %} {% endcomment %}
+
 </section>
+
+<!-- ================= DELETE MODAL ================= -->
+<div id="deleteModal"
+     class="hidden fixed inset-0 bg-black/40 flex items-center justify-center">
+
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg">
+
+        <h2 class="text-lg font-semibold text-slate-900">Delete schedule?</h2>
+        <p class="text-sm text-slate-500 mt-2">
+            This action cannot be undone.
+        </p>
+
+        <form id="deleteForm" method="POST" class="mt-4">
+            {% csrf_token %}
+
+            <div class="flex justify-end gap-3">
+                <button type="button"
+                        onclick="closeDeleteModal()"
+                        class="px-4 py-2 text-sm rounded-xl bg-slate-100 hover:bg-slate-200">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="px-4 py-2 text-sm rounded-xl bg-red-600 text-white hover:bg-red-700">
+                    Delete
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+    function openDeleteModal(id) {
+        const modal = document.getElementById("deleteModal");
+        const form = document.getElementById("deleteForm");
+
+        form.action = `/doctors/schedule/${id}/delete/`; // adjust to your URL name if needed
+        modal.classList.remove("hidden");
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("deleteModal").classList.add("hidden");
+    }
+</script>
+
 {% endblock %}

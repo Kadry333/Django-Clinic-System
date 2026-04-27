@@ -29,9 +29,19 @@ urlpatterns = [
     ),
     path("schedule/", views.DoctorScheduleView.as_view(), name="doctors.schedule"),
     path(
-        "schedule/edit/",
+        "schedule/create/",
+        views.DoctorScheduleCreateView.as_view(),
+        name="doctors.schedule.create",
+    ),
+    path(
+        "schedule/edit/<int:schedule_id>/",
         views.DoctorScheduleEditView.as_view(),
         name="doctors.schedule.edit",
+    ),
+    path(
+        "schedule/<int:schedule_id>/delete/",
+        views.DoctorScheduleDeleteView.as_view(),
+        name="doctors.schedule.delete",
     ),
     path(
         "schedule/exceptions/",

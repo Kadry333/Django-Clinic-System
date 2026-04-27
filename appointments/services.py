@@ -88,44 +88,43 @@ def get_available_slots(doctor, selected_date):
         if exception.start_time and exception.end_time:
             booked_slots.append((exception.start_time, exception.end_time))
 
-    selected_day_schedule = DoctorSchedule.objects.filter(
-        doctor=doctor, day_of_week=day
-    ).first()
+    schedules = DoctorSchedule.objects.filter(doctor=doctor, day_of_week=day)
 
-    if not selected_day_schedule:
+    if not schedules.exists():
         return []
-    else:
-        start_time = selected_day_schedule.start_time
-        end_time = selected_day_schedule.end_time
 
     session_duration = doctor.session_duration
     buffer_time = doctor.buffer_time or 0
 
-    current = datetime.combine(selected_date, start_time)
-    end_datetime = datetime.combine(selected_date, end_time)
-
     slots = []
 
-    while current + timedelta(minutes=session_duration) <= end_datetime:
-        slot_start = current.time()
-        slot_end = (current + timedelta(minutes=session_duration)).time()
+    for schedule in schedules:
+        start_time = schedule.start_time
+        end_time = schedule.end_time
 
-        is_overlapping = False
+        current = datetime.combine(selected_date, start_time)
+        end_datetime = datetime.combine(selected_date, end_time)
 
-        for booked_start, booked_end in booked_slots:
-            if booked_start < slot_end and booked_end > slot_start:
-                is_overlapping = True
-                break
+        while current + timedelta(minutes=session_duration) <= end_datetime:
+            slot_start = current.time()
+            slot_end = (current + timedelta(minutes=session_duration)).time()
 
-        if not is_overlapping:
-            slots.append(
-                {
-                    "start": slot_start.strftime("%H:%M"),
-                    "end": slot_end.strftime("%H:%M"),
-                    "label": f"{slot_start.strftime('%I:%M %p')} - {slot_end.strftime('%I:%M %p')}",
-                }
-            )
+            is_overlapping = False
 
-        current += timedelta(minutes=session_duration + buffer_time)
+            for booked_start, booked_end in booked_slots:
+                if booked_start < slot_end and booked_end > slot_start:
+                    is_overlapping = True
+                    break
+
+            if not is_overlapping:
+                slots.append(
+                    {
+                        "start": slot_start.strftime("%H:%M"),
+                        "end": slot_end.strftime("%H:%M"),
+                        "label": f"{slot_start.strftime('%I:%M %p')} - {slot_end.strftime('%I:%M %p')}",
+                    }
+                )
+
+            current += timedelta(minutes=session_duration + buffer_time)
 
     return slots

@@ -16,17 +16,17 @@ class DoctorProfile(models.Model):
 
 class DoctorSchedule(models.Model):
     DAYS = [
-        ("mon", "Monday"),
-        ("tue", "Tuesday"),
-        ("wed", "Wednesday"),
-        ("thu", "Thursday"),
-        ("fri", "Friday"),
-        ("sat", "Saturday"),
-        ("sun", "Sunday"),
+        (0, "Monday"),
+        (1, "Tuesday"),
+        (2, "Wednesday"),
+        (3, "Thursday"),
+        (4, "Friday"),
+        (5, "Saturday"),
+        (6, "Sunday"),
     ]
 
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
-    day_of_week = models.CharField(max_length=3, choices=DAYS)
+    day_of_week = models.IntegerField(choices=DAYS)
     start_time = models.TimeField()
     end_time = models.TimeField()
 

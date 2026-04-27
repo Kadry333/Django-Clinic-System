@@ -13,7 +13,12 @@ from django.contrib.auth.models import Group
 from accounts.mixins import AdminRequiredMixins, DoctorRequiredMixins
 from appointments.models import AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
-from .forms import DoctorProfileForm, DoctorScheduleExceptionForm, UserForm
+from .forms import (
+    DoctorProfileForm,
+    DoctorScheduleExceptionForm,
+    DoctorScheduleForm,
+    UserForm,
+)
 
 
 def dashboard_view(request):
@@ -247,204 +252,100 @@ class DoctorDeleteView(AdminRequiredMixins, View):
         return redirect("doctors.list")
 
 
-class DoctorScheduleEditView(DoctorRequiredMixins, View):
-    def build_schedule_map_from_post(self, post_data):
-        days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ]
-
-        schedule_map = {}
-
-        for day in days:
-            is_off = post_data.get(f"{day}_off") == "on"
-
-            schedule_map[day] = {
-                "off": is_off,
-                "start": "" if is_off else post_data.get(f"{day}_start", ""),
-                "end": "" if is_off else post_data.get(f"{day}_end", ""),
-            }
-
-        return schedule_map
-
-    def get(self, request):
-        doctor = get_object_or_404(DoctorProfile, user=request.user)
-        schedules = DoctorSchedule.objects.filter(doctor=doctor).order_by(
-            "day_of_week", "start_time"
-        )
-        days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ]
-        schedule_map = {}
-        for i, day in enumerate(days):
-            day_schedule = schedules.filter(day_of_week=i).first()
-
-            if day_schedule:
-                schedule_map[day] = {
-                    "off": False,
-                    "start": day_schedule.start_time.strftime("%H:%M"),
-                    "end": day_schedule.end_time.strftime("%H:%M"),
-                }
-            else:
-                schedule_map[day] = {
-                    "off": True,
-                    "start": "",
-                    "end": "",
-                }
-
-        exceptions = DoctorScheduleException.objects.filter(doctor=doctor).order_by(
-            "-date"
-        )
-
-        return render(
-            request,
-            "doctors/schedule-edit.html",
-            {
-                "schedule_map": schedule_map,
-                "current_role": "Doctor",
-            },
-        )
-
-    def post(self, request):
-        doctor = get_object_or_404(DoctorProfile, user=request.user)
-        session_duration = doctor.session_duration
-        days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ]
-        for i, day in enumerate(days):
-            is_off = request.POST.get(f"{day}_off") == "on"
-
-            if not is_off:
-                start = request.POST.get(f"{day}_start")
-                end = request.POST.get(f"{day}_end")
-
-                if not start or not end:
-                    messages.error(request, f"{day}: Missing time values")
-                    return render(
-                        request,
-                        "doctors/schedule-edit.html",
-                        {
-                            "schedule_map": self.build_schedule_map_from_post(
-                                request.POST
-                            ),
-                            "current_role": "Doctor",
-                        },
-                    )
-                if start >= end:
-                    messages.error(request, f"{day}: Start must be before end")
-                    return render(
-                        request,
-                        "doctors/schedule-edit.html",
-                        {
-                            "schedule_map": self.build_schedule_map_from_post(
-                                request.POST
-                            ),
-                            "current_role": "Doctor",
-                        },
-                    )
-                start_dt = datetime.strptime(start, "%H:%M")
-                end_dt = datetime.strptime(end, "%H:%M")
-                total_minutes = (end_dt - start_dt).total_seconds() / 60
-                if total_minutes < session_duration:
-                    messages.error(
-                        request,
-                        f"{day}: Total available time must be at least {session_duration} minutes",
-                    )
-                    return render(
-                        request,
-                        "doctors/schedule-edit.html",
-                        {
-                            "schedule_map": self.build_schedule_map_from_post(
-                                request.POST
-                            ),
-                            "current_role": "Doctor",
-                        },
-                    )
-
-        for i, day in enumerate(days):
-            is_off = request.POST.get(f"{day}_off") == "on"
-
-            if is_off:
-                schedule = DoctorSchedule.objects.filter(
-                    doctor=doctor, day_of_week=i
-                ).first()
-                if schedule:
-                    schedule.delete()
-            else:
-                start_time = request.POST.get(f"{day}_start")
-                end_time = request.POST.get(f"{day}_end")
-
-                DoctorSchedule.objects.update_or_create(
-                    doctor=doctor,
-                    day_of_week=i,
-                    defaults={
-                        "start_time": start_time,
-                        "end_time": end_time,
-                    },
-                )
-
-        messages.success(request, "Schedule updated successfully.")
-        return redirect("doctors.schedule")
-
-
 class DoctorScheduleView(DoctorRequiredMixins, View):
     def get(self, request):
         doctor = get_object_or_404(DoctorProfile, user=request.user)
         schedules = DoctorSchedule.objects.filter(doctor=doctor).order_by(
             "day_of_week", "start_time"
         )
-        days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ]
-
-        schedule_map = {}
-        for i, day in enumerate(days):
-            day_schedule = schedules.filter(day_of_week=i).first()
-
-            if day_schedule:
-                schedule_map[day] = {
-                    "off": False,
-                    "start": day_schedule.start_time.strftime("%H:%M"),
-                    "end": day_schedule.end_time.strftime("%H:%M"),
-                }
-            else:
-                schedule_map[day] = {
-                    "off": True,
-                    "start": "",
-                    "end": "",
-                }
 
         return render(
             request,
             "doctors/schedule.html",
             {
-                "schedule_map": schedule_map,
+                "schedules": schedules,
                 "current_role": "Doctor",
             },
         )
+
+
+class DoctorScheduleCreateView(DoctorRequiredMixins, View):
+    def get(self, request):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        form = DoctorScheduleForm(doctor=doctor)
+        return render(
+            request,
+            "doctors/schedule-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+    def post(self, request):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        form = DoctorScheduleForm(request.POST, doctor=doctor)
+
+        if form.is_valid():
+            schedule = form.save(commit=False)
+            schedule.doctor = doctor
+            schedule.save()
+
+            messages.success(request, "Schedule added successfully.")
+            return redirect("doctors.schedule")
+
+        return render(
+            request,
+            "doctors/schedule-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+
+class DoctorScheduleEditView(DoctorRequiredMixins, View):
+    def get(self, request, schedule_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        schedule = get_object_or_404(DoctorSchedule, pk=schedule_id)
+        form = DoctorScheduleForm(instance=schedule, doctor=doctor)
+
+        return render(
+            request,
+            "doctors/schedule-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+    def post(self, request, schedule_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        schedule = get_object_or_404(DoctorSchedule, pk=schedule_id)
+        form = DoctorScheduleForm(request.POST, instance=schedule, doctor=doctor)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Schedule updated successfully.")
+            return redirect("doctors.schedule")
+
+        return render(
+            request,
+            "doctors/schedule-form.html",
+            {
+                "form": form,
+                "current_role": "Doctor",
+            },
+        )
+
+
+class DoctorScheduleDeleteView(DoctorRequiredMixins, View):
+    def post(self, request, schedule_id):
+        doctor = get_object_or_404(DoctorProfile, user=request.user)
+        schedule = get_object_or_404(DoctorSchedule, pk=schedule_id)
+        schedule.delete()
+        messages.success(request, "Schedule deleted successfully.")
+        return redirect("doctors.schedule")
 
 
 class DoctorScheduleExceptionView(DoctorRequiredMixins, View):
