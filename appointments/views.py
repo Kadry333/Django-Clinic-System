@@ -4,7 +4,7 @@ from doctors.models import DoctorProfile
 from patients.models import PatientProfile  
 
 from datetime import datetime, date
-
+from accounts.decorators import patient_required, doctor_required, receptionist_required
 from appointments.models import Appointment, RescheduleRequest, AppointmentReschedule
 from doctors.models import DoctorProfile
 from patients.models import PatientProfile
@@ -18,7 +18,7 @@ from appointments.models import Appointment,RescheduleRequest
 
 from .models import RescheduleRequest
 
-
+@patient_required
 def patient_book_view(request):
     doctors = DoctorProfile.objects.select_related('user').all()
     slots = []
@@ -52,12 +52,12 @@ def patient_book_view(request):
         },
     )
 
-
+@patient_required
 def patient_book_submit(request):
     if request.method != "POST":
         return redirect("book_appointment")
 
-    patient = PatientProfile.objects.first().user
+    patient = request.user
 
     doctor_id = request.POST.get("doctor_id")
     date_str = request.POST.get("date")
@@ -89,9 +89,9 @@ def patient_book_submit(request):
                 "today": date.today().isoformat(),
             },
         )
-        
+@patient_required  
 def patient_appointments_view(request):
-    patient = PatientProfile.objects.first().user
+    patient = request.user
 
     all_appointments = Appointment.objects.filter(
         patient=patient
@@ -121,9 +121,9 @@ def patient_appointments_view(request):
         "reschedule_apt_id": apt_id,
         "reschedule_date": date_str,
     })
-
+@patient_required
 def cancel_appointment(request, appointment_id):
-    patient = PatientProfile.objects.first().user
+    patient = request.user
 
     appointment = get_object_or_404(
         Appointment,
@@ -144,9 +144,9 @@ def cancel_appointment(request, appointment_id):
 
 
 
-
+@patient_required
 def request_reschedule(request, appointment_id):
-    patient = PatientProfile.objects.first().user
+    patient = request.user
 
     appointment = get_object_or_404(
         Appointment,
@@ -200,7 +200,7 @@ def request_reschedule(request, appointment_id):
     
     
     
-    
+@doctor_required
 def doctor_management_view(request):
     return render(
         request,
@@ -210,7 +210,7 @@ def doctor_management_view(request):
         },
     )
 
-
+@receptionist_required
 def receptionist_bookings_view(request):
     return render(
         request,
