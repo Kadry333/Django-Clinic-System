@@ -102,7 +102,10 @@ class PatientBookAppointmentView(patientRequiredMixins, View):
             except IntegrityError:
                 form.available_slots = get_available_slots(doctor, appointment_date)
                 form._set_slot_choices(form.available_slots)
-                form.add_error("slot", "This slot has just been booked. Please choose another available slot.")
+                form.add_error(
+                    "slot",
+                    "This slot has just been booked. Please choose another available slot.",
+                )
                 return self.render_booking_page(request, form)
 
             messages.success(request, "Appointment requested successfully.")
@@ -111,9 +114,11 @@ class PatientBookAppointmentView(patientRequiredMixins, View):
         return self.render_booking_page(request, form)
 
     def render_booking_page(self, request, form):
-        availability_checked = bool(
-            form.data.get("doctor") and form.data.get("appointment_date")
-        ) if form.is_bound else False
+        availability_checked = (
+            bool(form.data.get("doctor") and form.data.get("appointment_date"))
+            if form.is_bound
+            else False
+        )
 
         return render(
             request,
@@ -136,8 +141,7 @@ class PatientAppointmentsView(patientRequiredMixins, ListView):
 
     def get_queryset(self):
         return (
-            Appointment.objects
-            .filter(patient=self.request.user)
+            Appointment.objects.filter(patient=self.request.user)
             .select_related("doctor", "doctor__user")
             .order_by("-appointment_date", "-start_time")
         )
@@ -226,14 +230,16 @@ class PatientRescheduleRequestView(patientRequiredMixins, View):
         return self.render_reschedule_page(request, form)
 
     def render_reschedule_page(self, request, form):
-        availability_checked = bool(form.data.get("preferred_date")) if form.is_bound else False
+        availability_checked = (
+            bool(form.data.get("preferred_date")) if form.is_bound else False
+        )
 
         return render(
             request,
             self.template_name,
             {
                 "form": form,
-                "current_role": "Patient",
+                "current_role": "patient",
                 "appointment": self.appointment,
                 "availability_checked": availability_checked,
                 "available_slots": form.available_slots,
@@ -249,8 +255,7 @@ class PatientConsultationSummaryView(patientRequiredMixins, ListView):
 
     def get_queryset(self):
         return (
-            Consultation.objects
-            .filter(
+            Consultation.objects.filter(
                 appointment__patient=self.request.user,
                 appointment__status="completed",
             )

@@ -1,26 +1,27 @@
-from django.shortcuts import render, redirect,get_object_or_404
-from datetime import datetime
-from doctors.models import DoctorProfile
-from patients.models import PatientProfile  
-
-from datetime import datetime, date
-
-from appointments.models import Appointment, RescheduleRequest, AppointmentReschedule
-from doctors.models import DoctorProfile
-from patients.models import PatientProfile
-
-from .utils import generate_slots
-from .services import book_appointment
+from datetime import date, datetime, timedelta
 
 from django.contrib import messages
-from appointments.models import Appointment,RescheduleRequest
+from django.db import IntegrityError
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views import View
 
+from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
+from doctors.models import DoctorProfile
+from patients.models import PatientProfile
+from patients.services import get_available_slots
 
-from .models import RescheduleRequest
+from .services import book_appointment
+from .utils import generate_slots
+
+User = get_user_model()
 
 
 def patient_book_view(request):
-    doctors = DoctorProfile.objects.select_related('user').all()
+    doctors = DoctorProfile.objects.select_related("user").all()
     slots = []
     error = None
 
@@ -89,70 +90,70 @@ def patient_book_submit(request):
                 "today": date.today().isoformat(),
             },
         )
-        
+
+
 def patient_appointments_view(request):
     patient = PatientProfile.objects.first().user
 
-    all_appointments = Appointment.objects.filter(
-        patient=patient
-    ).select_related('doctor__user').order_by('-appointment_date')
+    all_appointments = (
+        Appointment.objects.filter(patient=patient)
+        .select_related("doctor__user")
+        .order_by("-appointment_date")
+    )
 
-    upcoming = all_appointments.filter(status__in=['requested', 'confirmed', 'checked_in'])
-    history  = all_appointments.filter(status__in=['completed', 'cancelled', 'no_show'])
+    upcoming = all_appointments.filter(
+        status__in=["requested", "confirmed", "checked_in"]
+    )
+    history = all_appointments.filter(status__in=["completed", "cancelled", "no_show"])
 
     reschedule_slots = []
-    apt_id    = request.GET.get("apt_id")
+    apt_id = request.GET.get("apt_id")
     doctor_id = request.GET.get("doctor_id")
-    date_str  = request.GET.get("date")
+    date_str = request.GET.get("date")
 
     if doctor_id and date_str:
         try:
             doctor = DoctorProfile.objects.get(id=doctor_id)
-            date   = datetime.strptime(date_str, "%Y-%m-%d").date()
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
             reschedule_slots = generate_slots(doctor, date)
         except:
             reschedule_slots = []
 
-    return render(request, "appointments/my_appointments.html", {
-        "current_role": "Patient",
-        "upcoming": upcoming,
-        "history": history,
-        "reschedule_slots": reschedule_slots,
-        "reschedule_apt_id": apt_id,
-        "reschedule_date": date_str,
-    })
+    return render(
+        request,
+        "appointments/my_appointments.html",
+        {
+            "current_role": "Patient",
+            "upcoming": upcoming,
+            "history": history,
+            "reschedule_slots": reschedule_slots,
+            "reschedule_apt_id": apt_id,
+            "reschedule_date": date_str,
+        },
+    )
+
 
 def cancel_appointment(request, appointment_id):
     patient = PatientProfile.objects.first().user
 
-    appointment = get_object_or_404(
-        Appointment,
-        id=appointment_id,
-        patient=patient
-    )
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
 
     # rule
-    if appointment.status not in ['requested', 'confirmed']:
+    if appointment.status not in ["requested", "confirmed"]:
         messages.error(request, "You cannot cancel this appointment.")
         return redirect("my_appointments")
 
-    appointment.status = 'cancelled'
+    appointment.status = "cancelled"
     appointment.save()
 
     messages.success(request, "Appointment cancelled successfully.")
     return redirect("my_appointments")
 
 
-
-
 def request_reschedule(request, appointment_id):
     patient = PatientProfile.objects.first().user
 
-    appointment = get_object_or_404(
-        Appointment,
-        id=appointment_id,
-        patient=patient
-    )
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
 
     if request.method != "POST":
         return redirect("my_appointments")
@@ -162,8 +163,7 @@ def request_reschedule(request, appointment_id):
         return redirect("my_appointments")
 
     if RescheduleRequest.objects.filter(
-        appointment=appointment,
-        status="pending"
+        appointment=appointment, status="pending"
     ).exists():
         messages.warning(request, "Already requested.")
         return redirect("my_appointments")
@@ -179,28 +179,13 @@ def request_reschedule(request, appointment_id):
         requested_by=patient,
         preferred_date=preferred_date,
         preferred_time=preferred_time,
-        reason="Patient requested reschedule"
+        reason="Patient requested reschedule",
     )
 
     messages.success(request, "Request sent.")
     return redirect("my_appointments")
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
 def doctor_management_view(request):
     return render(
         request,
@@ -229,3 +214,327 @@ def receptionist_reschedule_view(request):
             "current_role": "Receptionist",
         },
     )
+
+
+class DoctorAppointmentsView(View):
+    sort_map = {
+        "doctor": ("doctor__user__first_name", "doctor__user__last_name"),
+        "patient": ("patient__first_name", "patient__last_name"),
+        "date": ("appointment_date", "start_time"),
+        "start_time": ("start_time",),
+        "session_duration": ("doctor__session_duration",),
+        "status": ("status",),
+    }
+
+    def get(self, request):
+        current_doctor = None
+        base_queryset = Appointment.objects.select_related("doctor__user", "patient")
+
+        if getattr(request.user, "is_doctor", False):
+            current_doctor = get_object_or_404(DoctorProfile, user=request.user)
+            base_queryset = base_queryset.filter(doctor=current_doctor)
+
+        search_query = request.GET.get("search", "").strip()
+        sort = request.GET.get("sort", "date")
+        direction = request.GET.get("direction", "desc")
+        status = request.GET.get("status", "").strip()
+        doctor_id = request.GET.get("doctor", "").strip()
+        patient_id = request.GET.get("patient", "").strip()
+        appointment_date = request.GET.get("date", "").strip()
+
+        appointments = base_queryset
+
+        if search_query:
+            appointments = appointments.filter(
+                Q(doctor__user__first_name__icontains=search_query)
+                | Q(doctor__user__last_name__icontains=search_query)
+                | Q(doctor__user__email__icontains=search_query)
+                | Q(patient__first_name__icontains=search_query)
+                | Q(patient__last_name__icontains=search_query)
+                | Q(patient__email__icontains=search_query)
+            )
+
+        if status:
+            appointments = appointments.filter(status=status)
+
+        if doctor_id and current_doctor is None:
+            appointments = appointments.filter(doctor_id=doctor_id)
+
+        if patient_id:
+            appointments = appointments.filter(patient_id=patient_id)
+
+        if appointment_date:
+            appointments = appointments.filter(appointment_date=appointment_date)
+
+        sort_fields = self.sort_map.get(sort, "date")
+        if direction == "desc":
+            ordering = [f"-{field}" for field in sort_fields]
+        else:
+            direction = "asc"
+            ordering = list(sort_fields)
+        appointments = appointments.order_by(*ordering, "id")
+
+        if current_doctor is not None:
+            doctors = (
+                DoctorProfile.objects.filter(id=current_doctor.id)
+                .select_related("user")
+                .order_by("user__first_name", "user__last_name", "user__email")
+            )
+        else:
+            doctors = DoctorProfile.objects.select_related("user").order_by(
+                "user__first_name", "user__last_name", "user__email"
+            )
+
+        patient_ids = base_queryset.values_list("patient_id", flat=True).distinct()
+        patients = User.objects.filter(id__in=patient_ids).order_by(
+            "first_name", "last_name", "email"
+        )
+
+        paginator = Paginator(appointments, 10)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+
+        return render(
+            request,
+            "appointments/doctor-appointments.html",
+            {
+                "current_role": "Doctor",
+                "appointments": page_obj,
+                "page_obj": page_obj,
+                "status_choices": Appointment.STATUS_CHOICES,
+                "doctors": doctors,
+                "patients": patients,
+                "search_query": search_query,
+                "current_sort": sort,
+                "current_direction": direction,
+                "selected_status": status,
+                "selected_doctor": doctor_id,
+                "selected_patient": patient_id,
+                "selected_date": appointment_date,
+            },
+        )
+
+
+class DoctorAppointmentView(View):
+    def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor__user", "patient"),
+            id=appointment_id,
+        )
+
+        if getattr(request.user, "is_doctor", False):
+            doctor = get_object_or_404(DoctorProfile, user=request.user)
+            if appointment.doctor != doctor:
+                messages.error(request, "You do not have permission to view this.")
+                return redirect("appointments")
+
+        reschedule_requests = (
+            RescheduleRequest.objects.filter(appointment=appointment)
+            .select_related("requested_by")
+            .order_by("-created_at")
+        )
+        reschedule_history = (
+            AppointmentReschedule.objects.filter(appointment=appointment)
+            .select_related("changed_by")
+            .order_by("-created_at")
+        )
+
+        return render(
+            request,
+            "appointments/doctor-appointment.html",
+            {
+                "current_role": "Doctor",
+                "appointment": appointment,
+                "reschedule_requests": reschedule_requests,
+                "reschedule_history": reschedule_history,
+            },
+        )
+
+
+class StaffCancelAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        if appointment.status not in ["requested", "confirmed"]:
+            messages.error(request, "Cannot cancel this appointment.")
+            return redirect("appointments")
+
+        appointment.status = "cancelled"
+        appointment.save()
+        RescheduleRequest.objects.filter(appointment=appointment).delete()
+        AppointmentReschedule.objects.filter(appointment=appointment).delete()
+
+        messages.success(request, "Appointment cancelled successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffConfirmAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        if appointment.status != "requested":
+            messages.error(request, "Only requested appointments can be confirmed.")
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        appointment.status = "confirmed"
+        appointment.save()
+
+        messages.success(request, "Appointment confirmed successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffMarkCheckinAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        if appointment.status != "confirmed":
+            messages.error(request, "Only confirmed appointments can be checked in.")
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        appointment.status = "checked_in"
+        appointment.check_in_time = timezone.now()
+        appointment.save()
+
+        messages.success(request, "Appointment checked in successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffMarkCompleteAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        if appointment.status != "checked_in":
+            messages.error(
+                request,
+                "Only checked-in appointments can be marked complete.",
+            )
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        appointment.status = "completed"
+        appointment.save()
+
+        messages.success(request, "Appointment marked as completed successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffMarkNoShowAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+
+        if appointment.status != "confirmed":
+            messages.error(
+                request,
+                "Only confirmed appointments can be marked as no-show.",
+            )
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        appointment.status = "no_show"
+        appointment.save()
+
+        messages.success(request, "Appointment marked as no-show successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffConfirmRescheduleAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor"),
+            id=appointment_id,
+        )
+        reschedule_request = (
+            RescheduleRequest.objects.filter(
+                appointment=appointment,
+                status="pending",
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+        if not reschedule_request:
+            messages.error(request, "No pending reschedule request found.")
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        old_date = appointment.appointment_date
+        old_time = appointment.start_time
+        new_date = reschedule_request.preferred_date
+        new_time = reschedule_request.preferred_time
+
+        if not new_date or not new_time:
+            messages.error(request, "The reschedule request is missing date or time.")
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        end_time = (
+            datetime.combine(new_date, new_time)
+            + timedelta(minutes=appointment.doctor.session_duration)
+        ).time()
+
+        appointment.appointment_date = new_date
+        appointment.start_time = new_time
+        appointment.end_time = end_time
+        appointment.status = "confirmed"
+
+        try:
+            appointment.save()
+        except IntegrityError:
+            messages.error(
+                request,
+                "This requested slot is no longer available. Please reschedule to another slot.",
+            )
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        AppointmentReschedule.objects.create(
+            appointment=appointment,
+            old_date=old_date,
+            old_time=old_time,
+            new_date=new_date,
+            new_time=new_time,
+            changed_by=request.user,
+            reason=reschedule_request.reason or "Approved patient reschedule request.",
+        )
+
+        reschedule_request.status = "approved"
+        reschedule_request.save()
+
+        messages.success(request, "Reschedule request confirmed successfully.")
+        return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffRejectRescheduleAppointmentView(View):
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        reschedule_request = (
+            RescheduleRequest.objects.filter(
+                appointment=appointment,
+                status="pending",
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+        if not reschedule_request:
+            messages.error(request, "No pending reschedule request found.")
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
+        reschedule_request.status = "rejected"
+        reschedule_request.save()
+
+        if appointment.status == "requested":
+            appointment.status = "cancelled"
+            appointment.save()
+            RescheduleRequest.objects.filter(
+                appointment=appointment,
+                status="pending",
+            ).delete()
+            AppointmentReschedule.objects.filter(appointment=appointment).delete()
+            messages.success(
+                request,
+                "Reschedule request rejected and appointment cancelled successfully.",
+            )
+        elif appointment.status == "confirmed":
+            messages.success(request, "Reschedule request rejected successfully.")
+        else:
+            messages.warning(
+                request,
+                "Reschedule request rejected, but the appointment status was unchanged.",
+            )
+
+        return redirect("appointments.appointment", appointment_id=appointment.id)
