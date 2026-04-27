@@ -63,6 +63,11 @@ urlpatterns = [
         name="appointments.reject_reschedule",
     ),
     path(
+        "doctor-management/<int:appointment_id>/reschedule/",
+        views.StaffRescheduleAppointmentView.as_view(),
+        name="appointments.reschedule",
+    ),
+    path(
         "receptionist-bookings/",
         views.receptionist_bookings_view,
         name="receptionist_bookings",

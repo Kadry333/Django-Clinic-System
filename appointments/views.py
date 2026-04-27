@@ -1,20 +1,22 @@
 from datetime import date, datetime, timedelta
+from http.client import HTTPResponse
 
 from django.contrib import messages
 from django.db import IntegrityError
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 
+from appointments.forms import AppointmentRescheduleForm
 from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
 from doctors.models import DoctorProfile
 from patients.models import PatientProfile
-from patients.services import get_available_slots
 
-from .services import book_appointment
+from .services import book_appointment, get_available_slots
 from .utils import generate_slots
 
 User = get_user_model()
@@ -467,6 +469,14 @@ class StaffConfirmRescheduleAppointmentView(View):
             + timedelta(minutes=appointment.doctor.session_duration)
         ).time()
 
+        available_slots = get_available_slots(appointment.doctor, new_date)
+        if new_time.strftime("%I:%M %p") not in available_slots:
+            messages.error(
+                request,
+                "The requested slot is no longer available. Please ask the patient to submit a new reschedule request with an available slot.",
+            )
+            return redirect("appointments.appointment", appointment_id=appointment.id)
+
         appointment.appointment_date = new_date
         appointment.start_time = new_time
         appointment.end_time = end_time
@@ -538,3 +548,88 @@ class StaffRejectRescheduleAppointmentView(View):
             )
 
         return redirect("appointments.appointment", appointment_id=appointment.id)
+
+
+class StaffRescheduleAppointmentView(View):
+    def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor"),
+            id=appointment_id,
+        )
+        date_query = request.GET.get("date", "").strip()
+
+        selected_date = None
+        available_slots = []
+
+        if date_query:
+            try:
+                selected_date = datetime.strptime(date_query, "%Y-%m-%d").date()
+                available_slots = get_available_slots(appointment.doctor, selected_date)
+            except ValueError:
+                selected_date = None
+
+        form = AppointmentRescheduleForm()
+
+        return render(
+            request,
+            "appointments/staff-reschedule.html",
+            {
+                "form": form,
+                "current_role": "Staff",
+                "selected_date": selected_date,
+                "available_slots": available_slots,
+                "appointment": appointment,
+                "doctor": appointment.doctor,
+            },
+        )
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        form = AppointmentRescheduleForm(request.POST)
+
+        if not form.is_valid():
+            messages.error(request, "Please correct the errors below.")
+
+        else:
+            new_date = form.cleaned_data["new_date"]
+            new_time = form.cleaned_data["new_time"]
+            reason = form.cleaned_data["reason"]
+
+            end_time = (
+                datetime.combine(new_date, new_time)
+                + timedelta(minutes=appointment.doctor.session_duration)
+            ).time()
+
+            old_time = appointment.start_time
+            old_date = appointment.appointment_date
+            appointment.appointment_date = new_date
+            appointment.start_time = new_time
+            appointment.end_time = end_time
+
+            try:
+                appointment.save()
+            except:
+                messages.error(
+                    request,
+                    "The selected slot is no longer available. Please choose another slot.",
+                )
+                return redirect(
+                    "appointments.appointment", appointment_id=appointment.id
+                )
+
+            AppointmentReschedule.objects.create(
+                appointment=appointment,
+                old_date=old_date,
+                old_time=old_time,
+                new_date=new_date,
+                new_time=new_time,
+                changed_by=request.user,
+                reason=reason or "Staff rescheduled the appointment.",
+            )
+
+            RescheduleRequest.objects.filter(
+                appointment=appointment,
+                status="pending",
+            ).delete()
+
+            return redirect("appointments.appointment", appointment_id=appointment.id)

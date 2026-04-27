@@ -131,9 +131,9 @@
                                 <button type="button" @click="activeModal = 'reject-reschedule'" class="inline-flex items-center justify-center rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700">
                                     Reject Request
                                 </button>
-                                {% comment %} <a href="{% url 'appointments.reschedule' appointment.id %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                                <a href="{% url 'appointments.reschedule' appointment.id %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
                                     Reschedule to Another Slot
-                                </a> {% endcomment %}
+                                </a>
                                 {% else %}
                                 <button type="button" disabled class="inline-flex cursor-not-allowed items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400">
                                     Request Already {{ request_item.get_status_display }}
@@ -252,9 +252,9 @@
                         Mark No Show
                     </button>
 
-                    {% comment %} <a href="{% url 'appointments.reschedule' appointment.id %}" {% if appointment.status == "cancelled" %}aria-disabled="true"{% endif %} class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'cancelled' %}pointer-events-none cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% else %}border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50{% endif %}">
+                    <a href="{% url 'appointments.reschedule' appointment.id %}" {% if appointment.status == "cancelled" %}aria-disabled="true"{% endif %} class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'cancelled' %}pointer-events-none cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% else %}border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50{% endif %}">
                         Reschedule to Another Slot
-                    </a> {% endcomment %}
+                    </a>
                 </div>
             </div>
         </div>
