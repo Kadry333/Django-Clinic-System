@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title|default:"Schedule Exception" }} | ClinicMS{% endblock %}
+{% block page_name %}{{ page_heading|default:"Schedule Exception" }}{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-4xl">
+
+    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+
+        <!-- HEADER -->
+        <div class="border-b border-slate-100 pb-5">
+            <h1 class="text-2xl font-semibold text-slate-900">
+                {{ page_heading|default:"Schedule Exception" }}
+            </h1>
+            <p class="mt-2 text-sm text-slate-500">
+                Add or update a special schedule exception for this doctor.
+            </p>
+        </div>
+
+        <form method="POST" class="mt-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- NON FIELD ERRORS -->
+            {% if form.non_field_errors %}
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid gap-5 md:grid-cols-2">
+
+                <!-- DATE -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        Date
+                    </label>
+
+                    {{ form.date }}
+
+                    {% for error in form.date.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- IS DAY OFF -->
+                <div class="flex items-center gap-2 mt-6 md:mt-0">
+                    {{ form.is_day_off }}
+                    <label class="text-sm font-medium text-slate-700">
+                        Mark as day off
+                    </label>
+                </div>
+
+                {% for error in form.is_day_off.errors %}
+                    <p class="text-sm text-rose-600">{{ error }}</p>
+                {% endfor %}
+
+                <!-- START TIME -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        Start time
+                    </label>
+
+                    {{ form.start_time }}
+
+                    {% for error in form.start_time.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- END TIME -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        End time
+                    </label>
+
+                    {{ form.end_time }}
+
+                    {% for error in form.end_time.errors %}
+                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <!-- GLOBAL ERRORS -->
+            {% if form.errors %}
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- ACTIONS -->
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+
+                <a href="{% url 'doctors.schedule.exceptions' %}"
+                   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                    Save
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+{% endblock %}

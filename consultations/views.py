@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from notifications.models import Notification
 
 from appointments.models import AppointmentQueue
 from consultations.models import Consultation, Prescription, MedicalTest
@@ -51,10 +52,7 @@ def consultation_submit_view(request, queue_id):
 
     for t in tests:
         if t:
-            MedicalTest.objects.create(
-                consultation=consultation,
-                test_name=t
-            )
+            MedicalTest.objects.create(consultation=consultation, test_name=t)
 
     q.status = "done"
     q.save()
@@ -62,9 +60,17 @@ def consultation_submit_view(request, queue_id):
     appointment.status = "completed"
     appointment.save()
 
+    Notification.objects.create(
+        user=appointment.patient,
+        title="Consultation summary ready",
+        message="Your consultation summary is now available.",
+        notification_type=Notification.NotificationType.CONSULTATION_READY,
+    )
+
     messages.success(request, "Consultation completed")
     return redirect("doctor_dashboard")
-    
+
+
 def summary_view(request):
     return render(
         request,

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from accounts.models import User
+from doctors.models import DoctorProfile
 
 
 class Command(BaseCommand):
@@ -14,6 +15,14 @@ class Command(BaseCommand):
         doctor.last_name  = 'Ali'
         doctor.save()
         doctor.groups.add(Group.objects.get(name='doctor'))
+        DoctorProfile.objects.get_or_create(
+            user=doctor,
+            defaults={
+                'specialization': 'General Medicine',
+                'session_duration': 30,
+                'buffer_time': 5,
+            },
+        )
         self.stdout.write(self.style.SUCCESS('Doctor created'))
 
         receptionist, created = User.objects.get_or_create(email='receptionist@clinicms.com')
