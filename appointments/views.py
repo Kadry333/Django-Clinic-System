@@ -470,13 +470,15 @@ class StaffConfirmRescheduleAppointmentView(View):
         ).time()
 
         available_slots = get_available_slots(appointment.doctor, new_date)
-        if new_time.strftime("%I:%M %p") not in available_slots:
+
+        new_time_str = new_time.strftime("%I:%M %p")
+
+        if not any(slot["label"].startswith(new_time_str) for slot in available_slots):
             messages.error(
                 request,
                 "The requested slot is no longer available. Please ask the patient to submit a new reschedule request with an available slot.",
             )
             return redirect("appointments.appointment", appointment_id=appointment.id)
-
         appointment.appointment_date = new_date
         appointment.start_time = new_time
         appointment.end_time = end_time
