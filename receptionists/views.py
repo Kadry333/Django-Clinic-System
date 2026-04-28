@@ -72,7 +72,8 @@ class BookingsView(ReceptionistRequiredMixins, View):
 
 class CheckInQueueView(ReceptionistRequiredMixins, View):
     def get(self, request):
-        today = timezone.now().date()
+        today = timezone.localtime(timezone.now()).date()
+        print(today)
 
         appointments = Appointment.objects.select_related(
             'patient', 'doctor__user'
@@ -96,7 +97,7 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
     def post(self, request):
         appointment_id = request.POST.get('appointment_id')
         appointment    = get_object_or_404(Appointment, id=appointment_id)
-        today          = timezone.now().date()
+        today          = timezone.localtime(timezone.now()).date()
 
         if appointment.appointment_date != today:
             messages.error(request, "This appointment is not for today.")
@@ -112,7 +113,7 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
             return redirect('checkin_queue')
 
         appointment.status        = 'checked_in'
-        appointment.check_in_time = timezone.now()
+        appointment.check_in_time = timezone.localtime(timezone.now())
         appointment.save()
 
         AppointmentQueue.objects.create(

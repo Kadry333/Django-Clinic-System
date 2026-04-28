@@ -35,10 +35,14 @@ def book_appointment(patient, doctor, date, start_time):
         raise Exception("Invalid slot")
 
     if Appointment.objects.filter(
-        doctor=doctor, appointment_date=date, start_time=start_time
+    doctor=doctor,
+    appointment_date=date,
+    start_time=start_time,
+    status__in=['requested', 'confirmed', 'checked_in']
     ).exists():
         raise Exception("Slot already booked")
 
+      
     patient_appointments = Appointment.objects.filter(
         patient=patient,
         appointment_date=date,

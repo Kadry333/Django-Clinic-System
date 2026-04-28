@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from doctors.models import DoctorProfile
 from django.utils import timezone
+from django.db.models import UniqueConstraint, Q
 
 User = settings.AUTH_USER_MODEL
 
@@ -30,12 +31,25 @@ class Appointment(models.Model):
     check_in_time = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
-        unique_together = [
-            ('doctor', 'appointment_date', 'start_time'),
-            ('patient', 'appointment_date', 'start_time'),
-        ]
+            constraints = [
+                UniqueConstraint(
+            fields=['doctor', 'appointment_date', 'start_time'],
+            condition=Q(status__in=['requested', 'confirmed', 'checked_in']),
+            name='unique_active_doctor_slot'
+        ),
+                 UniqueConstraint(
+            fields=['patient', 'appointment_date', 'start_time'],
+            condition=Q(status__in=['requested', 'confirmed', 'checked_in']),
+            name='unique_active_patient_slot'
+        ),
+        
+       
+    ]
+
+
+
 
 
 

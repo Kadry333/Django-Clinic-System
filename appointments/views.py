@@ -1,193 +1,186 @@
-from datetime import date, datetime, timedelta
-from http.client import HTTPResponse
+from datetime import date, datetime
 
 from django.contrib import messages
-from django.db import IntegrityError
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views import View
 
-from appointments.forms import AppointmentRescheduleForm
-from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
+from accounts.mixins import patientRequiredMixins
+from appointments.models import Appointment, RescheduleRequest
 from doctors.models import DoctorProfile
-from patients.models import PatientProfile
 
-from .services import book_appointment, get_available_slots
+from .services import book_appointment
 from .utils import generate_slots
 
-User = get_user_model()
 
 
-def patient_book_view(request):
-    doctors = DoctorProfile.objects.select_related("user").all()
-    slots = []
-    error = None
+class PatientBookView(patientRequiredMixins, View):
 
-    doctor_id = request.GET.get("doctor_id")
-    date_str = request.GET.get("date")
+    def get(self, request):
+        
+        doctors = DoctorProfile.objects.select_related("user").all()
+        slots = []
+        error = None
 
-    if doctor_id and date_str:
-        try:
-            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        doctor_id = request.GET.get("doctor_id")
+        date_str = request.GET.get("date")
 
-            if selected_date < date.today():
-                error = "Invalid date"
-            else:
-                doctor = DoctorProfile.objects.get(id=doctor_id)
-                slots = generate_slots(doctor, selected_date)
+        if doctor_id and date_str:
+            try:
+                selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-        except Exception as e:
-            error = str(e)
+                if selected_date < date.today():
+                    error = "Invalid date"
+                else:
+                    doctor = DoctorProfile.objects.get(id=doctor_id)
+                    slots = generate_slots(doctor, selected_date)
 
-    return render(
-        request,
-        "appointments/book.html",
-        {
+            except Exception as e:
+                error = str(e)
+
+        return render(request, "appointments/book.html", {
             "current_role": "Patient",
             "doctors": doctors,
             "slots": slots,
             "error": error,
             "today": date.today().isoformat(),
-        },
-    )
+        })
 
 
-def patient_book_submit(request):
-    if request.method != "POST":
-        return redirect("book_appointment")
 
-    patient = PatientProfile.objects.first().user
+class PatientBookSubmitView(patientRequiredMixins, View):
 
-    doctor_id = request.POST.get("doctor_id")
-    date_str = request.POST.get("date")
-    time_str = request.POST.get("time")
+    def post(self, request):
+        patient = request.user 
 
-    try:
-        doctor = DoctorProfile.objects.get(id=doctor_id)
-        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        selected_time = datetime.strptime(time_str, "%I:%M %p").time()
+        doctor_id = request.POST.get("doctor_id")
+        date_str = request.POST.get("date")
+        time_str = request.POST.get("time")
 
-        if selected_date < date.today():
-            raise Exception("Invalid date")
+        try:
+            doctor = DoctorProfile.objects.get(id=doctor_id)
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            selected_time = datetime.strptime(time_str, "%I:%M %p").time()
 
-        book_appointment(patient, doctor, selected_date, selected_time)
+            if selected_date < date.today():
+                raise Exception("Invalid date")
 
-        messages.success(request, "Appointment booked successfully")
-        return redirect("my_appointments")
+            book_appointment(patient, doctor, selected_date, selected_time)
 
-    except Exception as e:
-        doctors = DoctorProfile.objects.all()
-        return render(
-            request,
-            "appointments/book.html",
-            {
+            messages.success(request, "Appointment booked successfully")
+            return redirect("my_appointments")
+
+        except Exception as e:
+            doctors = DoctorProfile.objects.all()
+            return render(request, "appointments/book.html", {
                 "current_role": "Patient",
                 "doctors": doctors,
                 "error": str(e),
                 "slots": [],
                 "today": date.today().isoformat(),
-            },
+            })
+
+
+
+class PatientAppointmentsView(patientRequiredMixins, View):
+
+    def get(self, request):
+        patient = request.user
+
+        all_appointments = (
+            Appointment.objects.filter(patient=patient)
+            .select_related("doctor__user")
+            .order_by("-appointment_date")
         )
 
+        upcoming = all_appointments.filter(
+            status__in=["requested", "confirmed", "checked_in"]
+        )
+        history = all_appointments.filter(
+            status__in=["completed", "cancelled", "no_show"]
+        )
 
-def patient_appointments_view(request):
-    patient = PatientProfile.objects.first().user
+        reschedule_slots = []
+        apt_id = request.GET.get("apt_id")
+        doctor_id = request.GET.get("doctor_id")
+        date_str = request.GET.get("date")
 
-    all_appointments = (
-        Appointment.objects.filter(patient=patient)
-        .select_related("doctor__user")
-        .order_by("-appointment_date")
-    )
+        if doctor_id and date_str:
+            try:
+                doctor = DoctorProfile.objects.get(id=doctor_id)
+                selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                reschedule_slots = generate_slots(doctor, selected_date)
+            except:
+                reschedule_slots = []
 
-    upcoming = all_appointments.filter(
-        status__in=["requested", "confirmed", "checked_in"]
-    )
-    history = all_appointments.filter(status__in=["completed", "cancelled", "no_show"])
-
-    reschedule_slots = []
-    apt_id = request.GET.get("apt_id")
-    doctor_id = request.GET.get("doctor_id")
-    date_str = request.GET.get("date")
-
-    if doctor_id and date_str:
-        try:
-            doctor = DoctorProfile.objects.get(id=doctor_id)
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            reschedule_slots = generate_slots(doctor, date)
-        except:
-            reschedule_slots = []
-
-    return render(
-        request,
-        "appointments/my_appointments.html",
-        {
+        return render(request, "appointments/my_appointments.html", {
             "current_role": "Patient",
             "upcoming": upcoming,
             "history": history,
             "reschedule_slots": reschedule_slots,
             "reschedule_apt_id": apt_id,
             "reschedule_date": date_str,
-        },
-    )
+        })
 
 
-def cancel_appointment(request, appointment_id):
-    patient = PatientProfile.objects.first().user
 
-    appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
+class CancelAppointmentView(patientRequiredMixins, View):
 
-    # rule
-    if appointment.status not in ["requested", "confirmed"]:
-        messages.error(request, "You cannot cancel this appointment.")
+    def post(self, request, appointment_id):
+        patient = request.user
+
+        appointment = get_object_or_404(
+            Appointment, id=appointment_id, patient=patient
+        )
+
+        if appointment.status not in ["requested", "confirmed"]:
+            messages.error(request, "You cannot cancel this appointment.")
+            return redirect("my_appointments")
+
+        appointment.status = "cancelled"
+        appointment.save()
+
+        messages.success(request, "Appointment cancelled successfully.")
         return redirect("my_appointments")
 
-    appointment.status = "cancelled"
-    appointment.save()
-
-    messages.success(request, "Appointment cancelled successfully.")
-    return redirect("my_appointments")
 
 
-def request_reschedule(request, appointment_id):
-    patient = PatientProfile.objects.first().user
+class RequestRescheduleView(patientRequiredMixins, View):
 
-    appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
+    def post(self, request, appointment_id):
+        patient = request.user  
 
-    if request.method != "POST":
+        appointment = get_object_or_404(
+            Appointment, id=appointment_id, patient=patient
+        )
+
+        if appointment.status not in ["requested", "confirmed"]:
+            messages.error(request, "Cannot request reschedule.")
+            return redirect("my_appointments")
+
+        if RescheduleRequest.objects.filter(
+            appointment=appointment, status="pending"
+        ).exists():
+            messages.warning(request, "Already requested.")
+            return redirect("my_appointments")
+
+        date_str = request.POST.get("date")
+        time_str = request.POST.get("time")
+
+        preferred_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        preferred_time = datetime.strptime(time_str, "%I:%M %p").time()
+
+        RescheduleRequest.objects.create(
+            appointment=appointment,
+            requested_by=patient,
+            preferred_date=preferred_date,
+            preferred_time=preferred_time,
+            reason="Patient requested reschedule",
+        )
+
+        messages.success(request, "Request sent.")
         return redirect("my_appointments")
-
-    if appointment.status not in ["requested", "confirmed"]:
-        messages.error(request, "Cannot request reschedule.")
-        return redirect("my_appointments")
-
-    if RescheduleRequest.objects.filter(
-        appointment=appointment, status="pending"
-    ).exists():
-        messages.warning(request, "Already requested.")
-        return redirect("my_appointments")
-
-    date_str = request.POST.get("date")
-    time_str = request.POST.get("time")
-
-    preferred_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    preferred_time = datetime.strptime(time_str, "%I:%M %p").time()
-
-    RescheduleRequest.objects.create(
-        appointment=appointment,
-        requested_by=patient,
-        preferred_date=preferred_date,
-        preferred_time=preferred_time,
-        reason="Patient requested reschedule",
-    )
-
-    messages.success(request, "Request sent.")
-    return redirect("my_appointments")
-
-
+    
+    
 def doctor_management_view(request):
     return render(
         request,
