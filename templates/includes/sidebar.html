@@ -155,13 +155,38 @@
                         <span class="block text-xs {% if request.path == '/analytics/admin-dashboard/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Monitor clinic performance</span>
                     </span>
                 </a>
-                <a href="/users/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/users/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/users/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a8.965 8.965 0 0 0-6-2.22 8.965 8.965 0 0 0-6 2.22m12 0a9 9 0 1 0-12 0m12 0A9 9 0 0 1 12 21a9 9 0 0 1-6-2.28M15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+<a href="{% url 'patients:admin_patients' %}" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/patients/admin/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/patients/admin/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 19.5a7.5 7.5 0 0 1 15 0" />
+                        </svg>
                     </span>
                     <span class="min-w-0">
-                        <span class="block">Users</span>
-                        <span class="block text-xs {% if request.path == '/users/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Manage staff and patient access</span>
+                        <span class="block">Patients</span>
+                        <span class="block text-xs {% if request.path == '/patients/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Manage patient accounts</span>
+                    </span>
+                </a>
+
+                <a href="/doctors/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/doctors/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/doctors/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6m-7.5 4.5h15A2.25 2.25 0 0 0 21.75 17.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                        </svg>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block">Doctors</span>
+                        <span class="block text-xs {% if request.path == '/doctors/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Manage doctor accounts</span>
+                    </span>
+                </a>
+
+                <a href="/receptionists/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/receptionists/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/receptionists/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a8.965 8.965 0 0 0-6-2.22 8.965 8.965 0 0 0-6 2.22M15 9a3 3 0 1 1-6 0M3.75 21h16.5" />
+                        </svg>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block">Receptionists</span>
+                        <span class="block text-xs {% if request.path == '/receptionists/' %}text-teal-50/80{% else %}text-slate-400{% endif %}">Manage reception staff</span>
                     </span>
                 </a>
                 <a href="/analytics/dashboard/" class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/analytics/dashboard/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">

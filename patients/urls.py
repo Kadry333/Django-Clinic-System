@@ -25,4 +25,6 @@ urlpatterns = [
 
     path("profile/", views.PatientProfileView.as_view(), name="my_profile"),
     path("profile/edit/", views.PatientProfileUpdateView.as_view(), name="edit_profile"),
+    path("admin/", views.AdminPatientsView.as_view(), name="admin_patients"),
+    path("admin/<int:pk>/edit/",views.AdminPatientProfileUpdateView.as_view(),name="admin_patient_edit",),
 ]
