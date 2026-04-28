@@ -29,3 +29,9 @@ media/
 
 # Logs
 *.log
+
+__pycache__/
+*.pyc
+venv/
+.env
+db.sqlite3

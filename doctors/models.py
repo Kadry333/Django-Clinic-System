@@ -14,28 +14,31 @@ class DoctorProfile(models.Model):
         return self.user.username
 
 
+
+
 class DoctorSchedule(models.Model):
     DAYS = [
-        (0, "Monday"),
-        (1, "Tuesday"),
-        (2, "Wednesday"),
-        (3, "Thursday"),
-        (4, "Friday"),
-        (5, "Saturday"),
-        (6, "Sunday"),
+        ('mon','Monday'),
+        ('tue','Tuesday'),
+        ('wed','Wednesday'),
+        ('thu','Thursday'),
+        ('fri','Friday'),
+        ('sat','Saturday'),
+        ('sun','Sunday'),
     ]
 
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
-    day_of_week = models.IntegerField(choices=DAYS)
+    day_of_week = models.CharField(max_length=3, choices=DAYS)
     start_time = models.TimeField()
     end_time = models.TimeField()
-
-
+    
+    
+    
 class DoctorScheduleException(models.Model):
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
     date = models.DateField()
 
-    is_day_off = models.BooleanField(default=False)
+    is_day_off = models.BooleanField(default=True)
 
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
