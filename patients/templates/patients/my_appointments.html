@@ -11,16 +11,6 @@
 
 {% block content %}
 <section class="space-y-6">
-    {% if messages %}
-    <div class="space-y-3">
-        {% for message in messages %}
-        <div class="rounded-2xl border px-4 py-3 text-sm {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-slate-200 bg-white text-slate-700{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -60,10 +50,16 @@
                     {% for appointment in appointments %}
                     <tr>
                         <td class="px-5 py-4 align-top">
-                            <p class="font-semibold text-slate-900">{{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.email|default:"Doctor unavailable" }}</p>
+                            <p class="font-semibold text-slate-900">
+                                {{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.email|default:"Doctor unavailable" }}
+                            </p>
                         </td>
-                        <td class="px-5 py-4 align-top text-slate-600">{{ appointment.doctor.specialization|default:"Not specified" }}</td>
-                        <td class="px-5 py-4 align-top text-slate-600">{{ appointment.appointment_date|date:"d M Y"|default:"-" }}</td>
+                        <td class="px-5 py-4 align-top text-slate-600">
+                            {{ appointment.doctor.specialization|default:"Not specified" }}
+                        </td>
+                        <td class="px-5 py-4 align-top text-slate-600">
+                            {{ appointment.appointment_date|date:"d M Y"|default:"-" }}
+                        </td>
                         <td class="px-5 py-4 align-top text-slate-600">
                             {{ appointment.start_time|time:"h:i A"|default:"-" }}
                             {% if appointment.end_time %}
@@ -73,7 +69,9 @@
                         <td class="px-5 py-4 align-top">
                             {% include "components/badges.html" with status=appointment.status|upper %}
                         </td>
-                        <td class="px-5 py-4 align-top text-slate-600">{{ appointment.created_at|date:"d M Y, h:i A"|default:"-" }}</td>
+                        <td class="px-5 py-4 align-top text-slate-600">
+                            {{ appointment.created_at|date:"d M Y, h:i A"|default:"-" }}
+                        </td>
                         <td class="px-5 py-4 align-top">
                             <div class="flex flex-wrap gap-2">
                                 {% if appointment.status == "requested" or appointment.status == "confirmed" %}
