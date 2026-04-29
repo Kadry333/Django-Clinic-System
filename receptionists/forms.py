@@ -27,3 +27,8 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
     class Meta:
         model  = DoctorScheduleException
         fields = ['doctor', 'date', 'is_day_off', 'start_time', 'end_time']
+        
+        
+        
+        
+        
