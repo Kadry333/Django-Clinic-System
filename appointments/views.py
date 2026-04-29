@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
@@ -25,11 +26,9 @@ from .utils import generate_slots
 
 User = get_user_model()
 
-
 class PatientBookView(patientRequiredMixins, View):
 
     def get(self, request):
-
         doctors = DoctorProfile.objects.select_related("user").all()
         slots = []
         error = None
@@ -62,9 +61,9 @@ class PatientBookView(patientRequiredMixins, View):
             },
         )
 
-
 class PatientBookSubmitView(patientRequiredMixins, View):
 
+    @transaction.atomic
     def post(self, request):
         patient = request.user
 
@@ -73,14 +72,15 @@ class PatientBookSubmitView(patientRequiredMixins, View):
         time_str = request.POST.get("time")
 
         try:
-            doctor = DoctorProfile.objects.get(id=doctor_id)
-            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            selected_time = datetime.strptime(time_str, "%I:%M %p").time()
+            with transaction.atomic():
+                doctor = DoctorProfile.objects.get(id=doctor_id)
+                selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                selected_time = datetime.strptime(time_str, "%I:%M %p").time()
 
-            if selected_date < date.today():
-                raise Exception("Invalid date")
+                if selected_date < date.today():
+                    raise Exception("Invalid date")
 
-            book_appointment(patient, doctor, selected_date, selected_time)
+                book_appointment(patient, doctor, selected_date, selected_time)
 
             messages.success(request, "Appointment booked successfully")
             return redirect("my_appointments")
@@ -98,7 +98,6 @@ class PatientBookSubmitView(patientRequiredMixins, View):
                     "today": date.today().isoformat(),
                 },
             )
-
 
 class PatientAppointmentsView(patientRequiredMixins, View):
 
@@ -128,7 +127,7 @@ class PatientAppointmentsView(patientRequiredMixins, View):
                 doctor = DoctorProfile.objects.get(id=doctor_id)
                 selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
                 reschedule_slots = generate_slots(doctor, selected_date)
-            except:
+            except Exception:
                 reschedule_slots = []
 
         return render(
@@ -144,20 +143,27 @@ class PatientAppointmentsView(patientRequiredMixins, View):
             },
         )
 
-
 class CancelAppointmentView(patientRequiredMixins, View):
 
     def post(self, request, appointment_id):
         patient = request.user
 
-        appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
+        try:
+            with transaction.atomic():
+                appointment = get_object_or_404(
+                    Appointment, id=appointment_id, patient=patient
+                )
 
-        if appointment.status not in ["requested", "confirmed"]:
-            messages.error(request, "You cannot cancel this appointment.")
+                if appointment.status not in ["requested", "confirmed"]:
+                    messages.error(request, "You cannot cancel this appointment.")
+                    return redirect("my_appointments")
+
+                appointment.status = "cancelled"
+                appointment.save()
+
+        except Exception:
+            messages.error(request, "Something went wrong. Please try again.")
             return redirect("my_appointments")
-
-        appointment.status = "cancelled"
-        appointment.save()
 
         messages.success(request, "Appointment cancelled successfully.")
         return redirect("my_appointments")
@@ -168,31 +174,39 @@ class RequestRescheduleView(patientRequiredMixins, View):
     def post(self, request, appointment_id):
         patient = request.user
 
-        appointment = get_object_or_404(Appointment, id=appointment_id, patient=patient)
+        try:
+            with transaction.atomic():
+                appointment = get_object_or_404(
+                    Appointment, id=appointment_id, patient=patient
+                )
 
-        if appointment.status not in ["requested", "confirmed"]:
-            messages.error(request, "Cannot request reschedule.")
+                if appointment.status not in ["requested", "confirmed"]:
+                    messages.error(request, "Cannot request reschedule.")
+                    return redirect("my_appointments")
+
+                if RescheduleRequest.objects.filter(
+                    appointment=appointment, status="pending"
+                ).exists():
+                    messages.warning(request, "Already requested.")
+                    return redirect("my_appointments")
+
+                date_str = request.POST.get("date")
+                time_str = request.POST.get("time")
+
+                preferred_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                preferred_time = datetime.strptime(time_str, "%I:%M %p").time()
+
+                RescheduleRequest.objects.create(
+                    appointment=appointment,
+                    requested_by=patient,
+                    preferred_date=preferred_date,
+                    preferred_time=preferred_time,
+                    reason="Patient requested reschedule",
+                )
+
+        except Exception:
+            messages.error(request, "Something went wrong. Please try again.")
             return redirect("my_appointments")
-
-        if RescheduleRequest.objects.filter(
-            appointment=appointment, status="pending"
-        ).exists():
-            messages.warning(request, "Already requested.")
-            return redirect("my_appointments")
-
-        date_str = request.POST.get("date")
-        time_str = request.POST.get("time")
-
-        preferred_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        preferred_time = datetime.strptime(time_str, "%I:%M %p").time()
-
-        RescheduleRequest.objects.create(
-            appointment=appointment,
-            requested_by=patient,
-            preferred_date=preferred_date,
-            preferred_time=preferred_time,
-            reason="Patient requested reschedule",
-        )
 
         messages.success(request, "Request sent.")
         return redirect("my_appointments")

@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
@@ -8,8 +7,8 @@ from django.utils import timezone
 from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import transaction
 from django.contrib.auth.models import Group
-
 from accounts.mixins import AdminRequiredMixins, DoctorRequiredMixins
 from appointments.models import AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
@@ -21,48 +20,51 @@ from .forms import (
 )
 
 
-def dashboard_view(request):
-    doctor = DoctorProfile.objects.first()
-    today = timezone.localtime(timezone.now()).date()
-
-    queue = (
-        AppointmentQueue.objects.select_related("appointment__patient")
-        .filter(appointment__doctor=doctor, appointment__appointment_date=today)
-        .order_by("check_in_time")
-    )
-
-    return render(
-        request,
-        "doctors/dashboard.html",
-        {
-            "current_role": "Doctor",
-            "queue": queue,
-        },
-    )
-
-
-def start_consultation(request, queue_id):
-    q = get_object_or_404(AppointmentQueue, id=queue_id)
-
-    q.status = "in_progress"
-    q.save()
-
-    return redirect("doctor_dashboard")
+class DoctorDashboardView(DoctorRequiredMixins, View):
+    def get(self, request):
+        doctor = DoctorProfile.objects.get(user=request.user)
+        today = timezone.localtime(timezone.now()).date()
+        queue = (
+            AppointmentQueue.objects.select_related("appointment__patient")
+            .filter(appointment__doctor=doctor, appointment__appointment_date=today)
+            .order_by("check_in_time")
+        )
+        return render(
+            request,
+            "doctors/dashboard.html",
+            {
+                "current_role": "Doctor",
+                "queue": queue,
+            },
+        )
 
 
-def finish_consultation(request, queue_id):
-    return redirect("consultation_form", queue_id=queue_id)
+class StartConsultationView(DoctorRequiredMixins, View):
+    def post(self, request, queue_id):
+        try:
+            with transaction.atomic():
+                q = get_object_or_404(AppointmentQueue, id=queue_id)
+                q.status = "in_progress"
+                q.save()
+        except Exception:
+            messages.error(request, "Something went wrong. Please try again.")
+        return redirect("doctor_dashboard")
 
 
-def schedule_view(request):
-    return render(
-        request,
-        "doctors/schedule.html",
-        {
-            "current_role": "Doctor",
-        },
-    )
+class FinishConsultationView(DoctorRequiredMixins, View):
+    def post(self, request, queue_id):
+        return redirect("consultation_form", queue_id=queue_id)
 
+
+class ScheduleView(DoctorRequiredMixins, View):
+    def get(self, request):
+        return render(
+            request,
+            "doctors/schedule.html",
+            {
+                "current_role": "Doctor",
+            },
+        )
 
 class DoctorsListView(AdminRequiredMixins, View):
     sort_map = {
