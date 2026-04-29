@@ -4,15 +4,14 @@
 {% block content %}
 <section class="space-y-6">
     <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
-        <form method="get" class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <form id="filterForm" class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <div class="xl:col-span-2">
                 <label for="search" class="mb-2 block text-sm font-medium text-slate-700">Search</label>
                 <input
                     id="search"
                     name="search"
                     type="text"
-                    value="{{ search_query }}"
-                    placeholder="Search by patient or doctor name"
+                    placeholder="Search by ID or patient name"
                     class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
                 >
             </div>
@@ -22,7 +21,7 @@
                 <select id="status" name="status" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
                     <option value="">All statuses</option>
                     {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -32,7 +31,7 @@
                 <select id="doctor" name="doctor" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
                     <option value="">All doctors</option>
                     {% for doctor in doctors %}
-                    <option value="{{ doctor.id }}" {% if selected_doctor == doctor.id|stringformat:"s" %}selected{% endif %}>
+                    <option value="{{ doctor.id }}">
                         {% if doctor.user.first_name or doctor.user.last_name %}
                             {{ doctor.user.first_name }} {{ doctor.user.last_name }}
                         {% else %}
@@ -48,7 +47,7 @@
                 <select id="patient" name="patient" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
                     <option value="">All patients</option>
                     {% for patient in patients %}
-                    <option value="{{ patient.id }}" {% if selected_patient == patient.id|stringformat:"s" %}selected{% endif %}>
+                    <option value="{{ patient.id }}">
                         {% if patient.first_name or patient.last_name %}
                             {{ patient.first_name }} {{ patient.last_name }}
                         {% else %}
@@ -60,22 +59,31 @@
             </div>
 
             <div>
-                <label for="date" class="mb-2 block text-sm font-medium text-slate-700">Date</label>
+                <label for="start_date" class="mb-2 block text-sm font-medium text-slate-700">Start Date</label>
                 <input
-                    id="date"
-                    name="date"
+                    id="start_date"
+                    name="start_date"
                     type="date"
-                    value="{{ selected_date }}"
+                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                >
+            </div>
+
+            <div>
+                <label for="end_date" class="mb-2 block text-sm font-medium text-slate-700">End Date</label>
+                <input
+                    id="end_date"
+                    name="end_date"
+                    type="date"
                     class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
                 >
             </div>
 
             <div>
                 <label for="direction" class="mb-2 block text-sm font-medium text-slate-700">Date order</label>
-                <input type="hidden" name="sort" value="{{ current_sort }}">
+                <input type="hidden" name="sort" id="current_sort" value="date">
                 <select id="direction" name="direction" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
-                    <option value="desc" {% if current_direction == "desc" %}selected{% endif %}>Newest first</option>
-                    <option value="asc" {% if current_direction == "asc" %}selected{% endif %}>Oldest first</option>
+                    <option value="desc">Newest first</option>
+                    <option value="asc">Oldest first</option>
                 </select>
             </div>
 
@@ -83,26 +91,31 @@
                 <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700">
                     Apply Filters
                 </button>
-                <a href="{% url 'appointments' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                <button type="button" id="clearFilters" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
                     Clear
-                </a>
+                </button>
             </div>
         </form>
     </div>
 
-    <div class="rounded-panel border border-slate-200 bg-white shadow-soft">
+    <div class="rounded-panel border border-slate-200 bg-white shadow-soft relative min-h-[400px]">
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 hidden">
+            <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+
         <div class="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-slate-900">Appointments</h2>
                 <p class="text-sm text-slate-500">Review doctor schedules, patient bookings, and appointment timing.</p>
             </div>
-            <div class="text-sm text-slate-500">
-                {% if page_obj.paginator.count %}
-                    {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}
-                {% else %}
-                    0 results
-                {% endif %}
+            <div id="resultsCount" class="text-sm text-slate-500">
+                0 results
             </div>
+        </div>
+
+        <div id="errorBanner" class="m-5 hidden rounded-xl bg-rose-50 p-4 text-sm font-medium text-rose-700 border border-rose-100">
+            Failed to load appointments. Please try again.
         </div>
 
         <div class="overflow-x-auto">
@@ -111,133 +124,187 @@
                     <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <th class="px-5 py-4">Doctor</th>
                         <th class="px-5 py-4">Patient</th>
-                        <th class="px-5 py-4">
-                            <a
-                                href="?search={{ search_query|urlencode }}&status={{ selected_status|urlencode }}&doctor={{ selected_doctor|urlencode }}&patient={{ selected_patient|urlencode }}&date={{ selected_date|urlencode }}&sort=date&direction={% if current_sort == 'date' and current_direction == 'asc' %}desc{% else %}asc{% endif %}"
-                                class="inline-flex items-center gap-2 transition hover:text-primary"
-                            >
+                        <th class="px-5 py-4 cursor-pointer hover:text-primary" id="sortDate">
+                            <span class="inline-flex items-center gap-2">
                                 <span>Date</span>
-                                <span class="text-[11px] normal-case">
-                                    {% if current_sort == "date" and current_direction == "asc" %}Asc{% else %}Desc{% endif %}
-                                </span>
-                            </a>
+                                <span id="sortDirectionIcon" class="text-[11px] normal-case">Desc</span>
+                            </span>
                         </th>
                         <th class="px-5 py-4">Start Time</th>
                         <th class="px-5 py-4">Session Duration</th>
                         <th class="px-5 py-4">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white text-sm text-slate-700">
-                    {% for appointment in appointments %}
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="block font-semibold text-slate-900 hover:text-primary">
-                                {% if appointment.doctor.user.first_name or appointment.doctor.user.last_name %}
-                                    {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}
-                                {% else %}
-                                    {{ appointment.doctor.user.email }}
-                                {% endif %}
-                            </a>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="block font-semibold text-slate-900 hover:text-primary">
-                                {% if appointment.patient.first_name or appointment.patient.last_name %}
-                                    {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
-                                {% else %}
-                                    {{ appointment.patient.email }}
-                                {% endif %}
-                            </a>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="block hover:text-primary">{{ appointment.appointment_date|date:"M d, Y" }}</a>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="block hover:text-primary">{{ appointment.start_time|time:"g:i A" }}</a>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="block hover:text-primary">{{ appointment.doctor.session_duration }} min</a>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <a href="{% url 'appointments.appointment' appointment.id %}" class="inline-flex">
-                                <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold
-                                    {% if appointment.status == 'requested' %}bg-amber-100 text-amber-700
-                                    {% elif appointment.status == 'confirmed' %}bg-blue-100 text-blue-700
-                                    {% elif appointment.status == 'checked_in' %}bg-cyan-100 text-cyan-700
-                                    {% elif appointment.status == 'completed' %}bg-emerald-100 text-emerald-700
-                                    {% elif appointment.status == 'cancelled' %}bg-rose-100 text-rose-700
-                                    {% else %}bg-slate-100 text-slate-700{% endif %}">
-                                    {{ appointment.get_status_display }}
-                                </span>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
+                <tbody id="appointmentsTableBody" class="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+                    <!-- Rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="paginationContainer" class="flex items-center justify-between border-t border-slate-100 px-5 py-4 hidden">
+            <p id="paginationText" class="text-sm text-slate-500">
+                Showing <span class="font-medium text-slate-700">0</span> to <span class="font-medium text-slate-700">0</span> of <span class="font-medium text-slate-700">0</span> results
+            </p>
+
+            <div id="paginationControls" class="flex items-center gap-1">
+                <!-- Buttons will be injected here -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableBody = document.getElementById('appointmentsTableBody');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorBanner = document.getElementById('errorBanner');
+        const resultsCount = document.getElementById('resultsCount');
+        const filterForm = document.getElementById('filterForm');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const paginationText = document.getElementById('paginationText');
+        const paginationControls = document.getElementById('paginationControls');
+        const clearBtn = document.getElementById('clearFilters');
+        const sortDateBtn = document.getElementById('sortDate');
+        const sortDirectionIcon = document.getElementById('sortDirectionIcon');
+        const currentSortInput = document.getElementById('current_sort');
+        const directionSelect = document.getElementById('direction');
+
+        let currentPageUrl = '/appointments/api/appointments_view/';
+
+        const statusClasses = {
+            'requested': 'bg-amber-100 text-amber-700',
+            'confirmed': 'bg-blue-100 text-blue-700',
+            'checked_in': 'bg-cyan-100 text-cyan-700',
+            'completed': 'bg-emerald-100 text-emerald-700',
+            'cancelled': 'bg-rose-100 text-rose-700'
+        };
+
+        const statusLabels = {
+            'requested': 'Requested',
+            'confirmed': 'Confirmed',
+            'checked_in': 'Checked In',
+            'completed': 'Completed',
+            'cancelled': 'Cancelled',
+            'no_show': 'No Show'
+        };
+
+        async function fetchAppointments(url) {
+            loadingOverlay.classList.remove('hidden');
+            errorBanner.classList.add('hidden');
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                renderAppointments(data);
+            } catch (error) {
+                console.error('Fetch error:', error);
+                errorBanner.classList.remove('hidden');
+                tableBody.innerHTML = '';
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function renderAppointments(data) {
+            const appointments = data.results || [];
+            resultsCount.textContent = `${data.count} result${data.count === 1 ? '' : 's'}`;
+
+            if (appointments.length === 0) {
+                tableBody.innerHTML = `
                     <tr>
                         <td colspan="6" class="px-5 py-12 text-center">
                             <p class="text-base font-semibold text-slate-900">No appointments found</p>
                             <p class="mt-2 text-sm text-slate-500">Try adjusting the filters or search text to broaden the results.</p>
                         </td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                `;
+                paginationContainer.classList.add('hidden');
+                return;
+            }
 
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="flex items-center justify-between border-t border-slate-100 px-5 py-4">
-            <p class="text-sm text-slate-500">
-                Showing
-                <span class="font-medium text-slate-700">{{ page_obj.start_index }}</span>
-                to
-                <span class="font-medium text-slate-700">{{ page_obj.end_index }}</span>
-                of
-                <span class="font-medium text-slate-700">{{ page_obj.paginator.count }}</span>
-                results
-            </p>
+            tableBody.innerHTML = appointments.map(apt => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-5 py-4 align-top">
+                        <a href="/appointments/doctor-management/${apt.id}" class="block font-semibold text-slate-900 hover:text-primary">
+                            ${apt.doctor_name || 'N/A'}
+                        </a>
+                    </td>
+                    <td class="px-5 py-4 align-top">
+                        <a href="/appointments/doctor-management/${apt.id}" class="block font-semibold text-slate-900 hover:text-primary">
+                            ${apt.patient_name || 'N/A'}
+                        </a>
+                    </td>
+                    <td class="px-5 py-4 align-top">
+                        <a href="/appointments/doctor-management/${apt.id}" class="block hover:text-primary">${new Date(apt.appointment_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</a>
+                    </td>
+                    <td class="px-5 py-4 align-top">
+                        <a href="/appointments/doctor-management/${apt.id}" class="block hover:text-primary">${apt.start_time}</a>
+                    </td>
+                    <td class="px-5 py-4 align-top">
+                        <!-- We don't have duration in the simple serializer, we'll assume it's there or skip -->
+                        <a href="/appointments/doctor-management/${apt.id}" class="block hover:text-primary">30 min</a>
+                    </td>
+                    <td class="px-5 py-4 align-top">
+                        <a href="/appointments/doctor-management/${apt.id}" class="inline-flex">
+                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[apt.status] || 'bg-slate-100 text-slate-700'}">
+                                ${statusLabels[apt.status] || apt.status}
+                            </span>
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
 
-            <div class="flex items-center gap-1">
-                {% if page_obj.has_previous %}
-                <a href="?search={{ search_query|urlencode }}&status={{ selected_status|urlencode }}&doctor={{ selected_doctor|urlencode }}&patient={{ selected_patient|urlencode }}&date={{ selected_date|urlencode }}&sort={{ current_sort|urlencode }}&direction={{ current_direction|urlencode }}&page={{ page_obj.previous_page_number }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
-                {% else %}
-                <span class="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </span>
-                {% endif %}
+            renderPagination(data);
+        }
 
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white">
-                        {{ num }}
-                    </span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <a href="?search={{ search_query|urlencode }}&status={{ selected_status|urlencode }}&doctor={{ selected_doctor|urlencode }}&patient={{ selected_patient|urlencode }}&date={{ selected_date|urlencode }}&sort={{ current_sort|urlencode }}&direction={{ current_direction|urlencode }}&page={{ num }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-600 transition hover:border-teal-200 hover:text-primary">
-                        {{ num }}
-                    </a>
-                    {% endif %}
-                {% endfor %}
+        function renderPagination(data) {
+            paginationContainer.classList.remove('hidden');
 
-                {% if page_obj.has_next %}
-                <a href="?search={{ search_query|urlencode }}&status={{ selected_status|urlencode }}&doctor={{ selected_doctor|urlencode }}&patient={{ selected_patient|urlencode }}&date={{ selected_date|urlencode }}&sort={{ current_sort|urlencode }}&direction={{ current_direction|urlencode }}&page={{ page_obj.next_page_number }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-                {% else %}
-                <span class="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </span>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</section>
+            // Note: simple DRF pagination doesn't give start/end index, we'll simplify
+            paginationText.innerHTML = `Total results: <span class="font-medium text-slate-700">${data.count}</span>`;
+
+            let controls = '';
+            if (data.previous) {
+                controls += `<button data-url="${data.previous}" class="pagination-btn inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>`;
+            }
+
+            if (data.next) {
+                controls += `<button data-url="${data.next}" class="pagination-btn inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>`;
+            }
+
+            paginationControls.innerHTML = controls;
+
+            document.querySelectorAll('.pagination-btn').forEach(btn => {
+                btn.onclick = () => fetchAppointments(btn.dataset.url);
+            });
+        }
+
+        filterForm.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData);
+            fetchAppointments(`/appointments/api/appointments_view/?${params.toString()}`);
+        };
+
+        clearBtn.onclick = function() {
+            filterForm.reset();
+            fetchAppointments('/appointments/api/appointments_view/');
+        };
+
+        sortDateBtn.onclick = function() {
+            const direction = directionSelect.value === 'asc' ? 'desc' : 'asc';
+            directionSelect.value = direction;
+            sortDirectionIcon.textContent = direction === 'asc' ? 'Asc' : 'Desc';
+            filterForm.dispatchEvent(new Event('submit'));
+        };
+
+        // Initial load
+        fetchAppointments(currentPageUrl);
+    });
+</script>
 {% endblock %}

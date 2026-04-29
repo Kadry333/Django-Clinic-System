@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "notifications",
     "receptionists",
     "django_extensions",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -146,6 +147,6 @@ DATABASES = {
         "USER": "root",
         "PASSWORD": "",
         "HOST": "127.0.0.1",
-        "PORT": "3306"
-}
+        "PORT": "3306",
+    }
 }

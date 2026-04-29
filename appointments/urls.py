@@ -1,25 +1,21 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
-
 urlpatterns = [
+    path("api/", include("appointments.api.urls")),
     path("book/", views.PatientBookView.as_view(), name="book_appointment"),
-    
     path("book/submit/", views.PatientBookSubmitView.as_view(), name="book_submit"),
-    
     path(
         "book/cancel/<int:appointment_id>/",
         views.CancelAppointmentView.as_view(),
         name="cancel_appointment",
     ),
-    
     path(
         "book/reschedule/request/<int:appointment_id>/",
         views.RequestRescheduleView.as_view(),
         name="request_reschedule",
     ),
-    
     path("mine/", views.PatientAppointmentsView.as_view(), name="my_appointments"),
     path(
         "doctor-management/",
