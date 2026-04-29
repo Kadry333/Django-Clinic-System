@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Consultation Form | ClinicMS{% endblock %}
+{% block page_name %}Consultation Form{% endblock %}
+{% block extra_scripts %}
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('prescriptions', () => ({
+            items: [{ drug: '', dosage: '', duration: '' }],
+            tests: [{ name: '' }],
+            add() { this.items.push({ drug: '', dosage: '', duration: '' }) },
+            addTest() { this.tests.push({ name: '' }) },
+            removeItem(index) { if (this.items.length > 1) this.items.splice(index, 1) },
+            removeTest(index) { if (this.tests.length > 1) this.tests.splice(index, 1) },
+        }))
+    })
+</script>
+{% endblock %}
+{% block content %}
+
+{% with apt=queue.appointment %}
+<form method="POST" action="{% url 'consultation_submit' queue.id %}">
+{% csrf_token %}
+<section class="space-y-6" x-data="prescriptions">
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+
+        {# ── Main form ── #}
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <h1 class="text-2xl font-semibold text-slate-900">Consultation details</h1>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="mt-6 grid gap-5">
+
+                {# Diagnosis #}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Diagnosis</label>
+                    <textarea name="diagnosis" rows="3"
+                              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                              placeholder="Enter diagnosis"></textarea>
+                </div>
+
+                {# Notes #}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Clinical notes</label>
+                    <textarea name="notes" rows="5" required
+                              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                              placeholder="Consultation notes"></textarea>
+                </div>
+
+                {# Prescriptions #}
+                <div>
+                    <div class="mb-3 flex items-center justify-between">
+                        <label class="block text-sm font-medium text-slate-700">Prescription</label>
+                        <button type="button" @click="add()"
+                                class="rounded-2xl bg-teal-50 px-3 py-2 text-sm font-semibold text-primary hover:bg-teal-100 transition">
+                            + Add medicine
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
+                                <input type="text" name="drug_name[]"
+                                       x-model="item.drug"
+                                       class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                       placeholder="Medicine name">
+                                <input type="text" name="dosage[]"
+                                       x-model="item.dosage"
+                                       class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                       placeholder="Dosage">
+                                <input type="text" name="duration[]"
+                                       x-model="item.duration"
+                                       class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                       placeholder="Duration">
+                                <button type="button" @click="removeItem(index)"
+                                        class="rounded-2xl border border-rose-200 px-3 py-3 text-xs text-rose-500 hover:bg-rose-50 transition">
+                                    ✕
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                {# Medical Tests #}
+                <div>
+                    <div class="mb-3 flex items-center justify-between">
+                        <label class="block text-sm font-medium text-slate-700">Requested tests</label>
+                        <button type="button" @click="addTest()"
+                                class="rounded-2xl bg-teal-50 px-3 py-2 text-sm font-semibold text-primary hover:bg-teal-100 transition">
+                            + Add test
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <template x-for="(test, index) in tests" :key="index">
+                            <div class="flex gap-3">
+                                <input type="text" name="test_name[]"
+                                       x-model="test.name"
+                                       class="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                       placeholder="e.g. Blood test, X-ray">
+                                <button type="button" @click="removeTest(index)"
+                                        class="rounded-2xl border border-rose-200 px-3 py-3 text-xs text-rose-500 hover:bg-rose-50 transition">
+                                    ✕
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                {# Submit #}
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                        Save Consultation
+                    </button>
+                    <a href="{% url 'doctor_dashboard' %}"
+                       class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                        Cancel
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        {# ── Sidebar ── #}
+        <div class="space-y-6">
+            <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+                <h2 class="text-lg font-semibold text-slate-900">Patient context</h2>
+                <div class="mt-4 space-y-3 text-sm text-slate-600">
+                    <div class="flex justify-between">
+                        <span>Patient</span>
+                        <span class="font-medium text-slate-900">{{ apt.patient.get_full_name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Appointment</span>
+                        <span class="font-medium text-slate-900">APT-{{ apt.id }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Date</span>
+                        <span class="font-medium text-slate-900">{{ apt.appointment_date|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Time</span>
+                        <span class="font-medium text-slate-900">{{ apt.start_time|time:"h:i A" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Doctor</span>
+                        <span class="font-medium text-slate-900">Dr. {{ apt.doctor.user.get_full_name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Queue status</span>
+                        <span class="font-medium text-slate-900">{{ queue.status|title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+</form>
+{% endwith %}
+{% endblock %}

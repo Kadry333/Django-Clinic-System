@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Appointment Management | ClinicMS{% endblock %}
+{% block page_name %}Appointment Management{% endblock %}
+{% block content %}
+<section class="space-y-6">
+    <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+            <input type="text" placeholder="Search appointment or patient" class="xl:col-span-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Status</option></select>
+            <input type="date" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Doctor</option></select>
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Patient</option></select>
+        </div>
+    </div>
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div>{% include "components/tables.html" with title="Doctor Appointment Actions" subtitle="Confirm, decline, and update appointment statuses." %}</div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <h2 class="text-lg font-semibold text-slate-900">Quick status actions</h2>
+            <div class="mt-5 grid gap-3">
+                {% include "components/buttons.html" with label="Confirm" %}
+                {% include "components/buttons.html" with variant="danger" label="Decline" %}
+                {% include "components/buttons.html" with variant="secondary" label="Mark Checked-in" %}
+                {% include "components/buttons.html" with variant="success" label="Mark Completed" %}
+                <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Mark No-show</button>
+            </div>
+        </div>
+    </div>
+    {% include "components/states.html" with empty_message="No appointments need review right now." error_message="Unable to load doctor appointment actions." %}
+</section>
+{% endblock %}

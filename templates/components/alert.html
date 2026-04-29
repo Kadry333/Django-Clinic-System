@@ -1,0 +1,17 @@
+{% if message %}
+    <div class="rounded-2xl border px-4 py-3 text-sm shadow-sm
+        {% if type == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800
+        {% elif type == 'error' %}border-rose-200 bg-rose-50 text-rose-800
+        {% elif type == 'warning' %}border-amber-200 bg-amber-50 text-amber-800
+        {% else %}border-sky-200 bg-sky-50 text-sky-800{% endif %}">
+        <div class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-current px-1 text-[10px] font-bold uppercase">
+                {% if type == 'success' %}OK
+                {% elif type == 'error' %}ER
+                {% elif type == 'warning' %}!
+                {% else %}i{% endif %}
+            </span>
+            <p>{{ message }}</p>
+        </div>
+    </div>
+{% endif %}

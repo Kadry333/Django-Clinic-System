@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | ClinicMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#0f766e' },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+
+<div class="min-h-screen lg:grid lg:grid-cols-2">
+
+    <!-- ── Left panel ─────────────────────────────────────── -->
+    <section class="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
+
+        <!-- Background pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)"/>
+            </svg>
+        </div>
+
+        <!-- Logo -->
+        <div class="relative inline-flex items-center gap-3">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-sm font-bold text-white backdrop-blur">
+                CM
+            </span>
+            <div>
+                <p class="font-semibold text-white">ClinicMS</p>
+                <p class="text-xs text-teal-100/70">Clinic management platform</p>
+            </div>
+        </div>
+
+        <!-- Center content -->
+        <div class="relative space-y-8">
+            <div class="space-y-4">
+                <span class="inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-100">
+                    Patient Portal
+                </span>
+                <h1 class="text-4xl font-bold leading-tight tracking-tight text-white">
+                    Your health,<br>managed simply.
+                </h1>
+                <p class="text-base leading-relaxed text-teal-100/80">
+                    Book appointments, track your history, and access consultation summaries — all in one place.
+                </p>
+            </div>
+
+            <!-- Feature cards -->
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm">
+                    <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <p class="font-semibold text-white">Book online</p>
+                    <p class="mt-1 text-sm text-teal-100/75">Pick doctors and time slots from a clean booking flow.</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm">
+                    <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <p class="font-semibold text-white">Track history</p>
+                    <p class="mt-1 text-sm text-teal-100/75">Review appointments, summaries, and requests anytime.</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm">
+                    <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <p class="font-semibold text-white">Stay notified</p>
+                    <p class="mt-1 text-sm text-teal-100/75">Get updates on confirmations and changes instantly.</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm">
+                    <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <p class="font-semibold text-white">Secure & private</p>
+                    <p class="mt-1 text-sm text-teal-100/75">Your medical data is protected and only yours to see.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="relative text-xs text-teal-100/50">
+            © 2026 ClinicMS. All rights reserved.
+        </div>
+    </section>
+
+    <!-- ── Right panel — form ──────────────────────────────── -->
+    <section class="flex min-h-screen flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
+        <div class="mx-auto w-full max-w-md animate-fade-in">
+
+            <!-- Mobile logo -->
+            <div class="mb-8 flex items-center gap-3 lg:hidden">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">CM</span>
+                <p class="font-semibold text-slate-900">ClinicMS</p>
+            </div>
+
+            <!-- Header -->
+            <div class="mb-8">
+                <span class="text-xs font-bold uppercase tracking-widest text-primary">Register</span>
+                <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Create your account</h2>
+                <p class="mt-2 text-sm text-slate-500">Join as a patient and manage your clinic visits online.</p>
+            </div>
+
+            <!-- Messages -->
+            {% for message in messages %}
+            <div class="mb-5 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm
+                {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700
+                {% else %}border-rose-200 bg-rose-50 text-rose-700{% endif %}">
+                <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    {% if message.tags == 'success' %}
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    {% else %}
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/>
+                    {% endif %}
+                </svg>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+
+            <!-- Form -->
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+
+                <!-- First + Last name -->
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700">First name</label>
+                        <input type="text"
+                               name="{{ form.first_name.html_name }}"
+                               value="{{ form.first_name.value|default:'' }}"
+                               placeholder="Ahmed"
+                               required
+                               class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition
+                                      placeholder:text-slate-400
+                                      focus:border-primary focus:ring-4 focus:ring-teal-50
+                                      {% if form.first_name.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                        {% for error in form.first_name.errors %}
+                        <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Last name</label>
+                        <input type="text"
+                               name="{{ form.last_name.html_name }}"
+                               value="{{ form.last_name.value|default:'' }}"
+                               placeholder="Hassan"
+                               required
+                               class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition
+                                      placeholder:text-slate-400
+                                      focus:border-primary focus:ring-4 focus:ring-teal-50
+                                      {% if form.last_name.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                        {% for error in form.last_name.errors %}
+                        <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </span>
+                        <input type="email"
+                               name="{{ form.email.html_name }}"
+                               value="{{ form.email.value|default:'' }}"
+                               placeholder="you@example.com"
+                               required
+                               class="w-full rounded-2xl border py-3 pl-11 pr-4 text-sm outline-none transition
+                                      placeholder:text-slate-400
+                                      focus:border-primary focus:ring-4 focus:ring-teal-50
+                                      {% if form.email.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                    </div>
+                    {% for error in form.email.errors %}
+                    <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                        <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                        </span>
+                        <input type="text"
+                               name="{{ form.phone.html_name }}"
+                               value="{{ form.phone.value|default:'' }}"
+                               placeholder="+20 100 000 0000"
+                               class="w-full rounded-2xl border py-3 pl-11 pr-4 text-sm outline-none transition
+                                      placeholder:text-slate-400
+                                      focus:border-primary focus:ring-4 focus:ring-teal-50
+                                      {% if form.phone.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                    </div>
+                    {% for error in form.phone.errors %}
+                    <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                        <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+
+                <!-- Password + Confirm -->
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </span>
+                            <input type="password"
+                                   name="{{ form.password1.html_name }}"
+                                   placeholder="Min. 8 characters"
+                                   required
+                                   class="w-full rounded-2xl border py-3 pl-11 pr-4 text-sm outline-none transition
+                                          placeholder:text-slate-400
+                                          focus:border-primary focus:ring-4 focus:ring-teal-50
+                                          {% if form.password1.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                        </div>
+                        {% for error in form.password1.errors %}
+                        <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                            </span>
+                            <input type="password"
+                                   name="{{ form.password2.html_name }}"
+                                   placeholder="Repeat password"
+                                   required
+                                   class="w-full rounded-2xl border py-3 pl-11 pr-4 text-sm outline-none transition
+                                          placeholder:text-slate-400
+                                          focus:border-primary focus:ring-4 focus:ring-teal-50
+                                          {% if form.password2.errors %}border-rose-400 bg-rose-50{% else %}border-slate-200 bg-white{% endif %}">
+                        </div>
+                        {% for error in form.password2.errors %}
+                        <p class="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Submit -->
+                <button type="submit"
+                        class="group relative w-full overflow-hidden rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 active:scale-[0.99]">
+                    <span class="relative flex items-center justify-center gap-2">
+                        Create Account
+                        <svg class="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Divider -->
+                <div class="relative flex items-center gap-4">
+                    <div class="h-px flex-1 bg-slate-200"></div>
+                    <span class="text-xs text-slate-400">or</span>
+                    <div class="h-px flex-1 bg-slate-200"></div>
+                </div>
+
+                <!-- Sign in link -->
+                <p class="text-center text-sm text-slate-500">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="font-semibold text-primary hover:text-teal-700 hover:underline">
+                        Sign in instead
+                    </a>
+                </p>
+
+            </form>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

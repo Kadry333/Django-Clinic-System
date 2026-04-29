@@ -1,0 +1,103 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Check-in Queue | ClinicMS{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <h1 class="text-2xl font-semibold text-slate-800">Check-in Queue</h1>
+
+    <!-- Section 1: Confirmed appointments ready to check in -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-slate-800">Ready to Check In</h2>
+            <p class="text-sm text-slate-500 mt-1">
+                Confirmed appointments for today
+            </p>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for appointment in appointments %}
+                {% if appointment.status == 'confirmed' %}
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <p class="font-semibold text-slate-800">
+                            {{ appointment.patient.get_full_name }}
+                        </p>
+                        <p class="text-sm text-slate-500 mt-0.5">
+                            Dr. {{ appointment.doctor.user.get_full_name }}
+                            — {{ appointment.start_time|time:"g:i A" }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold bg-amber-100 text-amber-700">
+                            Confirmed
+                        </span>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                            <button type="submit"
+                                    class="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition">
+                                Check In
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            {% empty %}
+            <div class="px-6 py-10 text-center text-slate-400">
+                No confirmed appointments for today.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Section 2: Currently waiting queue -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-slate-800">Currently Waiting</h2>
+            <p class="text-sm text-slate-500 mt-1">
+                Patients already checked in, ordered by arrival
+            </p>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for entry in queue %}
+            <div class="flex items-center justify-between px-6 py-4">
+                <div>
+                    <p class="font-semibold text-slate-800">
+                        {{ entry.appointment.patient.get_full_name }}
+                    </p>
+                    <p class="text-sm text-slate-500 mt-0.5">
+                        Dr. {{ entry.appointment.doctor.user.get_full_name }}
+                        — {{ entry.appointment.start_time|time:"g:i A" }}
+                    </p>
+                    <p class="text-xs text-teal-600 mt-1">
+                        Waiting since {{ entry.check_in_time|time:"g:i A" }}
+                        ({{ entry.check_in_time|timesince }})
+                    </p>
+                </div>
+
+                <div>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold
+                        {% if entry.status == 'waiting' %}
+                            bg-blue-100 text-blue-700
+                        {% elif entry.status == 'in_progress' %}
+                            bg-teal-100 text-teal-700
+                        {% else %}
+                            bg-slate-100 text-slate-700
+                        {% endif %}">
+                        {{ entry.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="px-6 py-10 text-center text-slate-400">
+                No patients in queue yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

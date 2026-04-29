@@ -1,0 +1,120 @@
+﻿<!-- {% extends "base.html" %}
+{% block title %}Patient Check-in | ClinicMS{% endblock %}
+{% block page_name %}Patient Check-in{% endblock %}
+{% block content %}
+<section class="space-y-6">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {# ── Filters ── #}
+    {% comment %} <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <input type="text" placeholder="Search patient name" class="xl:col-span-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Status</option></select>
+            <input type="date" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+        </div>
+    </div> {% endcomment %}
+
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+
+        {# ── Queue ── #}
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900">Today's Queue</h2>
+                    <p class="text-sm text-slate-500">Ordered by check-in time.</p>
+                </div>
+                {% if queue %}
+                <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-primary">
+                    {{ queue|length }} in queue
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="mt-6 space-y-4">
+                {% if queue %}
+                    {% for q in queue %}
+                    <div class="rounded-3xl border border-violet-200 bg-violet-50 p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-semibold text-slate-900">
+                                    {{ q.check_in_time|time:"h:i A" }} — {{ q.appointment.patient.get_full_name }}
+                                </p>
+                                <p class="text-sm text-slate-500">Dr. {{ q.appointment.doctor.user.get_full_name }}</p>
+                            </div>
+                            {% include "components/badges.html" with status=q.appointment.status|upper %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xs font-semibold text-slate-500 ring-1 ring-slate-200">EM</div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Queue is empty</p>
+                                <p class="mt-1 text-sm text-slate-500">The waiting queue is currently empty.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Today's appointments ── #}
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-semibold text-slate-900">Today's Appointments</h2>
+                {% if appointments %}
+                <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-primary">
+                    {{ appointments|length }} total
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="space-y-3">
+                {% if appointments %}
+                    {% for apt in appointments %}
+                    <div class="rounded-2xl border border-slate-200 p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">
+                                    {{ apt.start_time|time:"h:i A" }} — {{ apt.patient.get_full_name }}
+                                </p>
+                                <p class="text-sm text-slate-500">Dr. {{ apt.doctor.user.get_full_name }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                {% include "components/badges.html" with status=apt.status|upper %}
+                                {% if apt.status == 'confirmed' %}
+                                <form method="POST" action="{% url 'check_in' apt.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="rounded-2xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-800">
+                                        Check In
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xs font-semibold text-slate-500 ring-1 ring-slate-200">EM</div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">No appointments today</p>
+                                <p class="mt-1 text-sm text-slate-500">No appointments scheduled for today.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %} -->

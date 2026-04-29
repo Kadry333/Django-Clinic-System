@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Receptionist Dashboard | ClinicMS{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <h1 class="text-2xl font-semibold text-slate-800 mb-6">Dashboard</h1>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Today's Appointments</p>
+            <p class="text-3xl font-bold text-slate-800 mt-1">{{ total_today }}</p>
+        </div>
+
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Confirmed</p>
+            <p class="text-3xl font-bold text-emerald-600 mt-1">{{ confirmed_today }}</p>
+        </div>
+
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Checked In</p>
+            <p class="text-3xl font-bold text-primary mt-1">{{ checked_in }}</p>
+        </div>
+
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Pending Requests</p>
+            <p class="text-3xl font-bold text-amber-500 mt-1">{{ requested }}</p>
+        </div>
+
+    </div>
+
+    <!-- Quick links -->
+    <div class="grid grid-cols-2 gap-4">
+        <a href="{% url 'checkin_queue' %}"
+           class="rounded-2xl bg-primary text-white p-6 shadow-sm hover:bg-teal-700 transition">
+            <p class="font-semibold text-lg">Check-in Queue</p>
+            <p class="text-sm text-teal-100 mt-1">Manage today's patient arrivals</p>
+        </a>
+        <a href="{% url 'bookings' %}"
+           class="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:bg-slate-50 transition">
+            <p class="font-semibold text-lg text-slate-800">Bookings</p>
+            <p class="text-sm text-slate-500 mt-1">Confirm or cancel appointments</p>
+        </a>
+        <a href="{% url 'schedules' %}"
+           class="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:bg-slate-50 transition">
+            <p class="font-semibold text-lg text-slate-800">Schedules</p>
+            <p class="text-sm text-slate-500 mt-1">Manage doctor availability</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

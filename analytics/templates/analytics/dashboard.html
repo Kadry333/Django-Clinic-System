@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard | ClinicMS{% endblock %}
+{% block page_name %}Analytics Dashboard{% endblock %}
+{% block content %}
+<section class="space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div><h1 class="text-2xl font-semibold text-slate-900">Clinic analytics</h1><p class="mt-2 text-sm text-slate-500">Cards, chart placeholders, and export controls for reporting UI.</p></div>
+        <div class="flex gap-3">{% include "components/buttons.html" with variant="secondary" label="Filter Report" %}{% include "components/buttons.html" with label="Export" %}</div>
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {% include "components/cards.html" with title="Total Appointments" value="4,280" subtitle="Last 30 days" icon="AP" %}
+        {% include "components/cards.html" with title="No-show Rate" value="7.4%" subtitle="Target under 5%" icon="NS" %}
+        {% include "components/cards.html" with title="Completed Visits" value="3,910" subtitle="Successfully closed" icon="OK" %}
+        {% include "components/cards.html" with title="Average Wait" value="14m" subtitle="All clinics" icon="WT" %}
+    </div>
+    <div class="grid gap-6 xl:grid-cols-2">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft"><div class="flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-900">Appointment trends</h2><span class="text-sm text-slate-500">Chart placeholder</span></div><div class="mt-6 h-72 rounded-3xl border border-dashed border-slate-300 bg-slate-50"></div></div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft"><div class="flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-900">No-show analysis</h2><span class="text-sm text-slate-500">Chart placeholder</span></div><div class="mt-6 h-72 rounded-3xl border border-dashed border-slate-300 bg-slate-50"></div></div>
+    </div>
+    {% include "components/tables.html" with title="Analytics Data Export" subtitle="Tabular analytics preview with pagination and states." %}
+    {% include "components/states.html" with empty_message="No analytics data is available for the selected period." error_message="Unable to render analytics insights." %}
+</section>
+{% endblock %}
