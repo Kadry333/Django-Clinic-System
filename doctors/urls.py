@@ -1,9 +1,17 @@
 from django.urls import path
-
+from doctors.views import (
+    DoctorDashboardView,
+    StartConsultationView,
+    FinishConsultationView,
+    ScheduleView,
+)
 from . import views
 
 urlpatterns = [
-    path("dashboard/", views.dashboard_view, name="doctor_dashboard"),
+    path("dashboard/", DoctorDashboardView.as_view(), name="doctor_dashboard"),
+    path("start/<int:queue_id>/", StartConsultationView.as_view(), name="start_consultation"),
+    path("finish/<int:queue_id>/", FinishConsultationView.as_view(), name="finish_consultation"),
+     
     path("admin/doctors/", views.DoctorsListView.as_view(), name="doctors.list"),
     path(
         "admin/doctors/create/", views.DoctorCreateView.as_view(), name="doctors.create"
@@ -22,10 +30,6 @@ urlpatterns = [
         "admin/doctors/<int:doctor_id>/delete/",
         views.DoctorDeleteView.as_view(),
         name="doctors.delete",
-    ),
-    path("start/<int:queue_id>/", views.start_consultation, name="start_consultation"),
-    path(
-        "finish/<int:queue_id>/", views.finish_consultation, name="finish_consultation"
     ),
     path("schedule/", views.DoctorScheduleView.as_view(), name="doctors.schedule"),
     path(
