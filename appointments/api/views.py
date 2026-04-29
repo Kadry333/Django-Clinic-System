@@ -7,7 +7,7 @@ from appointments.services import get_available_slots
 from doctors.models import DoctorProfile
 from datetime import datetime, timedelta
 
-from django.db.models import Q
+from django.db import Q, transaction
 from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -111,43 +111,97 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({"error": "new_date and new_time are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            new_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
-            new_time = None
-            for fmt in ("%H:%M", "%H:%M:%S", "%I:%M %p"):
-                try:
-                    new_time = datetime.strptime(new_time_str, fmt).time()
-                    break
-                except ValueError:
-                    continue
+            with transaction.atomic():
+                new_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
+                new_time = None
+                for fmt in ("%H:%M", "%H:%M:%S", "%I:%M %p"):
+                    try:
+                        new_time = datetime.strptime(new_time_str, fmt).time()
+                        break
+                    except ValueError:
+                        continue
 
-            if not new_time:
-                return Response({"error": "Invalid time format"}, status=status.HTTP_400_BAD_REQUEST)
+                if not new_time:
+                    return Response({"error": "Invalid time format"}, status=status.HTTP_400_BAD_REQUEST)
 
-            old_date = appointment.appointment_date
-            old_time = appointment.start_time
+                old_date = appointment.appointment_date
+                old_time = appointment.start_time
 
-            end_time = (datetime.combine(new_date, new_time) + timedelta(minutes=appointment.doctor.session_duration)).time()
+                end_time = (datetime.combine(new_date, new_time) + timedelta(minutes=appointment.doctor.session_duration)).time()
 
-            appointment.appointment_date = new_date
-            appointment.start_time = new_time
-            appointment.end_time = end_time
-            appointment.save()
+                appointment.appointment_date = new_date
+                appointment.start_time = new_time
+                appointment.end_time = end_time
+                appointment.save()
 
-            AppointmentReschedule.objects.create(
-                appointment=appointment,
-                old_date=old_date,
-                old_time=old_time,
-                new_date=new_date,
-                new_time=new_time,
-                changed_by=request.user,
-                reason=reason
-            )
+                AppointmentReschedule.objects.create(
+                    appointment=appointment,
+                    old_date=old_date,
+                    old_time=old_time,
+                    new_date=new_date,
+                    new_time=new_time,
+                    changed_by=request.user,
+                    reason=reason
+                )
 
-            RescheduleRequest.objects.filter(appointment=appointment, status="pending").delete()
+                RescheduleRequest.objects.filter(appointment=appointment, status="pending").delete()
 
-            return Response({"status": "rescheduled"})
+                return Response({"status": "rescheduled"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["post"])
+    def approve_reschedule(self, request, pk=None):
+        appointment = self.get_object()
+        reschedule_request = RescheduleRequest.objects.filter(appointment=appointment, status="pending").order_by("-created_at").first()
+
+        if not reschedule_request:
+            return Response({"error": "No pending reschedule request found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                old_date = appointment.appointment_date
+                old_time = appointment.start_time
+                new_date = reschedule_request.preferred_date
+                new_time = reschedule_request.preferred_time
+
+                end_time = (datetime.combine(new_date, new_time) + timedelta(minutes=appointment.doctor.session_duration)).time()
+
+                appointment.appointment_date = new_date
+                appointment.start_time = new_time
+                appointment.end_time = end_time
+                appointment.status = "confirmed"
+                appointment.save()
+
+                AppointmentReschedule.objects.create(
+                    appointment=appointment,
+                    old_date=old_date,
+                    old_time=old_time,
+                    new_date=new_date,
+                    new_time=new_time,
+                    changed_by=request.user,
+                    reason=reschedule_request.reason or "Approved patient reschedule request."
+                )
+
+                reschedule_request.status = "approved"
+                reschedule_request.save()
+
+                return Response({"status": "approved"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["post"])
+    def reject_reschedule(self, request, pk=None):
+        appointment = self.get_object()
+        reschedule_request = RescheduleRequest.objects.filter(appointment=appointment, status="pending").order_by("-created_at").first()
+
+        if not reschedule_request:
+            return Response({"error": "No pending reschedule request found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        reschedule_request.status = "rejected"
+        reschedule_request.save()
+
+        return Response({"status": "rejected"})
 
 @api_view(['GET'])
 def available_slots(request):
