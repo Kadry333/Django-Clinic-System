@@ -45,6 +45,7 @@ class StartConsultationView(DoctorRequiredMixins, View):
             with transaction.atomic():
                 q = get_object_or_404(AppointmentQueue, id=queue_id)
                 q.status = "in_progress"
+                q.started_at = timezone.now()
                 q.save()
         except Exception:
             messages.error(request, "Something went wrong. Please try again.")
