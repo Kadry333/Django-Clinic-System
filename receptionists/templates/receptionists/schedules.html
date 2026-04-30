@@ -14,6 +14,12 @@
     <h2 class="text-lg font-semibold text-slate-800 mb-4">Add Weekly Schedule</h2>
     <form method="POST" class="space-y-4">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
         <input type="hidden" name="action" value="add_schedule">
 
         <div>
@@ -94,13 +100,101 @@
                         <td class="px-5 py-4">{{ schedule.get_day_of_week_display }}</td>
                         <td class="px-5 py-4">{{ schedule.start_time }}</td>
                         <td class="px-5 py-4">{{ schedule.end_time }}</td>
-                        <td class="px-5 py-4">
-                            <form method="POST" action="{% url 'delete_schedule' schedule.id %}">
+                        <td class="px-5 py-4" x-data="{ editOpen: false }">
+                            <div class="flex items-center gap-2">
+
+    <!-- Edit Button -->
+    <button type="button"
+            @click="editOpen = true"
+            class="rounded-xl bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold hover:bg-blue-200 transition">
+        Edit
+    </button>
+              
+                            <form method="POST" action="{% url 'delete.schedule' schedule.id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="rounded-xl bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200">
                                     Delete
                                 </button>
                             </form>
+
+                            </div>
+                                <!-- Modal -->
+    <div x-cloak
+         x-show="editOpen"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+
+        <div @click.outside="editOpen = false"
+             class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+
+            <h2 class="mb-4 text-lg font-semibold text-slate-800">
+                Edit Schedule
+            </h2>
+
+            <form method="POST" action="{% url 'edit.schedule' schedule.id %}" class="space-y-4">
+                {% csrf_token %}
+
+                <!-- Doctor -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Doctor</label>
+                    <select name="doctor" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}"
+                                {% if doctor.id == schedule.doctor.id %}selected{% endif %}>
+                                Dr. {{ doctor.user.get_full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Day -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Day</label>
+                    <select name="day_of_week" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+                        {% for value, label in form.fields.day_of_week.choices %}
+                            <option value="{{ value }}"
+                                {% if value == schedule.day_of_week %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Time -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">Start Time</label>
+                        <input type="time"
+                               name="start_time"
+                               value="{{ schedule.start_time|time:'H:i' }}"
+                               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">End Time</label>
+                        <input type="time"
+                               name="end_time"
+                               value="{{ schedule.end_time|time:'H:i' }}"
+                               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button"
+                            @click="editOpen = false"
+                            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</td>
                         </td>
                     </tr>
                     {% empty %}

@@ -60,7 +60,7 @@ class DashboardView(LoginRequiredMixin,View):
         elif user.is_doctor:
             return redirect('doctor_dashboard')
         elif user.is_receptionist:
-            return redirect('receptionist_dashboard')
+            return redirect('receptionist.dashboard')
         else:
             return redirect('admin_dashboard')
 
