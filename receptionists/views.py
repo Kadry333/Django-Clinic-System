@@ -179,6 +179,7 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
 
     def post(self, request):
         appointment_id = request.POST.get('appointment_id')
+        action         = request.POST.get('action')
         today          = timezone.localtime(timezone.now()).date()
 
         try:
@@ -189,31 +190,39 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
                     messages.error(request, "This appointment is not for today.")
                     return redirect('checkin_queue')
 
-                if appointment.status.lower() != 'confirmed':
-                    messages.error(request, "Only confirmed appointments can be checked in.")
-                    return redirect('checkin_queue')
+                if action == 'checkin':
+                    if appointment.status.lower() != 'confirmed':
+                        messages.error(request, "Only confirmed appointments can be checked in.")
+                        return redirect('checkin_queue')
 
-                if AppointmentQueue.objects.filter(appointment=appointment).exists():
-                    messages.warning(request, "Patient is already checked in.")
-                    return redirect('checkin_queue')
+                    if AppointmentQueue.objects.filter(appointment=appointment).exists():
+                        messages.warning(request, "Patient is already checked in.")
+                        return redirect('checkin_queue')
 
-                appointment.status        = 'checked_in'
-                appointment.check_in_time = timezone.localtime(timezone.now())
-                appointment.save()
+                    appointment.status        = 'checked_in'
+                    appointment.check_in_time = timezone.localtime(timezone.now())
+                    appointment.save()
 
-                AppointmentQueue.objects.create(
-                    appointment   = appointment,
-                    check_in_time = appointment.check_in_time,
-                    status        = 'waiting',
-                )
+                    AppointmentQueue.objects.create(
+                        appointment   = appointment,
+                        check_in_time = appointment.check_in_time,
+                        status        = 'waiting',
+                    )
+                    messages.success(request, f'{appointment.patient.get_full_name()} checked in.')
+
+                elif action == 'no_show':
+                    if appointment.status.lower() not in ['confirmed', 'requested']:
+                        messages.error(request, "Cannot mark this appointment as no-show.")
+                        return redirect('checkin_queue')
+
+                    appointment.status = 'no_show'
+                    appointment.save()
+                    messages.success(request, f'{appointment.patient.get_full_name()} marked as no-show.')
 
         except Exception:
             messages.error(request, 'Something went wrong. Please try again.')
-            return redirect('checkin_queue')
 
-        messages.success(request, f'{appointment.patient.get_full_name()} checked in.')
         return redirect('checkin_queue')
-
 class RescheduleView(ReceptionistRequiredMixins, View):
     def post(self, request, appointment_id):
         appointment = get_object_or_404(

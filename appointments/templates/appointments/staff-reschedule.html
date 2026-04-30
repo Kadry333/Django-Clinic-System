@@ -10,181 +10,191 @@
 {% endblock %}
 
 {% block content %}
-<section class="space-y-6" x-data="rescheduleManager('{{ appointment_id }}')" x-init="init()">
-    <!-- Loading Overlay -->
-    <template x-if="globalLoading">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-white/70">
-            <div class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        </div>
-    </template>
+<section class="space-y-6">
 
-    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]" x-show="appointment" x-cloak>
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
+
         <!-- LEFT: Appointment Info -->
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Current Appointment</p>
-            <h1 class="mt-2 text-2xl font-semibold text-slate-900">Staff Reschedule Panel</h1>
-            <p class="mt-2 text-sm text-slate-500">Review current appointment details.</p>
+
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Current Appointment
+            </p>
+
+            <h1 class="mt-2 text-2xl font-semibold text-slate-900">
+                Staff Reschedule Panel
+            </h1>
+
+            <p class="mt-2 text-sm text-slate-500">
+                Review appointment details before selecting a new time.
+            </p>
 
             <div class="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm">
+
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Patient</p>
-                    <p class="mt-1 font-medium text-slate-900" x-text="appointment.patient_name"></p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.patient.get_full_name|default:appointment.patient.email|default:"-" }}
+                    </p>
                 </div>
+
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Doctor</p>
-                    <p class="mt-1 font-medium text-slate-900" x-text="appointment.doctor_name"></p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ doctor.user.get_full_name|default:doctor.user.email|default:"-" }}
+                    </p>
                 </div>
+
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Current Date</p>
-                    <p class="mt-1 font-medium text-slate-900" x-text="formatDate(appointment.appointment_date)"></p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.appointment_date|date:"d M Y"|default:"-" }}
+                    </p>
                 </div>
+
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Current Time</p>
-                    <p class="mt-1 font-medium text-slate-900" x-text="appointment.start_time + ' - ' + appointment.end_time"></p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.start_time|time:"h:i A" }}
+                        {% if appointment.end_time %}
+                            - {{ appointment.end_time|time:"h:i A" }}
+                        {% endif %}
+                    </p>
                 </div>
+
             </div>
         </div>
 
         <!-- RIGHT: RESCHEDULE -->
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
             <div class="border-b border-slate-100 pb-6">
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Reschedule Appointment</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Choose new date & time</h2>
-                <p class="mt-2 text-sm text-slate-500">Select a date to check available slots.</p>
+
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Reschedule Appointment
+                </p>
+
+                <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                    Choose new date & time
+                </h2>
+
+                <p class="mt-2 text-sm text-slate-500">
+                    Select a date, then choose an available time slot.
+                </p>
             </div>
 
-            <div class="mt-8 space-y-6">
+            <!-- GET FORM (DATE FILTER) -->
+            <form method="get" class="mt-8 space-y-6">
+
                 <div>
-                    <label class="mb-2 block text-sm font-medium text-slate-700">Select Date</label>
-                    <input type="date" x-model="selectedDate" @change="fetchSlots()"
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        Select Date
+                    </label>
+
+                    <input type="date"
+                           name="date"
+                           value="{{ selected_date|date:'Y-m-d' }}"
                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50">
                 </div>
 
-                <div id="errorBanner" x-show="error" x-cloak class="rounded-xl bg-rose-50 p-4 text-sm font-medium text-rose-700 border border-rose-100 mb-4">
-                    <span x-text="error"></span>
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Check Availability
+                </button>
+
+            </form>
+
+            {% if selected_date %}
+
+            <div class="mt-8 border-t border-slate-100 pt-6">
+
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-900">
+                        Available Slots
+                    </h3>
+
+                    <span class="rounded-2xl bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                        {{ available_slots|length }} slots
+                    </span>
                 </div>
 
-                <div x-show="slotsLoading" class="flex justify-center py-6">
-                    <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                </div>
+                {% if available_slots %}
 
-                <div x-show="!slotsLoading && selectedDate">
-                    <div x-show="availableSlots.length > 0" class="mt-8 border-t border-slate-100 pt-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-slate-900">Available Slots</h3>
-                            <span class="rounded-2xl bg-slate-50 px-3 py-1 text-xs text-slate-600" x-text="availableSlots.length + ' slots'"></span>
-                        </div>
+                <!-- POST FORM (RESCHEDULE) -->
+                <form method="post" class="mt-6 space-y-5">
+                    {% csrf_token %}
 
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-                            <template x-for="slot in availableSlots" :key="slot.start">
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="new_time" :value="slot.start" x-model="selectedTime" class="peer sr-only">
-                                    <div class="rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition
-                                                peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary" x-text="slot.label">
-                                    </div>
-                                </label>
-                            </template>
-                        </div>
+                    <!-- KEEP EXISTING FORM FIELD: new_date -->
+                    <input type="hidden"
+                           name="new_date"
+                           value="{{ selected_date|date:'Y-m-d' }}">
 
-                        <div class="space-y-6">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-slate-700">Reason</label>
-                                <textarea x-model="reason" rows="4"
-                                          class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-teal-50"
-                                          placeholder="Write reason for rescheduling..."></textarea>
+                    <!-- SLOT SELECTION (maps to new_time) -->
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+                        {% for slot in available_slots %}
+                        <label class="cursor-pointer">
+
+                            <input type="radio"
+                                   name="new_time"
+                                   value="{{ slot.start }}"
+                                   class="peer sr-only"
+                                   {% if form.new_time.value == slot.start %}checked{% endif %}>
+
+                            <div class="rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition
+                                        peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary">
+
+                                {{ slot.label }}
                             </div>
-                            <button @click="submitReschedule" :disabled="!selectedTime"
-                                    class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                Confirm Reschedule
-                            </button>
-                        </div>
+
+                        </label>
+                        {% endfor %}
+
                     </div>
 
-                    <div x-show="availableSlots.length === 0" class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
-                        <p class="text-sm text-slate-600">No available slots for this date.</p>
+                    {% if form.new_time.errors %}
+                    <p class="text-sm text-rose-600">{{ form.new_time.errors|join:", " }}</p>
+                    {% endif %}
+
+                    <!-- REASON -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Reason
+                        </label>
+
+                        <textarea name="reason"
+                                  rows="4"
+                                  class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                  placeholder="Write reason for rescheduling...">{{ form.reason.value|default:'' }}</textarea>
+
+                        {% if form.reason.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.reason.errors|join:", " }}</p>
+                        {% endif %}
                     </div>
+
+                    <!-- SUBMIT -->
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-teal-700">
+                        Confirm Reschedule
+                    </button>
+
+                </form>
+
+                {% else %}
+
+                <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+                    <p class="text-sm text-slate-600">
+                        No available slots for this date.
+                    </p>
                 </div>
+
+                {% endif %}
             </div>
+
+            {% endif %}
+
         </div>
     </div>
-</section>
 
-<script>
-    function rescheduleManager(appointmentId) {
-        return {
-            appointmentId: appointmentId,
-            appointment: null,
-            selectedDate: '',
-            selectedTime: '',
-            reason: '',
-            availableSlots: [],
-            globalLoading: true,
-            slotsLoading: false,
-            error: null,
-            async init() {
-                await this.fetchDetails();
-            },
-            async fetchDetails() {
-                this.globalLoading = true;
-                this.error = null;
-                try {
-                    const response = await fetch(`/appointments/api/appointments_view/${this.appointmentId}/`);
-                    if (!response.ok) throw new Error('Failed to load appointment details');
-                    this.appointment = await response.json();
-                } catch (e) {
-                    this.error = e.message;
-                } finally {
-                    this.globalLoading = false;
-                }
-            },
-            async fetchSlots() {
-                if (!this.selectedDate) return;
-                this.slotsLoading = true;
-                this.error = null;
-                this.availableSlots = [];
-                this.selectedTime = '';
-                try {
-                    const response = await fetch(`/appointments/api/slots/?doctor_id=${this.appointment.doctor}&date=${this.selectedDate}`);
-                    if (!response.ok) throw new Error('Failed to fetch available slots');
-                    this.availableSlots = await response.json();
-                } catch (e) {
-                    this.error = e.message;
-                } finally {
-                    this.slotsLoading = false;
-                }
-            },
-            async submitReschedule() {
-                if (!this.selectedTime) return;
-                this.globalLoading = true;
-                this.error = null;
-                try {
-                    const response = await fetch(`/appointments/api/appointments_view/${this.appointmentId}/reschedule/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            new_date: this.selectedDate,
-                            new_time: this.selectedTime,
-                            reason: this.reason
-                        })
-                    });
-                    if (!response.ok) {
-                        const data = await response.json();
-                        throw new Error(data.detail || 'Failed to reschedule appointment');
-                    }
-                    window.location.href = `/appointments/doctor-management/${this.appointmentId}/`;
-                } catch (e) {
-                    this.error = e.message;
-                    this.globalLoading = false;
-                }
-            },
-            formatDate(dateStr) {
-                if (!dateStr) return '';
-                return new Date(dateStr).toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'});
-            }
-        }
-    }
-</script>
+</section>
 {% endblock %}

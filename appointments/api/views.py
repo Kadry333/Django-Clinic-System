@@ -1,17 +1,27 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
-from .serializers import AppointmentSerializer
-from appointments.services import get_available_slots
-from doctors.models import DoctorProfile
-from datetime import datetime, timedelta
-
-from django.db.models import Q
+from datetime import datetime, timedelta, date
 from django.db import transaction
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework.decorators import action
+
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, action
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
+from appointments.services import get_available_slots, book_appointment
+from doctors.models import DoctorProfile
+from rest_framework.decorators import permission_classes
+
+from .permissions import IsDoctor, IsPatient
+from .serializers import (
+    AppointmentSerializer,
+    PatientAppointmentSerializer,
+    PatientBookAppointmentSerializer,
+    PatientRescheduleSerializer,
+)
 
 
 class AppointmentPagination(PageNumberPagination):
@@ -19,6 +29,7 @@ class AppointmentPagination(PageNumberPagination):
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsDoctor]
     queryset = Appointment.objects.all().select_related("doctor__user", "patient")
     serializer_class = AppointmentSerializer
     pagination_class = AppointmentPagination
@@ -35,7 +46,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         params = self.request.query_params
-
         search = params.get("search", "").strip()
         status_filter = params.get("status", "").strip()
         doctor_id = params.get("doctor", "").strip()
@@ -67,11 +77,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(appointment_date__lte=end_date)
 
         sort_fields = self.sort_map.get(sort, ("appointment_date", "start_time"))
-        if direction == "desc":
-            ordering = [f"-{field}" for field in sort_fields]
-        else:
-            ordering = list(sort_fields)
-
+        ordering = (
+            [f"-{f}" for f in sort_fields] if direction == "desc" else list(sort_fields)
+        )
         return queryset.order_by(*ordering, "id")
 
     @action(detail=True, methods=["post"])
@@ -135,7 +143,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
                 old_date = appointment.appointment_date
                 old_time = appointment.start_time
-
                 end_time = (
                     datetime.combine(new_date, new_time)
                     + timedelta(minutes=appointment.doctor.session_duration)
@@ -185,7 +192,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 old_time = appointment.start_time
                 new_date = reschedule_request.preferred_date
                 new_time = reschedule_request.preferred_time
-
                 end_time = (
                     datetime.combine(new_date, new_time)
                     + timedelta(minutes=appointment.doctor.session_duration)
@@ -210,7 +216,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
                 reschedule_request.status = "approved"
                 reschedule_request.save()
-
                 return Response({"status": "approved"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -232,11 +237,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         reschedule_request.status = "rejected"
         reschedule_request.save()
-
         return Response({"status": "rejected"})
 
 
 @api_view(["GET"])
+@permission_classes([IsDoctor])
 def available_slots(request):
     doctor_id = request.query_params.get("doctor_id")
     date_str = request.query_params.get("date")
@@ -248,8 +253,141 @@ def available_slots(request):
 
     try:
         doctor = DoctorProfile.objects.get(id=doctor_id)
-        date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        slots = get_available_slots(doctor, date)
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        slots = get_available_slots(doctor, date_obj)
         return Response(slots)
-    except:
+    except Exception:
         return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PatientSlotListView(APIView):
+    permission_classes = [IsPatient]
+
+    def get(self, request):
+        doctor_id = request.query_params.get("doctor_id")
+        date_str = request.query_params.get("date")
+
+        if not doctor_id or not date_str:
+            return Response(
+                {"error": "doctor_id and date are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            doctor = get_object_or_404(DoctorProfile, id=doctor_id)
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+            if selected_date < date.today():
+                return Response(
+                    {"error": "Invalid date."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            slots = get_available_slots(doctor, selected_date)
+            return Response({"slots": slots})
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PatientAppointmentListCreateView(APIView):
+    permission_classes = [IsPatient]
+
+    def get(self, request):
+        appointments = (
+            Appointment.objects.filter(patient=request.user)
+            .select_related("doctor__user")
+            .order_by("-appointment_date")
+        )
+        return Response(PatientAppointmentSerializer(appointments, many=True).data)
+
+    def post(self, request):
+        serializer = PatientBookAppointmentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        try:
+            with transaction.atomic():
+                doctor = DoctorProfile.objects.get(id=data["doctor_id"])
+                book_appointment(request.user, doctor, data["date"], data["time"])
+
+            return Response(
+                {"detail": "Appointment booked successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PatientAppointmentCancelView(APIView):
+    permission_classes = [IsPatient]
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment, id=appointment_id, patient=request.user
+        )
+
+        if appointment.status not in ["requested", "confirmed"]:
+            return Response(
+                {"error": "Cannot cancel this appointment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            with transaction.atomic():
+                appointment.status = "cancelled"
+                appointment.save()
+            return Response({"detail": "Appointment cancelled successfully."})
+        except Exception:
+            return Response(
+                {"error": "Something went wrong."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class PatientAppointmentRescheduleView(APIView):
+    permission_classes = [IsPatient]
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment, id=appointment_id, patient=request.user
+        )
+
+        if appointment.status not in ["requested", "confirmed"]:
+            return Response(
+                {"error": "Cannot reschedule this appointment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if RescheduleRequest.objects.filter(
+            appointment=appointment, status="pending"
+        ).exists():
+            return Response(
+                {"error": "Reschedule request already pending."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = PatientRescheduleSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        try:
+            with transaction.atomic():
+                RescheduleRequest.objects.create(
+                    appointment=appointment,
+                    requested_by=request.user,
+                    preferred_date=data["date"],
+                    preferred_time=data["time"],
+                    reason="Patient requested reschedule",
+                )
+            return Response(
+                {"detail": "Reschedule request sent successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception:
+            return Response(
+                {"error": "Something went wrong."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

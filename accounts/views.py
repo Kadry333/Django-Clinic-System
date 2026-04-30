@@ -3,9 +3,13 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth import login, logout
-from accounts.forms import RegisterForm, LoginForm
+from accounts.forms import RegisterForm, LoginForm, UserUpdateForm
 from django.contrib import messages
 from django.contrib.messages import get_messages
+from doctors.models import DoctorProfile
+from patients.models import PatientProfile
+from receptionists.models import ReceptionistProfile
+
 
 class RegisterView(View):
     def get(self,request):
@@ -59,3 +63,30 @@ class DashboardView(LoginRequiredMixin,View):
             return redirect('receptionist.dashboard')
         else:
             return redirect('admin_dashboard')
+
+class ProfileView(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        form = UserUpdateForm(instance=user)
+        profile_data = None
+        if user.is_doctor:
+            profile_data = DoctorProfile.objects.filter(user=user).first()
+        elif user.is_patient:
+            profile_data = PatientProfile.objects.filter(user=user).first()
+        elif user.is_receptionist:
+            profile_data = ReceptionistProfile.objects.filter(user=user).first()
+            
+        return render(request, 'accounts/profile.html', {
+            'user': user,
+            'profile_data': profile_data,
+            'form': form
+        })
+
+    def post(self, request):
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('profile')
+        
+        return render(request, 'accounts/profile.html', {'form': form})

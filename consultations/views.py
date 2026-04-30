@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from notifications.models import Notification
 
-from appointments.models import AppointmentQueue
+from appointments.models import AppointmentQueue, Appointment
 from consultations.models import Consultation, Prescription, MedicalTest
 
 
@@ -71,14 +71,23 @@ def consultation_submit_view(request, queue_id):
     return redirect("doctor_dashboard")
 
 
-def summary_view(request):
+def summary_view(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+    consultation = get_object_or_404(
+        Consultation.objects.prefetch_related('prescriptions', 'medicaltest_set'), 
+        appointment=appointment
+    )
+
     return render(
         request,
         "consultations/summary.html",
         {
             "current_role": "Patient",
+            "appointment": appointment,
+            "consultation": consultation,
         },
     )
+
 
 
 def doctor_consultation_view(request):

@@ -2,226 +2,581 @@
 {% block title %}Appointment Details | ClinicMS{% endblock %}
 {% block page_name %}Appointment Details{% endblock %}
 {% block content %}
-<section class="space-y-6" x-data="appointmentManager('{{ appointment_id }}')" x-init="init()">
-    <!-- Loading Detail Overlay -->
-    <template x-if="loading">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-white/70">
-            <div class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        </div>
-    </template>
-
-    <div class="flex flex-wrap items-center justify-between gap-3" x-show="appointment" x-cloak>
+<section class="space-y-6" x-data="{ activeModal: '' }">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <a href="{% url 'appointments' %}" class="text-sm font-medium text-primary hover:text-teal-700">Back to appointments</a>
+            <a href="{% url 'appointments' %}" class="text-sm font-medium text-primary hover:text-teal-700">Back to
+                appointments</a>
             <h1 class="mt-2 text-2xl font-semibold text-slate-900">Doctor Appointment Overview</h1>
-            <p class="mt-1 text-sm text-slate-500">Review booking details, update appointment status, and manage consultation follow-up.</p>
+            <p class="mt-1 text-sm text-slate-500">Review booking details, update appointment status, and manage
+                consultation follow-up.</p>
         </div>
-        <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold"
-              :class="statusClasses[appointment.status] || 'bg-slate-100 text-slate-700'"
-              x-text="statusLabels[appointment.status] || appointment.status">
+        <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold
+            {% if appointment.status == 'requested' %}bg-amber-100 text-amber-700
+            {% elif appointment.status == 'confirmed' %}bg-blue-100 text-blue-700
+            {% elif appointment.status == 'checked_in' %}bg-cyan-100 text-cyan-700
+            {% elif appointment.status == 'completed' %}bg-emerald-100 text-emerald-700
+            {% elif appointment.status == 'cancelled' %}bg-rose-100 text-rose-700
+            {% else %}bg-slate-100 text-slate-700{% endif %}">
+            {{ appointment.get_status_display }}
         </span>
     </div>
 
-    <div id="errorBanner" x-show="error" x-cloak class="rounded-xl bg-rose-50 p-4 text-sm font-medium text-rose-700 border border-rose-100">
-        <span x-text="error"></span>
-    </div>
-
-    <div class="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]" x-show="appointment" x-cloak>
+    <div class="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <div class="space-y-6">
-            <!-- Details Card -->
             <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
                 <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Doctor</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="appointment.doctor_name"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">
+                            {% if appointment.doctor.user.first_name or appointment.doctor.user.last_name %}
+                            {{ appointment.doctor.user.first_name }} {{ appointment.doctor.user.last_name }}
+                            {% else %}
+                            {{ appointment.doctor.user.email }}
+                            {% endif %}
+                        </p>
+                        <p class="mt-1 text-sm text-slate-500">{{ appointment.doctor.user.email }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Patient</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="appointment.patient_name"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">
+                            {% if appointment.patient.first_name or appointment.patient.last_name %}
+                            {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+                            {% else %}
+                            {{ appointment.patient.email }}
+                            {% endif %}
+                        </p>
+                        <p class="mt-1 text-sm text-slate-500">{{ appointment.patient.email }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Fee</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="'$' + appointment.fee"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">${{ appointment.fee }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Appointment Date</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="formatDate(appointment.appointment_date)"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">{{ appointment.appointment_date|date:"M
+                            d, Y" }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Start Time</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="formatTime(appointment.start_time)"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">{{ appointment.start_time|time:"g:i A" }}
+                        </p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">End Time</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="formatTime(appointment.end_time)"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">{{ appointment.end_time|time:"g:i A" }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Session Duration</p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">{{ appointment.doctor.session_duration }}
+                            minutes</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Created At</p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">{{ appointment.created_at|date:"M d, Y
+                            g:i A" }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Check-in Time</p>
-                        <p class="mt-2 text-base font-semibold text-slate-900" x-text="appointment.check_in_time ? formatDateTime(appointment.check_in_time) : 'Not checked in yet'"></p>
+                        <p class="mt-2 text-base font-semibold text-slate-900">
+                            {% if appointment.check_in_time %}
+                            {{ appointment.check_in_time|date:"M d, Y g:i A" }}
+                            {% else %}
+                            Not checked in yet
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Reschedule Requests -->
-            <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft" x-show="appointment && appointment.reschedule_requests && appointment.reschedule_requests.some(r => r.status === 'pending')">
+            <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-900">Reschedule Requests</h2>
-                        <p class="mt-1 text-sm text-slate-500">Handle patient reschedule requests for active appointments.</p>
+                        <p class="mt-1 text-sm text-slate-500">Handle patient reschedule requests for active
+                            appointments.</p>
                     </div>
                 </div>
-                <div class="mt-6 overflow-hidden rounded-2xl border border-slate-100">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
-                            <tr>
-                                <th class="px-5 py-3">Requested Date/Time</th>
-                                <th class="px-5 py-3">Reason</th>
-                                <th class="px-5 py-3 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <template x-for="req in appointment.reschedule_requests.filter(r => r.status === 'pending')" :key="req.id">
-                                <tr>
-                                    <td class="px-5 py-4">
-                                        <div class="font-medium text-slate-900" x-text="formatDate(req.preferred_date)"></div>
-                                        <div class="text-slate-500" x-text="formatTime(req.preferred_time)"></div>
-                                    </td>
-                                    <td class="px-5 py-4 text-slate-600" x-text="req.reason || '-'"></td>
-                                    <td class="px-5 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <button @click="updateStatus('approve_reschedule')" class="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-primary hover:bg-teal-100">Approve</button>
-                                            <button @click="updateStatus('reject_reschedule')" class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100">Reject</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+
+                {% if appointment.status == "cancelled" %}
+                <div class="mt-5 rounded-2xl border border-dashed border-rose-200 bg-rose-50 p-5">
+                    <p class="text-sm font-semibold text-rose-800">Rescheduling is disabled for cancelled appointments.
+                    </p>
+                    <p class="mt-1 text-sm text-rose-700">Any reschedule activity for this appointment is removed once
+                        the schedule is cancelled.</p>
                 </div>
+                {% else %}
+                <div class="mt-5 space-y-4">
+                    {% for request_item in reschedule_requests %}
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="space-y-2">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="text-sm font-semibold text-slate-900">Requested by {{
+                                        request_item.requested_by.get_full_name|default:request_item.requested_by.email
+                                        }}</p>
+                                    <span
+                                        class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
+                                        {{ request_item.get_status_display }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-slate-600">
+                                    Preferred slot:
+                                    <span class="font-medium text-slate-900">{{ request_item.preferred_date|date:"M d,
+                                        Y" }}</span>
+                                    at
+                                    <span class="font-medium text-slate-900">{{ request_item.preferred_time|time:"g:i A"
+                                        }}</span>
+                                </p>
+                                <p class="text-sm text-slate-500">Submitted on {{ request_item.created_at|date:"M d, Y
+                                    g:i A" }}</p>
+                                <p class="text-sm text-slate-600">
+                                    {% if request_item.reason %}
+                                    {{ request_item.reason }}
+                                    {% else %}
+                                    No reason was provided with this reschedule request.
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                {% if request_item.status == "pending" %}
+                                <button type="button" @click="activeModal = 'confirm-reschedule'"
+                                    class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700">
+                                    Confirm Requested Slot
+                                </button>
+                                <button type="button" @click="activeModal = 'reject-reschedule'"
+                                    class="inline-flex items-center justify-center rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700">
+                                    Reject Request
+                                </button>
+                                <a href="{% url 'appointments.reschedule' appointment.id %}"
+                                    class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                                    Reschedule to Another Slot
+                                </a>
+                                {% else %}
+                                <button type="button" disabled
+                                    class="inline-flex cursor-not-allowed items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400">
+                                    Request Already {{ request_item.get_status_display }}
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5">
+                        <p class="text-sm font-semibold text-slate-900">No patient reschedule requests yet.</p>
+                        <p class="mt-1 text-sm text-slate-500">No reschedule actions are pending for this appointment
+                            right now.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if reschedule_history %}
+                <div class="mt-6">
+                    <h3 class="text-sm font-semibold text-slate-900">Reschedule History</h3>
+                    <div class="mt-3 space-y-3">
+                        {% for item in reschedule_history %}
+                        <div class="rounded-2xl border border-slate-200 p-4">
+                            <p class="text-sm font-semibold text-slate-900">
+                                {{ item.old_date|date:"M d, Y" }} {{ item.old_time|time:"g:i A" }}
+                                to
+                                {{ item.new_date|date:"M d, Y" }} {{ item.new_time|time:"g:i A" }}
+                            </p>
+                            <p class="mt-1 text-sm text-slate-500">Changed by {{
+                                item.changed_by.get_full_name|default:item.changed_by.email }} on {{
+                                item.created_at|date:"M d, Y g:i A" }}</p>
+                            {% if item.reason %}
+                            <p class="mt-1 text-sm text-slate-600">{{ item.reason }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900">Consultation Notes</h2>
+                        <p class="mt-1 text-sm text-slate-500">Static preview for the doctor consultation form and saved
+                            note visibility.</p>
+                    </div>
+                    {% if appointment.status == "requested" %}
+                    <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">Enable after
+                        confirmation</span>
+                    {% elif appointment.status == "cancelled" %}
+                    <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">Disabled for
+                        cancelled appointment</span>
+                    {% else %}
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Notes
+                        enabled</span>
+                    {% endif %}
+                </div>
+
+                {% if appointment.status == "requested" %}
+                <div class="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5">
+                    <p class="text-sm font-semibold text-slate-900">Consultation entry is locked until the appointment
+                        is confirmed.</p>
+                    <p class="mt-1 text-sm text-slate-500">Once the doctor confirms the schedule, they can add findings,
+                        treatment notes, and follow-up instructions here.</p>
+                </div>
+                {% elif appointment.status == "cancelled" %}
+                <div class="mt-5 rounded-2xl border border-dashed border-rose-200 bg-rose-50 p-5">
+                    <p class="text-sm font-semibold text-rose-800">Consultation entry is disabled for cancelled
+                        appointments.</p>
+                    <p class="mt-1 text-sm text-rose-700">A cancelled schedule should not accept any new consultation
+                        notes.</p>
+                </div>
+                {% else %}
+                <div class="mt-5 grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+                    <div class="space-y-3">
+                        <label for="consultation_note" class="block text-sm font-medium text-slate-700">Write
+                            consultation note</label>
+                        <textarea id="consultation_note" rows="8"
+                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                            placeholder="Static preview: enter diagnosis, treatment, prescription notes, and follow-up instructions.">Patient reports mild recurring headache for the last 3 days. Recommended hydration, rest, and a follow-up review if symptoms continue.</textarea>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button"
+                                class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700">
+                                Save Consultation
+                            </button>
+                            <button type="button"
+                                class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                                Attach Prescription
+                            </button>
+                        </div>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-sm font-semibold text-slate-900">Visible Consultation Preview</p>
+                        <p class="mt-3 text-sm leading-6 text-slate-600">Patient reports mild recurring headache for the
+                            last 3 days. Recommended hydration, rest, and a follow-up review if symptoms continue.</p>
+                        <div class="mt-4 space-y-2 text-sm text-slate-500">
+                            <p>Assessment: Stable and suitable for outpatient guidance.</p>
+                            <p>Follow-up: Recheck within 5 days if symptoms persist.</p>
+                            <p>Prescription: Static placeholder for medication summary.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
         <div class="space-y-6">
-            <!-- Status Actions -->
             <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
                 <h2 class="text-lg font-semibold text-slate-900">Status Actions</h2>
-                <p class="mt-1 text-sm text-slate-500">Update the appointment status using the actions below.</p>
+                <p class="mt-1 text-sm text-slate-500">Static action panel based on the current appointment status.</p>
 
                 <div class="mt-5 grid gap-3">
-                    <button type="button" @click="updateStatus('confirm')"
-                            :disabled="appointment.status !== 'requested'"
-                            class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition"
-                            :class="appointment.status === 'requested' ? 'bg-primary text-white hover:bg-teal-700' : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'">
+                    <button type="button" @click="activeModal = 'confirm'" {% if appointment.status !="requested" or
+                        reschedule_requests %}disabled{% endif %}
+                        class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'requested' and not reschedule_requests %}bg-primary text-white hover:bg-teal-700{% else %}cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% endif %}">
                         Confirm Appointment
                     </button>
 
-                    <button type="button" @click="updateStatus('cancel')"
-                            :disabled="['completed', 'cancelled', 'no_show'].includes(appointment.status)"
-                            class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition"
-                            :class="!['completed', 'cancelled', 'no_show'].includes(appointment.status) ? 'bg-rose-600 text-white hover:bg-rose-700' : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'">
+                    <button type="button" @click="activeModal = 'cancel'" {% if appointment.status=="completed" or
+                        appointment.status=="cancelled" or appointment.status=="no_show" %}disabled{% endif %}
+                        class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'completed' or appointment.status == 'cancelled' or appointment.status == 'no_show' %}cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% else %}bg-rose-600 text-white hover:bg-rose-700{% endif %}">
                         Cancel Appointment
                     </button>
 
-                    <button type="button" @click="updateStatus('check_in')"
-                            :disabled="appointment.status !== 'confirmed'"
-                            class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition"
-                            :class="appointment.status === 'confirmed' ? 'bg-cyan-600 text-white hover:bg-cyan-700' : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'">
+                    <button type="button" @click="activeModal = 'check-in'" {% if appointment.status !="confirmed"
+                        %}disabled{% endif %}
+                        class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'confirmed' %}bg-cyan-600 text-white hover:bg-cyan-700{% else %}cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% endif %}">
                         Mark Checked In
                     </button>
 
-                    <button type="button" @click="updateStatus('no_show')"
-                            :disabled="appointment.status !== 'confirmed'"
-                            class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition"
-                            :class="appointment.status === 'confirmed' ? 'bg-slate-700 text-white hover:bg-slate-800' : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'">
+                    <button type="button" @click="activeModal = 'complete'" {% if appointment.status !="checked_in"
+                        %}disabled{% endif %}
+                        class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'checked_in' %}bg-emerald-600 text-white hover:bg-emerald-700{% else %}cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% endif %}">
+                        Mark Completed
+                    </button>
+
+                    <button type="button" @click="activeModal = 'no-show'" {% if appointment.status !="confirmed"
+                        %}disabled{% endif %}
+                        class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'confirmed' %}bg-slate-700 text-white hover:bg-slate-800{% else %}cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% endif %}">
                         Mark No Show
                     </button>
 
-                    <a :href="'/appointments/doctor-management/' + appointmentId + '/reschedule/'"
-                       :class="appointment.status === 'cancelled' ? 'pointer-events-none cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400' : 'border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50'"
-                       class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold">
-                        Reschedule Appointment
+                    <a href="{% url 'appointments.reschedule' appointment.id %}" {% if appointment.status=="cancelled"
+                        %}aria-disabled="true" {% endif %}
+                        class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold {% if appointment.status == 'cancelled' %}pointer-events-none cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400{% else %}border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50{% endif %}">
+                        Reschedule to Another Slot
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <div x-cloak x-show="activeModal == 'cancel'" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Cancel Appointment</h3>
+                    <p class="mt-1 text-sm text-slate-500">Please confirm before cancelling this appointment.</p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">
+                Are you sure you want to cancel the appointment for
+                <span class="font-semibold text-slate-900">
+                    {% if appointment.patient.first_name or appointment.patient.last_name %}
+                    {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+                    {% else %}
+                    {{ appointment.patient.email }}
+                    {% endif %}
+                </span>
+                on
+                <span class="font-semibold text-slate-900">{{ appointment.appointment_date|date:"M d, Y" }}</span>
+                at
+                <span class="font-semibold text-slate-900">{{ appointment.start_time|time:"g:i A" }}</span>?
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">
+                    No
+                </button>
+                <form method="post" action="{% url 'appointments.cancel' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700">
+                        Yes, Cancel
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'confirm'" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Confirm Appointment</h3>
+                    <p class="mt-1 text-sm text-slate-500">This will move the appointment from requested to confirmed.
+                    </p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">Are you sure you want to confirm this appointment?</div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.confirm' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">Yes,
+                        Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'check-in'" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Mark Checked In</h3>
+                    <p class="mt-1 text-sm text-slate-500">This will set the appointment status to checked in.</p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">Are you sure you want to mark this appointment as checked in?
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.check_in' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700">Yes,
+                        Check In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'complete'" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Mark Completed</h3>
+                    <p class="mt-1 text-sm text-slate-500">This will mark the visit as completed.</p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">Are you sure you want to mark this appointment as completed?
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.complete' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">Yes,
+                        Complete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'no-show'" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Mark No Show</h3>
+                    <p class="mt-1 text-sm text-slate-500">This will mark the patient as a no-show for this appointment.
+                    </p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">Are you sure you want to mark this appointment as no-show?
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.no_show' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Yes,
+                        Mark No Show</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'confirm-reschedule'"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Confirm Requested Slot</h3>
+                    <p class="mt-1 text-sm text-slate-500">This will apply the latest pending reschedule request and
+                        confirm the appointment.</p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">Are you sure you want to approve and confirm the requested
+                reschedule slot?</div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.confirm_reschedule' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">Yes,
+                        Confirm Slot</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-cloak x-show="activeModal == 'reject-reschedule'"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-slate-950/50" @click="activeModal = ''"></div>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-soft">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Reject Reschedule Request</h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {% if appointment.status == "requested" %}
+                        Rejecting this request will also cancel the appointment.
+                        {% elif appointment.status == "confirmed" %}
+                        Rejecting this request will keep the appointment confirmed and only reject the request.
+                        {% else %}
+                        Reject this reschedule request.
+                        {% endif %}
+                    </p>
+                </div>
+                <button type="button"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    @click="activeModal = ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-slate-600">
+                {% if appointment.status == "requested" %}
+                Are you sure you want to reject this requested reschedule and cancel the appointment?
+                {% elif appointment.status == "confirmed" %}
+                Are you sure you want to reject this requested reschedule and keep the confirmed appointment unchanged?
+                {% else %}
+                Are you sure you want to reject this requested reschedule?
+                {% endif %}
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <button type="button"
+                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
+                    @click="activeModal = ''">No</button>
+                <form method="post" action="{% url 'appointments.reject_reschedule' appointment.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700">Yes,
+                        Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </section>
-
-<script>
-    function appointmentManager(appointmentId) {
-        return {
-            appointmentId: appointmentId,
-            appointment: null,
-            loading: true,
-            error: null,
-            statusClasses: {
-                'requested': 'bg-amber-100 text-amber-700',
-                'confirmed': 'bg-blue-100 text-blue-700',
-                'checked_in': 'bg-cyan-100 text-cyan-700',
-                'completed': 'bg-emerald-100 text-emerald-700',
-                'cancelled': 'bg-rose-100 text-rose-700'
-            },
-            statusLabels: {
-                'requested': 'Requested',
-                'confirmed': 'Confirmed',
-                'checked_in': 'Checked In',
-                'completed': 'Completed',
-                'cancelled': 'Cancelled',
-                'no_show': 'No Show'
-            },
-            async init() {
-                await this.fetchDetails();
-            },
-            async fetchDetails() {
-                this.loading = true;
-                this.error = null;
-                try {
-                    const response = await fetch(`/appointments/api/appointments_view/${this.appointmentId}/`);
-                    if (!response.ok) throw new Error('Failed to load appointment details');
-                    this.appointment = await response.json();
-                } catch (e) {
-                    this.error = e.message;
-                } finally {
-                    this.loading = false;
-                }
-            },
-            async updateStatus(action) {
-                if (!confirm(`Are you sure you want to ${action.replace('_', ' ')} this appointment?`)) return;
-
-                this.loading = true;
-                this.error = null;
-                try {
-                    const response = await fetch(`/appointments/api/appointments_view/${this.appointmentId}/${action}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (!response.ok) throw new Error(`Failed to ${action.replace('_', ' ')} appointment`);
-                    await this.fetchDetails();
-                } catch (e) {
-                    this.error = e.message;
-                    this.loading = false;
-                }
-            },
-            formatDate(dateStr) {
-                if (!dateStr) return '';
-                return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
-            },
-            formatTime(timeStr) {
-                if (!timeStr) return '';
-                const [h, m] = timeStr.split(':');
-                const date = new Date();
-                date.setHours(h);
-                date.setMinutes(m);
-                return date.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
-            },
-            formatDateTime(dateStr) {
-                if (!dateStr) return '';
-                return new Date(dateStr).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true});
-            }
-        }
-    }
-</script>
 {% endblock %}

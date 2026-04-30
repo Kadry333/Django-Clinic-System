@@ -2,233 +2,29 @@
 {% block title %}Appointment Management | ClinicMS{% endblock %}
 {% block page_name %}Appointment Management{% endblock %}
 {% block content %}
-<section class="space-y-6" x-data="managementDashboard()" x-init="init()">
-    <!-- Loading Overlay -->
-    <template x-if="globalLoading">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-white/70">
-            <div class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        </div>
-    </template>
-
+<section class="space-y-6">
     <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-            <input type="text" x-model="filters.search" @input.debounce.500ms="fetchAppointments()" placeholder="Search appointment or patient" class="xl:col-span-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
-            <select x-model="filters.status" @change="fetchAppointments()" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500">
-                <option value="">All Statuses</option>
-                <template x-for="(label, val) in statusChoices" :key="val">
-                    <option :value="val" x-text="label"></option>
-                </template>
-            </select>
-            <input type="date" x-model="filters.start_date" @change="fetchAppointments()" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm">
-            <button @click="resetFilters()" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500 hover:bg-slate-50 transition">Reset</button>
+            <input type="text" placeholder="Search appointment or patient" class="xl:col-span-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50">
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Status</option></select>
+            <input type="date" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Doctor</option></select>
+            <select class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500"><option>Patient</option></select>
         </div>
     </div>
-
-    <div id="errorBanner" x-show="error" x-cloak class="rounded-xl bg-rose-50 p-4 text-sm font-medium text-rose-700 border border-rose-100">
-        <span x-text="error"></span>
-    </div>
-
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div class="rounded-panel border border-slate-200 bg-white overflow-hidden shadow-soft">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                        <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">ID</th>
-                        <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Patient</th>
-                        <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Date/Time</th>
-                        <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <template x-for="apt in appointments" :key="apt.id">
-                        <tr @click="selectAppointment(apt)"
-                            :class="selectedApt && selectedApt.id === apt.id ? 'bg-teal-50' : 'hover:bg-slate-50'"
-                            class="cursor-pointer transition">
-                            <td class="px-6 py-4 text-sm font-medium text-slate-900" x-text="'#' + apt.id"></td>
-                            <td class="px-6 py-4 text-sm text-slate-600" x-text="apt.patient_name"></td>
-                            <td class="px-6 py-4 text-sm text-slate-600" x-text="formatDate(apt.appointment_date) + ' ' + apt.start_time"></td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                                      :class="statusClasses[apt.status] || 'bg-slate-100 text-slate-600'"
-                                      x-text="statusLabels[apt.status] || apt.status"></span>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-
-            <div x-show="appointments.length === 0 && !loading" class="p-10 text-center text-slate-500">
-                No appointments found.
-            </div>
-
-            <!-- Pagination -->
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center" x-show="totalCount > 0">
-                <span class="text-sm text-slate-500" x-text="'Showing ' + appointments.length + ' of ' + totalCount + ' results'"></span>
-                <div class="flex gap-2">
-                    <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-1 rounded border border-slate-200 bg-white disabled:opacity-50">Prev</button>
-                    <button @click="changePage(currentPage + 1)" :disabled="!hasNext" class="px-3 py-1 rounded border border-slate-200 bg-white disabled:opacity-50">Next</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft h-fit sticky top-6">
+        <div>{% include "components/tables.html" with title="Doctor Appointment Actions" subtitle="Confirm, decline, and update appointment statuses." %}</div>
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
             <h2 class="text-lg font-semibold text-slate-900">Quick status actions</h2>
-            <p class="mt-1 text-sm text-slate-500">Select an appointment from the list to perform actions.</p>
-
-            <div x-show="selectedApt" class="mt-6 border-t border-slate-100 pt-6">
-                <div class="mb-6">
-                    <p class="text-xs font-semibold uppercase text-slate-400">Selected Appointment</p>
-                    <p class="mt-2 text-lg font-bold text-slate-900" x-text="'#' + selectedApt.id + ' - ' + selectedApt.patient_name"></p>
-                    <p class="text-sm text-slate-500" x-text="formatDate(selectedApt.appointment_date) + ' @ ' + selectedApt.start_time"></p>
-                </div>
-
-                <div class="grid gap-3">
-                    <button @click="updateStatus('confirm')"
-                            :disabled="selectedApt.status !== 'requested'"
-                            class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition bg-primary text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Confirm Appointment
-                    </button>
-                    <button @click="updateStatus('cancel')"
-                            :disabled="['completed', 'cancelled', 'no_show'].includes(selectedApt.status)"
-                            class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Cancel Appointment
-                    </button>
-                    <button @click="updateStatus('check_in')"
-                            :disabled="selectedApt.status !== 'confirmed'"
-                            class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Mark Checked-in
-                    </button>
-                    <button @click="updateStatus('no_show')"
-                            :disabled="selectedApt.status !== 'confirmed'"
-                            class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition bg-slate-700 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Mark No-show
-                    </button>
-                    <a :href="'/appointments/doctor-management/' + selectedApt.id + '/'" class="w-full inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition">
-                        View Full Details
-                    </a>
-                </div>
-            </div>
-
-            <div x-show="!selectedApt" class="mt-20 text-center text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                </svg>
-                <p>No appointment selected</p>
+            <div class="mt-5 grid gap-3">
+                {% include "components/buttons.html" with label="Confirm" %}
+                {% include "components/buttons.html" with variant="danger" label="Decline" %}
+                {% include "components/buttons.html" with variant="secondary" label="Mark Checked-in" %}
+                {% include "components/buttons.html" with variant="success" label="Mark Completed" %}
+                <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Mark No-show</button>
             </div>
         </div>
     </div>
+    {% include "components/states.html" with empty_message="No appointments need review right now." error_message="Unable to load doctor appointment actions." %}
 </section>
-
-<script>
-    function managementDashboard() {
-        return {
-            appointments: [],
-            selectedApt: null,
-            totalCount: 0,
-            currentPage: 1,
-            hasNext: false,
-            loading: false,
-            globalLoading: false,
-            error: null,
-            filters: {
-                search: '',
-                status: '',
-                start_date: ''
-            },
-            statusChoices: {
-                'requested': 'Requested',
-                'confirmed': 'Confirmed',
-                'checked_in': 'Checked In',
-                'completed': 'Completed',
-                'cancelled': 'Cancelled',
-                'no_show': 'No Show'
-            },
-            statusLabels: {
-                'requested': 'Requested',
-                'confirmed': 'Confirmed',
-                'checked_in': 'Checked In',
-                'completed': 'Completed',
-                'cancelled': 'Cancelled',
-                'no_show': 'No Show'
-            },
-            statusClasses: {
-                'requested': 'bg-amber-100 text-amber-700',
-                'confirmed': 'bg-blue-100 text-blue-700',
-                'checked_in': 'bg-cyan-100 text-cyan-700',
-                'completed': 'bg-emerald-100 text-emerald-700',
-                'cancelled': 'bg-rose-100 text-rose-700',
-                'no_show': 'bg-slate-100 text-slate-600'
-            },
-            async init() {
-                await this.fetchAppointments();
-            },
-            async fetchAppointments() {
-                this.loading = true;
-                this.error = null;
-                try {
-                    const params = new URLSearchParams({
-                        page: this.currentPage,
-                        search: this.filters.search,
-                        status: this.filters.status,
-                        start_date: this.filters.start_date
-                    });
-                    const response = await fetch(`/appointments/api/appointments_view/?${params.toString()}`);
-                    if (!response.ok) throw new Error('Failed to fetch appointments');
-                    const data = await response.json();
-                    this.appointments = data.results;
-                    this.totalCount = data.count;
-                    this.hasNext = !!data.next;
-
-                    // Keep selection if it exists in new data
-                    if (this.selectedApt) {
-                        const updated = this.appointments.find(a => a.id === this.selectedApt.id);
-                        if (updated) this.selectedApt = updated;
-                    }
-                } catch (e) {
-                    this.error = e.message;
-                } finally {
-                    this.loading = false;
-                }
-            },
-            selectAppointment(apt) {
-                this.selectedApt = apt;
-            },
-            async updateStatus(action) {
-                if (!this.selectedApt) return;
-                if (!confirm(`Are you sure you want to ${action.replace('_', ' ')} this appointment?`)) return;
-
-                this.globalLoading = true;
-                this.error = null;
-                try {
-                    const response = await fetch(`/appointments/api/appointments_view/${this.selectedApt.id}/${action}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (!response.ok) throw new Error(`Failed to ${action.replace('_', ' ')} appointment`);
-                    await this.fetchAppointments();
-                } catch (e) {
-                    this.error = e.message;
-                } finally {
-                    this.globalLoading = false;
-                }
-            },
-            resetFilters() {
-                this.filters = { search: '', status: '', start_date: '' };
-                this.currentPage = 1;
-                this.fetchAppointments();
-            },
-            changePage(page) {
-                this.currentPage = page;
-                this.fetchAppointments();
-            },
-            formatDate(dateStr) {
-                if (!dateStr) return '';
-                return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-            }
-        }
-    }
-</script>
 {% endblock %}
