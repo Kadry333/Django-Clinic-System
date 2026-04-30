@@ -32,11 +32,12 @@
                         <p class="mt-2 text-sm text-slate-500">{{ apt.appointment_date|date:"d M Y" }} at {{ apt.start_time|time:"h:i A" }}</p>
                     </div>
                     <div class="flex flex-wrap gap-3">
+                        {% if apt.status == 'requested' or apt.status == 'confirmed' %}
                         <form method="POST" action="{% url 'cancel_appointment' apt.id %}">
                             {% csrf_token %}
                             <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:text-rose-600">Cancel</button>
                         </form>
-                        {% if apt.status == 'requested' or apt.status == 'confirmed' %}
+                        
                         <a href="?apt_id={{ apt.id }}&doctor_id={{ apt.doctor.id }}&date={{ apt.appointment_date|date:'Y-m-d' }}"
                            class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
                             Request Reschedule
@@ -80,6 +81,8 @@
                 {% endif %}
             </div>
             {% endfor %}
+
+
         {% else %}
             <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
                 <div class="flex items-start gap-4">
