@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.views import View
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -9,11 +10,20 @@ from accounts.mixins import ReceptionistRequiredMixins
 from appointments.models import Appointment, AppointmentReschedule, AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
 from .forms import RescheduleForm, DoctorScheduleForm, DoctorScheduleExceptionForm
+from datetime import datetime, timedelta
+from django.db import IntegrityError, transaction
+from appointments.services import get_available_slots
+from django.db.models import Q
+from notifications.services import create_notification
+from notifications.models import Notification
+
+User = get_user_model()
+
 
 
 class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
     def get(self, request):
-        today = timezone.now().date()
+        today = datetime.now().date()
         context = {
             'total_today':     Appointment.objects.filter(appointment_date=today).count(),
             'confirmed_today': Appointment.objects.filter(appointment_date=today, status='confirmed').count(),
@@ -25,56 +35,123 @@ class ReceptionistDashboardView(ReceptionistRequiredMixins, View):
 
 class BookingsView(ReceptionistRequiredMixins, View):
     def get(self, request):
-        status = request.GET.get('status', '')
-        date   = request.GET.get('date', '')
+        status = request.GET.get("status", "")
+        date_from = request.GET.get("date_from", "")
+        date_to = request.GET.get("date_to", "")
+        doctor_id = request.GET.get("doctor", "")
+        patient_id = request.GET.get("patient", "")
+        search = request.GET.get("search", "")
 
-        appointments = Appointment.objects.select_related('patient', 'doctor__user').all()
+        appointments = Appointment.objects.select_related(
+            "patient",
+            "doctor__user",
+        ).all()
 
         if status:
-            appointments = appointments.filter(status=status.lower())
-        if date:
-            appointments = appointments.filter(appointment_date=date)
+            appointments = appointments.filter(status=status)
 
-        appointments = appointments.order_by('-appointment_date')
-        paginator    = Paginator(appointments, 10)
-        page_obj     = paginator.get_page(request.GET.get('page', 1))
+        if date_from:
+            appointments = appointments.filter(appointment_date__gte=date_from)
+
+        if date_to:
+            appointments = appointments.filter(appointment_date__lte=date_to)
+
+        if doctor_id:
+            appointments = appointments.filter(doctor_id=doctor_id)
+
+        if patient_id:
+            appointments = appointments.filter(patient_id=patient_id)
+
+        if search:
+            search_filter = (
+                Q(patient__first_name__icontains=search)
+                | Q(patient__last_name__icontains=search)
+            )
+
+            if search.isdigit():
+                search_filter |= Q(patient_id=int(search))
+
+            appointments = appointments.filter(search_filter)
+
+        reschedule_appointment = None
+        reschedule_slots = []
+        reschedule_apt_id = request.GET.get("apt_id")
+        reschedule_date = request.GET.get("date")
+
+        if reschedule_apt_id:
+            reschedule_appointment = get_object_or_404(
+                Appointment.objects.select_related("patient", "doctor__user"),
+                id=reschedule_apt_id,
+            )
+
+        if reschedule_appointment and reschedule_date:
+            try:
+                selected_date = datetime.strptime(reschedule_date, "%Y-%m-%d").date()
+                reschedule_slots = get_available_slots(
+                    reschedule_appointment.doctor,
+                    selected_date,
+                )
+            except Exception:
+                reschedule_slots = []
+
+        appointments = appointments.order_by("-appointment_date", "-start_time")
+
+        paginator = Paginator(appointments, 10)
+        current_page = paginator.get_page(request.GET.get("page", 1))
 
         context = {
-            'appointments':   page_obj,
-            'page_obj':       page_obj,
-            'status_choices': Appointment.STATUS_CHOICES,
+            "appointments": current_page,
+            "page_obj": current_page,
+            "status_choices": Appointment.STATUS_CHOICES,
+            "doctors": DoctorProfile.objects.select_related("user").all(),
+            "patients": User.objects.filter(groups__name="patient").distinct(),
+            "reschedule_appointment": reschedule_appointment,
+            "reschedule_slots": reschedule_slots,
+            "reschedule_date": reschedule_date,
         }
-        return render(request, 'receptionists/bookings.html', context)
+
+        return render(request, "receptionists/bookings.html", context)
 
     def post(self, request):
-        appointment_id = request.POST.get('appointment_id')
-        action         = request.POST.get('action')
+        appointment_id = request.POST.get("appointment_id")
+        action = request.POST.get("action")
 
         try:
             with transaction.atomic():
                 appointment = get_object_or_404(Appointment, id=appointment_id)
-                status      = appointment.status.lower()
+                status = appointment.status.lower()
 
-                if action == 'confirm':
-                    if status == 'requested':
-                        appointment.status = 'confirmed'
+                if action == "confirm":
+                    if status == "requested":
+                        appointment.status = "confirmed"
                         appointment.save()
-                        messages.success(request, 'Appointment confirmed.')
+                        messages.success(request, "Appointment confirmed.")
                     else:
-                        messages.error(request, 'Only requested appointments can be confirmed.')
+                        messages.error(
+                            request,
+                            "Only requested appointments can be confirmed.",
+                        )
 
-                elif action == 'cancel':
-                    if status in ['requested', 'confirmed']:
-                        appointment.status = 'cancelled'
+                elif action == "cancel":
+                    if status in ["requested", "confirmed"]:
+                        appointment.status = "cancelled"
                         appointment.save()
-                        messages.success(request, 'Appointment cancelled.')
+                        messages.success(request, "Appointment cancelled.")
+                        create_notification(
+                           user=appointment.patient,
+                           title="Appointment Cancelled",
+                           message=(f"Your appointment on with Dr {appointment.doctor.user.get_full_name()} on {appointment.appointment_date} at {appointment.start_time} has been cancelled. "),
+                    
+                          notification_type=Notification.NotificationType.RESCHEDULED,
+                     )
                     else:
-                        messages.error(request, 'This appointment cannot be cancelled.')
+                        messages.error(request, "This appointment cannot be cancelled.")
 
         except Exception:
-            messages.error(request, 'Something went wrong. Please try again.')
+            messages.error(request, "Something went wrong. Please try again.")
 
-        return redirect('bookings')
+        return redirect("bookings")
+
 
 
 class CheckInQueueView(ReceptionistRequiredMixins, View):
@@ -138,37 +215,80 @@ class CheckInQueueView(ReceptionistRequiredMixins, View):
         return redirect('checkin_queue')
 
 class RescheduleView(ReceptionistRequiredMixins, View):
-    def get(self, request, appointment_id):
-        appointment = get_object_or_404(Appointment, id=appointment_id)
-        form        = RescheduleForm(instance=appointment)
-        return render(request, 'receptionists/reschedule.html', {
-            'form':        form,
-            'appointment': appointment,
-        })
-
     def post(self, request, appointment_id):
-        appointment = get_object_or_404(Appointment, id=appointment_id)
-        form        = RescheduleForm(request.POST, instance=appointment)
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor"),
+            id=appointment_id,
+        )
 
-        if form.is_valid():
+        appointment_date = request.POST.get("appointment_date")
+        start_time = request.POST.get("start_time")
+        reason = request.POST.get("reason", "")
+        
+        if not reason:
+            messages.error(request, "Please provide a reason for rescheduling.")
+            return redirect("bookings")
 
-            AppointmentReschedule.objects.create(
-                appointment = appointment,
-                old_date    = appointment.appointment_date,
-                old_time    = appointment.start_time,
-                new_date    = form.cleaned_data['appointment_date'],
-                new_time    = form.cleaned_data['start_time'],
-                changed_by  = request.user,
-                reason      = form.cleaned_data['reason'],
-            )
-            form.save()
-            messages.success(request, 'Appointment rescheduled.')
-            return redirect('bookings')
+        if not appointment_date or not start_time:
+            messages.error(request, "Please choose a date and available slot.")
+            return redirect("bookings")
 
-        return render(request, 'receptionists/reschedule.html', {
-            'form':        form,
-            'appointment': appointment,
-        })
+        try:
+            new_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+            new_time = datetime.strptime(start_time, "%H:%M").time()
+        except ValueError:
+            messages.error(request, "Invalid date or time.")
+            return redirect("bookings")
+
+        available_slots = get_available_slots(appointment.doctor, new_date)
+
+        if not any(slot["start"] == new_time.strftime("%H:%M") for slot in available_slots):
+            messages.error(request, "This slot is no longer available.")
+            return redirect("bookings")
+
+        old_date = appointment.appointment_date
+        old_time = appointment.start_time
+
+        end_time = (
+            datetime.combine(new_date, new_time)
+            + timedelta(minutes=appointment.doctor.session_duration)
+        ).time()
+
+        try:
+            with transaction.atomic():
+                appointment.appointment_date = new_date
+                appointment.start_time = new_time
+                appointment.end_time = end_time
+                appointment.status = "CONFIRMED"
+                appointment.save()
+
+                AppointmentReschedule.objects.create(
+                    appointment=appointment,
+                    old_date=old_date,
+                    old_time=old_time,
+                    new_date=new_date,
+                    new_time=new_time,
+                    changed_by=request.user,
+                    reason=reason or "Receptionist rescheduled the appointment.",
+                )
+                create_notification(
+                    user=appointment.patient,
+                    title="Appointment Rescheduled",
+                    message=(f"Your appointment on with Dr {appointment.doctor.user.get_full_name()} on {old_date} at {old_time} has been rescheduled to {new_date} at {new_time}. "
+                             f"Reason: {reason}"),
+                    
+                   notification_type=Notification.NotificationType.RESCHEDULED,
+                )
+            
+
+            messages.success(request, "Appointment reschedule requested.")
+            return redirect("bookings")
+
+
+        except Exception:
+            messages.error(request, "Something went wrong. Please try again.")
+            return redirect("bookings")
+        
 
 
 class SchedulesView(ReceptionistRequiredMixins, View):
@@ -219,9 +339,22 @@ class SchedulesView(ReceptionistRequiredMixins, View):
         })
 
 
+class EditScheduleView(ReceptionistRequiredMixins, View):
+    def post(self, request, schedule_id):
+        schedule = get_object_or_404(DoctorSchedule, id=schedule_id)
+        form = DoctorScheduleForm(request.POST, instance=schedule)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Schedule updated.')
+        else:
+            messages.error(request, 'Something went wrong. Please try again.')
+
+        return redirect('schedules')
+
 class DeleteScheduleView(ReceptionistRequiredMixins, View):
     def post(self, request, schedule_id):
         schedule = get_object_or_404(DoctorSchedule, id=schedule_id)
         schedule.delete()
-        messages.success(request, 'Schedule deleted.')
+        messages.error(request, 'Schedule deleted.')
         return redirect('schedules')
