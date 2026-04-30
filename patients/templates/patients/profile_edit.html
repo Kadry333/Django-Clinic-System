@@ -5,7 +5,7 @@
 
 {% block page_actions %}
 {% if current_role != "Admin" %}
-<a href="{% url 'patients:my_profile' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+<a href="{% url 'patients:profile' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
     Back to Profile
 </a>
 {% endif %}
@@ -110,11 +110,11 @@
                 </button>
 
                 {% if current_role == "Admin" %}
-                <a href="{% url 'patients:admin_patients' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                <a href="{% url 'patients:admin' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                     Cancel
                 </a>
                 {% else %}
-                <a href="{% url 'patients:my_profile' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                <a href="{% url 'patients:profile' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                     Cancel
                 </a>
                 {% endif %}
