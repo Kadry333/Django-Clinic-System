@@ -315,7 +315,9 @@
       </div>
       {% elif request.user.is_receptionist %}
       <a
-        href="{% url 'receptionist_dashboard' %}"
+
+        href="{% url 'receptionist.dashboard' %}"
+
         class="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium {% if request.resolver_match.url_name == 'receptionist_dashboard' %} bg-primary text-white {% else %} text-slate-600 hover:bg-slate-100 {% endif %}"
       >
         Dashboard
