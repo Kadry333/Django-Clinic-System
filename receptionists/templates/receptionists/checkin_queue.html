@@ -33,14 +33,26 @@
                         <span class="rounded-full px-3 py-1 text-xs font-semibold bg-amber-100 text-amber-700">
                             Confirmed
                         </span>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
-                            <button type="submit"
-                                    class="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition">
-                                Check In
-                            </button>
-                        </form>
+                       <div class="flex items-center gap-2">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                                <input type="hidden" name="action" value="checkin">
+                                <button type="submit"
+                                        class="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition">
+                                    Check In
+                                </button>
+                            </form>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                                <input type="hidden" name="action" value="no_show">
+                                <button type="submit"
+                                        class="rounded-xl bg-rose-500 text-white px-4 py-2 text-sm font-semibold hover:bg-rose-600 transition">
+                                    No Show
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
