@@ -83,6 +83,7 @@ class AppointmentQueue(models.Model):
         ],
         default="waiting"
     )
+    started_at     = models.DateTimeField(null=True, blank=True) 
 
     def waiting_time(self):
         return int((timezone.now() - self.check_in_time).total_seconds() / 60)
