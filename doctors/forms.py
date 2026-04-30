@@ -1,3 +1,5 @@
+from calendar import day_abbr
+
 from django import forms
 from django.contrib.auth.models import Group
 from django.utils import timezone
@@ -84,6 +86,8 @@ class DoctorScheduleForm(forms.ModelForm):
             )
 
         schedules = DoctorSchedule.objects.filter(doctor=self.doctor, day_of_week=day)
+        if self.instance and self.instance.pk:
+            schedules = schedules.exclude(pk=self.instance.pk)
 
         is_valid = True
         for schedule in schedules:
@@ -118,6 +122,15 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean(self):
+        day_abbr = {
+            0: "mon",
+            1: "tue",
+            2: "wed",
+            3: "thu",
+            4: "fri",
+            5: "sat",
+            6: "sun",
+        }
         cleaned_data = super().clean()
         start_time = cleaned_data.get("start_time")
         end_time = cleaned_data.get("end_time")
@@ -135,11 +148,13 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
                 raise forms.ValidationError("End time must be after start time.")
 
         if self.doctor:
-            weekday = date.weekday()
+            weekday = day_abbr[date.weekday()]
 
             schedules = DoctorSchedule.objects.filter(
                 doctor=self.doctor, day_of_week=weekday
             )
+            if self.instance and self.instance.pk:
+                schedules = schedules.exclude(pk=self.instance.pk)
 
             if not schedules.exists():
                 raise forms.ValidationError("Doctor is not working on this day.")

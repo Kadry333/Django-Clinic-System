@@ -35,10 +35,14 @@ def book_appointment(patient, doctor, date, start_time):
         raise Exception("Invalid slot")
 
     if Appointment.objects.filter(
-        doctor=doctor, appointment_date=date, start_time=start_time
+    doctor=doctor,
+    appointment_date=date,
+    start_time=start_time,
+    status__in=['requested', 'confirmed', 'checked_in']
     ).exists():
         raise Exception("Slot already booked")
 
+      
     patient_appointments = Appointment.objects.filter(
         patient=patient,
         appointment_date=date,
@@ -68,6 +72,15 @@ def book_appointment(patient, doctor, date, start_time):
 
 
 def get_available_slots(doctor, selected_date):
+    weekdays_abbr = {
+        0: "mon",
+        1: "tue",
+        2: "wed",
+        3: "thu",
+        4: "fri",
+        5: "sat",
+        6: "sun",
+    }
     booked_slots = Appointment.objects.filter(
         doctor=doctor,
         appointment_date=selected_date,
@@ -75,7 +88,7 @@ def get_available_slots(doctor, selected_date):
     ).values_list("start_time", "end_time")
 
     booked_slots = list(booked_slots)
-    day = selected_date.weekday()
+    day = weekdays_abbr[selected_date.weekday()]
 
     exceptions = DoctorScheduleException.objects.filter(
         doctor=doctor, date=selected_date

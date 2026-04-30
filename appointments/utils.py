@@ -6,7 +6,8 @@ from doctors.models import DoctorSchedule, DoctorScheduleException
 
 
 def generate_slots(doctor, date):
-    now = timezone.localtime()
+    now = timezone.localtime(timezone.now())
+    print(now)
 
     if date < now.date():
         return []
@@ -36,8 +37,9 @@ def generate_slots(doctor, date):
         end = schedule.end_time
 
     booked = Appointment.objects.filter(
-        doctor=doctor,
-        appointment_date=date
+    doctor=doctor,
+    appointment_date=date,
+    status__in=['requested', 'confirmed', 'checked_in']
     ).values_list('start_time', flat=True)
 
     slots = []

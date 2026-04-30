@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Reschedule Appointment | ClinicMS{% endblock %}
+{% block page_name %}Staff Reschedule{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'appointments' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+    Back to Appointments
+</a>
+{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
+
+        <!-- LEFT: Appointment Info -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Current Appointment
+            </p>
+
+            <h1 class="mt-2 text-2xl font-semibold text-slate-900">
+                Staff Reschedule Panel
+            </h1>
+
+            <p class="mt-2 text-sm text-slate-500">
+                Review appointment details before selecting a new time.
+            </p>
+
+            <div class="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm">
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Patient</p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.patient.get_full_name|default:appointment.patient.email|default:"-" }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Doctor</p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ doctor.user.get_full_name|default:doctor.user.email|default:"-" }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Current Date</p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.appointment_date|date:"d M Y"|default:"-" }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Current Time</p>
+                    <p class="mt-1 font-medium text-slate-900">
+                        {{ appointment.start_time|time:"h:i A" }}
+                        {% if appointment.end_time %}
+                            - {{ appointment.end_time|time:"h:i A" }}
+                        {% endif %}
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: RESCHEDULE -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
+            <div class="border-b border-slate-100 pb-6">
+
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Reschedule Appointment
+                </p>
+
+                <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                    Choose new date & time
+                </h2>
+
+                <p class="mt-2 text-sm text-slate-500">
+                    Select a date, then choose an available time slot.
+                </p>
+            </div>
+
+            <!-- GET FORM (DATE FILTER) -->
+            <form method="get" class="mt-8 space-y-6">
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                        Select Date
+                    </label>
+
+                    <input type="date"
+                           name="date"
+                           value="{{ selected_date|date:'Y-m-d' }}"
+                           class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50">
+                </div>
+
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Check Availability
+                </button>
+
+            </form>
+
+            {% if selected_date %}
+
+            <div class="mt-8 border-t border-slate-100 pt-6">
+
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-900">
+                        Available Slots
+                    </h3>
+
+                    <span class="rounded-2xl bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                        {{ available_slots|length }} slots
+                    </span>
+                </div>
+
+                {% if available_slots %}
+
+                <!-- POST FORM (RESCHEDULE) -->
+                <form method="post" class="mt-6 space-y-5">
+                    {% csrf_token %}
+
+                    <!-- KEEP EXISTING FORM FIELD: new_date -->
+                    <input type="hidden"
+                           name="new_date"
+                           value="{{ selected_date|date:'Y-m-d' }}">
+
+                    <!-- SLOT SELECTION (maps to new_time) -->
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+                        {% for slot in available_slots %}
+                        <label class="cursor-pointer">
+
+                            <input type="radio"
+                                   name="new_time"
+                                   value="{{ slot.start }}"
+                                   class="peer sr-only"
+                                   {% if form.new_time.value == slot.start %}checked{% endif %}>
+
+                            <div class="rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition
+                                        peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary">
+
+                                {{ slot.label }}
+                            </div>
+
+                        </label>
+                        {% endfor %}
+
+                    </div>
+
+                    {% if form.new_time.errors %}
+                    <p class="text-sm text-rose-600">{{ form.new_time.errors|join:", " }}</p>
+                    {% endif %}
+
+                    <!-- REASON -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Reason
+                        </label>
+
+                        <textarea name="reason"
+                                  rows="4"
+                                  class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                  placeholder="Write reason for rescheduling...">{{ form.reason.value|default:'' }}</textarea>
+
+                        {% if form.reason.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.reason.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-teal-700">
+                        Confirm Reschedule
+                    </button>
+
+                </form>
+
+                {% else %}
+
+                <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+                    <p class="text-sm text-slate-600">
+                        No available slots for this date.
+                    </p>
+                </div>
+
+                {% endif %}
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+</section>
+{% endblock %}

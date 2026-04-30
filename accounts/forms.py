@@ -1,14 +1,38 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
 from accounts.models import User
+from django.core.validators import RegexValidator
+
+name_validator = RegexValidator(
+    regex=r"^[a-zA-Z\s]+$",
+    message="Use letters and spaces only.",
+)
+
+egyptian_mobile_validator = RegexValidator(
+    regex=r"^01[0125][0-9]{8}$",
+    message="Enter a valid Egyptian mobile number.",
+)
 
 class RegisterForm(UserCreationForm):
-    first_name = forms.CharField(max_length=50)
-    last_name = forms.CharField(max_length=50)
+    first_name = forms.CharField(min_length=3,max_length=50,validators=[name_validator])
+    last_name = forms.CharField(min_length=3,max_length=50,validators=[name_validator])
+    email = forms.EmailField()
+    phone = forms.CharField(max_length=11,validators=[egyptian_mobile_validator])
 
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone', 'password1', 'password2']
+        
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.lower()
+        return email
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(label='Email', widget=forms.EmailInput())
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.lower()
+        return email
