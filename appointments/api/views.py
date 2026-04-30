@@ -13,8 +13,9 @@ from rest_framework.views import APIView
 from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
 from appointments.services import get_available_slots, book_appointment
 from doctors.models import DoctorProfile
+from rest_framework.decorators import permission_classes
 
-from .permissions import IsPatient
+from .permissions import IsDoctor, IsPatient
 from .serializers import (
     AppointmentSerializer,
     PatientAppointmentSerializer,
@@ -28,30 +29,31 @@ class AppointmentPagination(PageNumberPagination):
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
-    queryset         = Appointment.objects.all().select_related("doctor__user", "patient")
+    permission_classes = [IsDoctor]
+    queryset = Appointment.objects.all().select_related("doctor__user", "patient")
     serializer_class = AppointmentSerializer
     pagination_class = AppointmentPagination
 
     sort_map = {
-        "doctor":           ("doctor__user__first_name", "doctor__user__last_name"),
-        "patient":          ("patient__first_name", "patient__last_name"),
-        "date":             ("appointment_date", "start_time"),
-        "start_time":       ("start_time",),
+        "doctor": ("doctor__user__first_name", "doctor__user__last_name"),
+        "patient": ("patient__first_name", "patient__last_name"),
+        "date": ("appointment_date", "start_time"),
+        "start_time": ("start_time",),
         "session_duration": ("doctor__session_duration",),
-        "status":           ("status",),
+        "status": ("status",),
     }
 
     def get_queryset(self):
-        queryset      = super().get_queryset()
-        params        = self.request.query_params
-        search        = params.get("search", "").strip()
+        queryset = super().get_queryset()
+        params = self.request.query_params
+        search = params.get("search", "").strip()
         status_filter = params.get("status", "").strip()
-        doctor_id     = params.get("doctor", "").strip()
-        patient_id    = params.get("patient", "").strip()
-        start_date    = params.get("start_date", "").strip()
-        end_date      = params.get("end_date", "").strip()
-        sort          = params.get("sort", "date")
-        direction     = params.get("direction", "desc")
+        doctor_id = params.get("doctor", "").strip()
+        patient_id = params.get("patient", "").strip()
+        start_date = params.get("start_date", "").strip()
+        end_date = params.get("end_date", "").strip()
+        sort = params.get("sort", "date")
+        direction = params.get("direction", "desc")
 
         if search:
             search_filter = (
@@ -75,44 +77,46 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(appointment_date__lte=end_date)
 
         sort_fields = self.sort_map.get(sort, ("appointment_date", "start_time"))
-        ordering    = [f"-{f}" for f in sort_fields] if direction == "desc" else list(sort_fields)
+        ordering = (
+            [f"-{f}" for f in sort_fields] if direction == "desc" else list(sort_fields)
+        )
         return queryset.order_by(*ordering, "id")
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
-        appointment        = self.get_object()
+        appointment = self.get_object()
         appointment.status = "cancelled"
         appointment.save()
         return Response({"status": "cancelled"})
 
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
-        appointment        = self.get_object()
+        appointment = self.get_object()
         appointment.status = "confirmed"
         appointment.save()
         return Response({"status": "confirmed"})
 
     @action(detail=True, methods=["post"])
     def check_in(self, request, pk=None):
-        appointment               = self.get_object()
-        appointment.status        = "checked_in"
+        appointment = self.get_object()
+        appointment.status = "checked_in"
         appointment.check_in_time = timezone.now()
         appointment.save()
         return Response({"status": "checked_in"})
 
     @action(detail=True, methods=["post"])
     def no_show(self, request, pk=None):
-        appointment        = self.get_object()
+        appointment = self.get_object()
         appointment.status = "no_show"
         appointment.save()
         return Response({"status": "no_show"})
 
     @action(detail=True, methods=["post"])
     def reschedule(self, request, pk=None):
-        appointment  = self.get_object()
+        appointment = self.get_object()
         new_date_str = request.data.get("new_date")
         new_time_str = request.data.get("new_time")
-        reason       = request.data.get("reason", "")
+        reason = request.data.get("reason", "")
 
         if not new_date_str or not new_time_str:
             return Response(
@@ -145,8 +149,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 ).time()
 
                 appointment.appointment_date = new_date
-                appointment.start_time       = new_time
-                appointment.end_time         = end_time
+                appointment.start_time = new_time
+                appointment.end_time = end_time
                 appointment.save()
 
                 AppointmentReschedule.objects.create(
@@ -169,7 +173,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def approve_reschedule(self, request, pk=None):
-        appointment        = self.get_object()
+        appointment = self.get_object()
         reschedule_request = (
             RescheduleRequest.objects.filter(appointment=appointment, status="pending")
             .order_by("-created_at")
@@ -194,9 +198,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 ).time()
 
                 appointment.appointment_date = new_date
-                appointment.start_time       = new_time
-                appointment.end_time         = end_time
-                appointment.status           = "confirmed"
+                appointment.start_time = new_time
+                appointment.end_time = end_time
+                appointment.status = "confirmed"
                 appointment.save()
 
                 AppointmentReschedule.objects.create(
@@ -206,7 +210,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     new_date=new_date,
                     new_time=new_time,
                     changed_by=request.user,
-                    reason=reschedule_request.reason or "Approved patient reschedule request.",
+                    reason=reschedule_request.reason
+                    or "Approved patient reschedule request.",
                 )
 
                 reschedule_request.status = "approved"
@@ -217,7 +222,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def reject_reschedule(self, request, pk=None):
-        appointment        = self.get_object()
+        appointment = self.get_object()
         reschedule_request = (
             RescheduleRequest.objects.filter(appointment=appointment, status="pending")
             .order_by("-created_at")
@@ -236,9 +241,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
+@permission_classes([IsDoctor])
 def available_slots(request):
     doctor_id = request.query_params.get("doctor_id")
-    date_str  = request.query_params.get("date")
+    date_str = request.query_params.get("date")
 
     if not doctor_id or not date_str:
         return Response(
@@ -246,14 +252,12 @@ def available_slots(request):
         )
 
     try:
-        doctor     = DoctorProfile.objects.get(id=doctor_id)
-        date_obj   = datetime.strptime(date_str, "%Y-%m-%d").date()
-        slots      = get_available_slots(doctor, date_obj)
+        doctor = DoctorProfile.objects.get(id=doctor_id)
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        slots = get_available_slots(doctor, date_obj)
         return Response(slots)
     except Exception:
         return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class PatientSlotListView(APIView):
@@ -261,7 +265,7 @@ class PatientSlotListView(APIView):
 
     def get(self, request):
         doctor_id = request.query_params.get("doctor_id")
-        date_str  = request.query_params.get("date")
+        date_str = request.query_params.get("date")
 
         if not doctor_id or not date_str:
             return Response(
@@ -270,7 +274,7 @@ class PatientSlotListView(APIView):
             )
 
         try:
-            doctor        = get_object_or_404(DoctorProfile, id=doctor_id)
+            doctor = get_object_or_404(DoctorProfile, id=doctor_id)
             selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
             if selected_date < date.today():
@@ -372,11 +376,11 @@ class PatientAppointmentRescheduleView(APIView):
         try:
             with transaction.atomic():
                 RescheduleRequest.objects.create(
-                    appointment    = appointment,
-                    requested_by   = request.user,
-                    preferred_date = data["date"],
-                    preferred_time = data["time"],
-                    reason         = "Patient requested reschedule",
+                    appointment=appointment,
+                    requested_by=request.user,
+                    preferred_date=data["date"],
+                    preferred_time=data["time"],
+                    reason="Patient requested reschedule",
                 )
             return Response(
                 {"detail": "Reschedule request sent successfully."},

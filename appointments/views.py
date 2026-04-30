@@ -1,6 +1,9 @@
 from accounts.mixins import (
     patientRequiredMixins,
+    DoctorRequiredMixins,
+    AdminRequiredMixins,
 )
+
 
 from datetime import date, datetime, timedelta
 from http.client import HTTPResponse
@@ -25,6 +28,7 @@ from .services import book_appointment, get_available_slots
 from .utils import generate_slots
 
 User = get_user_model()
+
 
 class PatientBookView(patientRequiredMixins, View):
 
@@ -60,6 +64,7 @@ class PatientBookView(patientRequiredMixins, View):
                 "today": date.today().isoformat(),
             },
         )
+
 
 class PatientBookSubmitView(patientRequiredMixins, View):
 
@@ -98,6 +103,7 @@ class PatientBookSubmitView(patientRequiredMixins, View):
                     "today": date.today().isoformat(),
                 },
             )
+
 
 class PatientAppointmentsView(patientRequiredMixins, View):
 
@@ -142,6 +148,7 @@ class PatientAppointmentsView(patientRequiredMixins, View):
                 "reschedule_date": date_str,
             },
         )
+
 
 class CancelAppointmentView(patientRequiredMixins, View):
 
@@ -242,7 +249,7 @@ def receptionist_reschedule_view(request):
     )
 
 
-class DoctorAppointmentsView(View):
+class DoctorAppointmentsView(DoctorRequiredMixins, View):
     sort_map = {
         "doctor": ("doctor__user__first_name", "doctor__user__last_name"),
         "patient": ("patient__first_name", "patient__last_name"),
@@ -253,36 +260,137 @@ class DoctorAppointmentsView(View):
     }
 
     def get(self, request):
-        doctors = DoctorProfile.objects.select_related("user").order_by(
-            "user__first_name"
+        current_doctor = None
+        base_queryset = Appointment.objects.select_related("doctor__user", "patient")
+
+        if getattr(request.user, "is_doctor", False):
+            current_doctor = get_object_or_404(DoctorProfile, user=request.user)
+            base_queryset = base_queryset.filter(doctor=current_doctor)
+
+        search_query = request.GET.get("search", "").strip()
+        sort = request.GET.get("sort", "date")
+        direction = request.GET.get("direction", "desc")
+        status = request.GET.get("status", "").strip()
+        doctor_id = request.GET.get("doctor", "").strip()
+        patient_id = request.GET.get("patient", "").strip()
+        start_date = request.GET.get("start_date", "").strip()
+        end_date = request.GET.get("end_date", "").strip()
+
+        appointments = base_queryset
+
+        if search_query:
+            search_filter = (
+                Q(patient__first_name__icontains=search_query)
+                | Q(patient__last_name__icontains=search_query)
+                | Q(patient__email__icontains=search_query)
+            )
+            if search_query.isdigit():
+                search_filter |= Q(id=search_query)
+
+            appointments = appointments.filter(search_filter)
+
+        if status:
+            appointments = appointments.filter(status=status)
+
+        if doctor_id and current_doctor is None:
+            appointments = appointments.filter(doctor_id=doctor_id)
+
+        if patient_id:
+            appointments = appointments.filter(patient_id=patient_id)
+
+        if start_date:
+            appointments = appointments.filter(appointment_date__gte=start_date)
+
+        if end_date:
+            appointments = appointments.filter(appointment_date__lte=end_date)
+
+        sort_fields = self.sort_map.get(sort, "date")
+        if direction == "desc":
+            ordering = [f"-{field}" for field in sort_fields]
+        else:
+            direction = "asc"
+            ordering = list(sort_fields)
+        appointments = appointments.order_by(*ordering, "id")
+
+        if current_doctor is not None:
+            doctors = (
+                DoctorProfile.objects.filter(id=current_doctor.id)
+                .select_related("user")
+                .order_by("user__first_name", "user__last_name", "user__email")
+            )
+        else:
+            doctors = DoctorProfile.objects.select_related("user").order_by(
+                "user__first_name", "user__last_name", "user__email"
+            )
+
+        patient_ids = base_queryset.values_list("patient_id", flat=True).distinct()
+        patients = User.objects.filter(id__in=patient_ids).order_by(
+            "first_name", "last_name", "email"
         )
-        patients = User.objects.all().order_by("first_name")
+
+        paginator = Paginator(appointments, 10)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
 
         return render(
             request,
             "appointments/doctor-appointments.html",
             {
                 "current_role": "Doctor",
+                "appointments": page_obj,
+                "page_obj": page_obj,
                 "status_choices": Appointment.STATUS_CHOICES,
                 "doctors": doctors,
                 "patients": patients,
+                "search_query": search_query,
+                "current_sort": sort,
+                "current_direction": direction,
+                "selected_status": status,
+                "selected_doctor": doctor_id,
+                "selected_patient": patient_id,
+                "start_date": start_date,
+                "end_date": end_date,
             },
         )
 
 
-class DoctorAppointmentView(View):
+class DoctorAppointmentView(DoctorRequiredMixins, View):
     def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor__user", "patient"),
+            id=appointment_id,
+        )
+
+        if getattr(request.user, "is_doctor", False):
+            doctor = get_object_or_404(DoctorProfile, user=request.user)
+            if appointment.doctor != doctor:
+                messages.error(request, "You do not have permission to view this.")
+                return redirect("appointments")
+
+        reschedule_requests = (
+            RescheduleRequest.objects.filter(appointment=appointment)
+            .select_related("requested_by")
+            .order_by("-created_at")
+        )
+        reschedule_history = (
+            AppointmentReschedule.objects.filter(appointment=appointment)
+            .select_related("changed_by")
+            .order_by("-created_at")
+        )
+
         return render(
             request,
             "appointments/doctor-appointment.html",
             {
                 "current_role": "Doctor",
-                "appointment_id": appointment_id,
+                "appointment": appointment,
+                "reschedule_requests": reschedule_requests,
+                "reschedule_history": reschedule_history,
             },
         )
 
 
-class StaffCancelAppointmentView(View):
+class StaffCancelAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
@@ -299,7 +407,8 @@ class StaffCancelAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffConfirmAppointmentView(View):
+class StaffConfirmAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
@@ -314,7 +423,8 @@ class StaffConfirmAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffMarkCheckinAppointmentView(View):
+class StaffMarkCheckinAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
@@ -330,7 +440,8 @@ class StaffMarkCheckinAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffMarkCompleteAppointmentView(View):
+class StaffMarkCompleteAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
@@ -348,7 +459,8 @@ class StaffMarkCompleteAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffMarkNoShowAppointmentView(View):
+class StaffMarkNoShowAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
@@ -366,7 +478,8 @@ class StaffMarkNoShowAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffConfirmRescheduleAppointmentView(View):
+class StaffConfirmRescheduleAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(
             Appointment.objects.select_related("doctor"),
@@ -440,7 +553,8 @@ class StaffConfirmRescheduleAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffRejectRescheduleAppointmentView(View):
+class StaffRejectRescheduleAppointmentView(DoctorRequiredMixins, View):
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
         reschedule_request = (
@@ -482,17 +596,40 @@ class StaffRejectRescheduleAppointmentView(View):
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
 
-class StaffRescheduleAppointmentView(View):
+class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
     def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("doctor"),
+            id=appointment_id,
+        )
+        date_query = request.GET.get("date", "").strip()
+
+        selected_date = None
+        available_slots = []
+
+        if date_query:
+            try:
+                selected_date = datetime.strptime(date_query, "%Y-%m-%d").date()
+                available_slots = get_available_slots(appointment.doctor, selected_date)
+            except ValueError:
+                selected_date = None
+
+        form = AppointmentRescheduleForm()
+
         return render(
             request,
             "appointments/staff-reschedule.html",
             {
+                "form": form,
                 "current_role": "Staff",
-                "appointment_id": appointment_id,
+                "selected_date": selected_date,
+                "available_slots": available_slots,
+                "appointment": appointment,
+                "doctor": appointment.doctor,
             },
         )
 
+    @transaction.atomic
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
         form = AppointmentRescheduleForm(request.POST)
