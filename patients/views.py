@@ -112,6 +112,23 @@ class AdminPatientsView(AdminRequiredMixins, TemplateView):
         return context
 
 
+class AdminPatientDetailView(AdminRequiredMixins, TemplateView):
+    template_name = "patients/admin_patient_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        User = get_user_model()
+
+        patient = get_object_or_404(
+            User.objects.filter(groups__name="patient").distinct(),
+            pk=self.kwargs["pk"],
+        )
+
+        context["current_role"] = "Admin"
+        context["patient"] = patient
+        return context
+
+
 class AdminPatientProfileUpdateView(AdminRequiredMixins, UpdateView):
     form_class = PatientProfileForm
     template_name = "patients/profile_edit.html"

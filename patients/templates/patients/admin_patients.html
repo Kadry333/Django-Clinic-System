@@ -1,126 +1,111 @@
 {% extends "base.html" %}
 
 {% block title %}Patients | ClinicMS{% endblock %}
-{% block page_name %}Patients{% endblock %}
+{% block page_name %}Patients Directory{% endblock %}
 
 {% block content %}
 <section class="space-y-6" x-data="{ deleteModalOpen: false, deleteAction: '', deletePatientName: '' }">
-    <div class="rounded-panel border border-slate-200 bg-white p-5 shadow-soft">
-        <form method="get" class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-            <div class="xl:col-span-4">
-                <label for="search" class="mb-2 block text-sm font-medium text-slate-700">
-                    Search patients
-                </label>
+    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+        <div class="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">Patients</h1>
+                <p class="mt-2 text-sm text-slate-500">
+                    Browse registered patients, review their accounts, and manage profile details.
+                </p>
+            </div>
+            <div class="rounded-2xl bg-teal-50 px-4 py-3 text-sm text-teal-900">
+                <span class="font-semibold">{{ page_obj.paginator.count }}</span> patients
+            </div>
+        </div>
+
+        <form method="get" class="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div class="flex-1">
+                <label for="patient-search" class="sr-only">Search patients</label>
                 <input
-                    id="search"
+                    id="patient-search"
                     name="search"
                     type="text"
                     value="{{ search_query }}"
                     placeholder="Search by name, email, or phone"
-                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-teal-50"
                 >
             </div>
-
-            <div class="flex items-end gap-3 xl:col-span-2">
+            <div class="flex gap-3">
                 <button
                     type="submit"
-                    class="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700"
+                    class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800"
                 >
                     Search
                 </button>
-
                 <a
                     href="{% url 'patients:admin' %}"
-                    class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                    class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
                 >
-                    Clear
+                    Reset
                 </a>
             </div>
         </form>
-    </div>
 
-    <div class="rounded-panel border border-slate-200 bg-white shadow-soft">
-        <div class="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-900">Patients</h2>
-                <p class="text-sm text-slate-500">
-                    Manage patient accounts and review patient profile information.
-                </p>
-            </div>
-
-            <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <span class="font-semibold text-slate-900">{{ patients_count }}</span>
-                patient{{ patients_count|pluralize }}
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
+        <div class="mt-6 overflow-x-auto">
+            <table class="min-w-full text-sm">
                 <thead class="bg-slate-50">
-                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <th class="px-5 py-4">ID</th>
-                        <th class="px-5 py-4">Full Name</th>
-                        <th class="px-5 py-4">Email</th>
-                        <th class="px-5 py-4">Phone</th>
-                        <th class="px-5 py-4">Status</th>
-                        <th class="px-5 py-4 text-center">Actions</th>
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-slate-600">Patient</th>
+                        <th class="px-5 py-3 text-left font-semibold text-slate-600">Email</th>
+                        <th class="px-5 py-3 text-left font-semibold text-slate-600">Phone</th>
+                        <th class="px-5 py-3 text-left font-semibold text-slate-600">Status</th>
+                        <th class="px-5 py-3 text-left font-semibold text-slate-600">Actions</th>
                     </tr>
                 </thead>
-
-                <tbody class="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+                <tbody class="divide-y divide-slate-100">
                     {% for patient in patients %}
-                    <tr class="transition hover:bg-slate-50/80">
-                        <td class="px-5 py-4 align-top text-slate-500">
-                            #{{ patient.id }}
-                        </td>
-
-                        <td class="px-5 py-4 align-top">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-sm font-semibold text-primary ring-1 ring-teal-100">
-                                    {{ patient.get_full_name|default:patient.email|slice:":1"|upper }}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-900">
-                                        {{ patient.get_full_name|default:"No name provided" }}
-                                    </p>
-                                    <p class="mt-1 text-xs text-slate-500">
-                                        Patient account
-                                    </p>
-                                </div>
+                    <tr class="transition hover:bg-slate-50">
+                        <td class="px-5 py-4">
+                            <div>
+                                <a href="{% url 'patients:admin.patient.detail' patient.id %}" class="font-semibold text-slate-900 transition hover:text-primary">
+                                    {{ patient.get_full_name|default:patient.email|default:"No name provided" }}
+                                </a>
+                                <p class="mt-1 text-xs text-slate-500">Patient #{{ patient.id }}</p>
                             </div>
                         </td>
-
-                        <td class="px-5 py-4 align-top text-slate-600">
-                            {{ patient.email|default:"-" }}
+                        <td class="px-5 py-4 text-slate-600">
+                            <a href="{% url 'patients:admin.patient.detail' patient.id %}" class="transition hover:text-primary">
+                                {{ patient.email|default:"-" }}
+                            </a>
                         </td>
-
-                        <td class="px-5 py-4 align-top text-slate-600">
-                            {{ patient.phone|default:"Not provided" }}
+                        <td class="px-5 py-4 text-slate-600">
+                            <a href="{% url 'patients:admin.patient.detail' patient.id %}" class="transition hover:text-primary">
+                                {{ patient.phone|default:"Not provided" }}
+                            </a>
                         </td>
-
-                        <td class="px-5 py-4 align-top">
+                        <td class="px-5 py-4">
                             {% if patient.is_active %}
-                            <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                            <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                                 Active
                             </span>
                             {% else %}
-                            <span class="inline-flex rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+                            <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
                                 Inactive
                             </span>
                             {% endif %}
                         </td>
-
-                        <td class="px-5 py-4 align-top text-right">
-                            <div class="flex justify-end gap-2">
+                        <td class="px-5 py-4">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a
+                                    href="{% url 'patients:admin.patient.detail' patient.id %}"
+                                    class="inline-flex items-center rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-teal-200 hover:text-primary"
+                                >
+                                    View
+                                </a>
                                 <a
                                     href="{% url 'patients:admin.patient.edit' patient.id %}"
-                                    class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-teal-700"
+                                    class="inline-flex items-center rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
                                 >
-                                    Edit Profile
+                                    Edit
                                 </a>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center rounded-2xl bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-rose-700"
+                                    class="inline-flex items-center rounded-xl bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
                                     @click="deleteAction = '{% url 'patients:admin.patient.delete' patient.id %}?search={{ search_query|urlencode }}&page={{ page_obj.number }}'; deletePatientName = '{{ patient.get_full_name|default:patient.email|escapejs }}'; deleteModalOpen = true"
                                 >
                                     Delete
@@ -130,11 +115,11 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-5 py-12 text-center">
-                            <p class="text-base font-semibold text-slate-900">No patients found</p>
-                            <p class="mt-2 text-sm text-slate-500">
-                                Try changing your search text or clearing the filter.
-                            </p>
+                        <td colspan="5" class="px-5 py-10">
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                                <p class="text-sm font-semibold text-slate-900">No patients found</p>
+                                <p class="mt-1 text-sm text-slate-500">Patient accounts will appear here once they are created.</p>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -160,11 +145,15 @@
                     href="?search={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary"
                 >
-                    ‹
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </a>
                 {% else %}
                 <span class="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-300">
-                    ‹
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </span>
                 {% endif %}
 
@@ -188,11 +177,15 @@
                     href="?search={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-primary"
                 >
-                    ›
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </a>
                 {% else %}
                 <span class="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-300">
-                    ›
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </span>
                 {% endif %}
             </div>
@@ -203,53 +196,32 @@
     <div
         x-cloak
         x-show="deleteModalOpen"
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-        style="display:none;"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        style="display: none;"
     >
-        <div class="absolute inset-0 bg-slate-950/50" @click="deleteModalOpen = false"></div>
-        <div class="relative z-10 w-full max-w-lg overflow-hidden rounded-panel bg-white shadow-panel">
-            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-slate-900">Delete Patient</h3>
-                    <p class="mt-1 text-sm text-slate-500">Please confirm before removing this patient account.</p>
-                </div>
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" @click.outside="deleteModalOpen = false">
+            <h2 class="text-lg font-semibold text-slate-900">Delete Patient</h2>
+            <p class="mt-2 text-sm text-slate-600">
+                Are you sure you want to delete
+                <span class="font-semibold text-slate-900" x-text="deletePatientName"></span>?
+                This action cannot be undone.
+            </p>
+
+            <form method="post" :action="deleteAction" class="mt-6 flex justify-end gap-3">
+                {% csrf_token %}
                 <button
                     type="button"
-                    class="rounded-2xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     @click="deleteModalOpen = false"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
+                    Cancel
                 </button>
-            </div>
-            <div class="space-y-4 px-6 py-5 text-sm text-slate-600">
-                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
-                    This action cannot be undone.
-                </div>
-                <p>
-                    Are you sure you want to delete
-                    <span class="font-semibold text-slate-900" x-text="deletePatientName"></span>
-                    ?
-                </p>
-            </div>
-            <form method="post" :action="deleteAction">
-                {% csrf_token %}
-                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
-                    <button
-                        type="button"
-                        class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white"
-                        @click="deleteModalOpen = false"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        class="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700"
-                    >
-                        Delete Patient
-                    </button>
-                </div>
+                <button
+                    type="submit"
+                    class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+                >
+                    Delete
+                </button>
             </form>
         </div>
     </div>
