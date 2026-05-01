@@ -228,6 +228,11 @@ class RequestRescheduleView(patientRequiredMixins, View):
 
                 date_str = request.POST.get("date")
                 time_str = request.POST.get("time")
+                reason = request.POST.get("reason", "").strip()
+
+                if not reason:
+                    messages.error(request, "Please provide a reason for rescheduling.")
+                    return redirect("my_appointments")
 
                 preferred_date = datetime.strptime(date_str, "%Y-%m-%d").date()
                 preferred_time = datetime.strptime(time_str, "%I:%M %p").time()
@@ -237,7 +242,7 @@ class RequestRescheduleView(patientRequiredMixins, View):
                     requested_by=patient,
                     preferred_date=preferred_date,
                     preferred_time=preferred_time,
-                    reason="Patient requested reschedule",
+                    reason=reason,
                 )
 
         except Exception:

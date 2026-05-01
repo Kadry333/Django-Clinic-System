@@ -182,24 +182,37 @@
             </div>
 
             {# Footer #}
-            <form method="POST" action="{% url 'request_reschedule' reschedule_apt_id %}">
-                {% csrf_token %}
-                <input type="hidden" name="date" value="{{ reschedule_date }}">
-                <input type="hidden" name="time" x-bind:value="selectedSlot">
+{# Footer #}
+<form method="POST" action="{% url 'request_reschedule' reschedule_apt_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ reschedule_date }}">
+    <input type="hidden" name="time" x-bind:value="selectedSlot">
 
-                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
-                    <a href="{% url 'my_appointments' %}"
-                       class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white">
-                        Cancel
-                    </a>
-                    <button type="submit"
-                            :disabled="!selectedSlot"
-                            :class="selectedSlot ? 'bg-primary hover:bg-teal-800 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-primary'"
-                            class="rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition">
-                        Confirm Reschedule
-                    </button>
-                </div>
-            </form>
+    <div class="space-y-4 px-6 py-5 border-t border-slate-200">
+        <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">
+                Reason for Reschedule
+            </label>
+            <textarea name="reason"  required
+                      rows="3"
+                      placeholder="Please explain why you need to reschedule..."
+                      class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50 resize-none">{{ request.POST.reason }}</textarea>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+        <a href="{% url 'my_appointments' %}"
+           class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white">
+            Cancel
+        </a>
+        <button type="submit"
+                :disabled="!selectedSlot"
+                :class="selectedSlot ? 'bg-primary hover:bg-teal-800 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-primary'"
+                class="rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition">
+            Confirm Reschedule
+        </button>
+    </div>
+</form>
 
         </div>
     </div>
