@@ -1,96 +1,54 @@
 {% extends "base.html" %}
-
 {% block title %}{{ page_title|default:"Doctor Schedule" }} | ClinicMS{% endblock %}
 {% block page_name %}{{ page_heading|default:"Doctor Schedule" }}{% endblock %}
-
 {% block content %}
-<section class="mx-auto w-full ">
-
-    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-
-        <!-- HEADER -->
-        <div class="border-b border-slate-100 pb-5">
-            <h1 class="text-2xl font-semibold text-slate-900">
-                {{ page_heading|default:"Doctor Schedule" }}
-            </h1>
-
-            <p class="mt-2 text-sm text-slate-500">
-                Create or update your working schedule.
-            </p>
+    <section class="mx-auto w-full ">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+            <!-- HEADER -->
+            <div class="border-b border-slate-100 pb-5">
+                <h1 class="text-2xl font-semibold text-slate-900">{{ page_heading|default:"Doctor Schedule" }}</h1>
+                <p class="mt-2 text-sm text-slate-500">Create or update your working schedule.</p>
+            </div>
+            <form method="POST" class="mt-6 space-y-6">
+                {% csrf_token %}
+                <!-- NON FIELD ERRORS -->
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <div class="grid gap-5 md:grid-cols-3">
+                    <!-- DATE -->
+                    <div class="md:col-span-1">
+                        <label class="mb-2 block text-sm font-medium text-slate-700">Day</label>
+                        {{ form.day_of_week }}
+                        {% for error in form.day_of_week.errors %}<p class="mt-1 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                    </div>
+                    <!-- START TIME -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">Start Time</label>
+                        {{ form.start_time }}
+                        {% for error in form.start_time.errors %}<p class="mt-1 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                    </div>
+                    <!-- END TIME -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">End Time</label>
+                        {{ form.end_time }}
+                        {% for error in form.end_time.errors %}<p class="mt-1 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <!-- ACTIONS -->
+                <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                    <a href="{% url 'doctors.schedule' %}"
+                       class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                        Save Schedule
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <form method="POST" class="mt-6 space-y-6">
-            {% csrf_token %}
-
-            <!-- NON FIELD ERRORS -->
-            {% if form.non_field_errors %}
-            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {{ form.non_field_errors }}
-            </div>
-            {% endif %}
-
-            <div class="grid gap-5 md:grid-cols-3">
-
-                <!-- DATE -->
-                <div class="md:col-span-1">
-                    <label class="mb-2 block text-sm font-medium text-slate-700">
-                        Day
-                    </label>
-
-                    {{ form.day_of_week }}
-
-                    {% for error in form.day_of_week.errors %}
-                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
-                    {% endfor %}
-                </div>
-
-                <!-- START TIME -->
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-slate-700">
-                        Start Time
-                    </label>
-
-                    {{ form.start_time }}
-
-                    {% for error in form.start_time.errors %}
-                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
-                    {% endfor %}
-                </div>
-
-                <!-- END TIME -->
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-slate-700">
-                        End Time
-                    </label>
-
-                    {{ form.end_time }}
-
-                    {% for error in form.end_time.errors %}
-                        <p class="mt-1 text-sm text-rose-600">{{ error }}</p>
-                    {% endfor %}
-                </div>
-
-            </div>
-
-
-            <!-- ACTIONS -->
-            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-
-                <a href="{% url 'doctors.schedule' %}"
-                   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
-                    Cancel
-                </a>
-
-                <button type="submit"
-                        class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
-                    Save Schedule
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</section>
+    </section>
 {% endblock %}

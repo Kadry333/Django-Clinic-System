@@ -1,122 +1,85 @@
 {% extends "base.html" %}
-
 {% block title %}Exception Details | ClinicMS{% endblock %}
 {% block page_name %}Schedule Exception{% endblock %}
-
 {% block content %}
-<section class="mx-auto w-full max-w-3xl">
-
-    <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-
-        <!-- HEADER -->
-        <div class="border-b border-slate-100 pb-5">
-            <h1 class="text-2xl font-semibold text-slate-900">
-                Exception Details
-            </h1>
-            <p class="mt-2 text-sm text-slate-500">
-                View and manage this schedule exception.
-            </p>
-        </div>
-
-        <!-- DETAILS -->
-        <div class="mt-6 space-y-4 text-sm">
-
-            <div class="flex justify-between">
-                <span class="text-slate-500">Date</span>
-                <span class="font-medium text-slate-900">{{ exception.date }}</span>
+    <section class="mx-auto w-full max-w-3xl">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+            <!-- HEADER -->
+            <div class="border-b border-slate-100 pb-5">
+                <h1 class="text-2xl font-semibold text-slate-900">Exception Details</h1>
+                <p class="mt-2 text-sm text-slate-500">View and manage this schedule exception.</p>
             </div>
-
-            <div class="flex justify-between">
-                <span class="text-slate-500">Type</span>
-                <span class="font-medium">
-                    {% if exception.is_day_off %}
-                        <span class="text-rose-600">Day Off</span>
-                    {% else %}
-                        <span class="text-green-600">Custom Hours</span>
-                    {% endif %}
-                </span>
+            <!-- DETAILS -->
+            <div class="mt-6 space-y-4 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Date</span>
+                    <span class="font-medium text-slate-900">{{ exception.date }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Type</span>
+                    <span class="font-medium">
+                        {% if exception.is_day_off %}
+                            <span class="text-rose-600">Day Off</span>
+                        {% else %}
+                            <span class="text-green-600">Custom Hours</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Start Time</span>
+                    <span class="font-medium text-slate-900">{{ exception.start_time|default:"—" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">End Time</span>
+                    <span class="font-medium text-slate-900">{{ exception.end_time|default:"—" }}</span>
+                </div>
             </div>
-
-            <div class="flex justify-between">
-                <span class="text-slate-500">Start Time</span>
-                <span class="font-medium text-slate-900">
-                    {{ exception.start_time|default:"—" }}
-                </span>
-            </div>
-
-            <div class="flex justify-between">
-                <span class="text-slate-500">End Time</span>
-                <span class="font-medium text-slate-900">
-                    {{ exception.end_time|default:"—" }}
-                </span>
-            </div>
-
-
-        </div>
-
-
-        <!-- ACTIONS -->
-        <div class="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-5">
-        <!-- BACK -->
-
-            <a href="{% url 'doctors.schedule.exceptions' %}"
-   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
-    Back
-</a>
-
-            <!-- EDIT -->
-            <a href="{% url 'doctors.schedule.exceptions.edit' exception.id %}"
-               class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
-                Edit
-            </a>
-
-            <!-- DELETE BUTTON -->
-            <button onclick="openDeleteModal()"
-                    class="inline-flex items-center rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-700">
-                Delete
-            </button>
-
-        </div>
-
-    </div>
-</section>
-
-<!-- DELETE MODAL -->
-<div id="deleteModal"
-     class="fixed inset-0 hidden items-center justify-center bg-black/40">
-
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
-
-        <h2 class="text-lg font-semibold text-slate-900">
-            Delete Exception
-        </h2>
-
-        <p class="mt-2 text-sm text-slate-600">
-            Are you sure you want to delete this exception? This action cannot be undone.
-        </p>
-
-        <div class="mt-6 flex justify-end gap-3">
-
-            <button onclick="closeDeleteModal()"
-                    class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
-                Cancel
-            </button>
-
-            <form method="post" action="{% url 'doctors.schedule.exceptions.delete' exception.id %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-                    Yes, Delete
+            <!-- ACTIONS -->
+            <div class="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-5">
+                <!-- BACK -->
+                <a href="{% url 'doctors.schedule.exceptions' %}"
+                   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
+                    Back
+                </a>
+                <!-- EDIT -->
+                <a href="{% url 'doctors.schedule.exceptions.edit' exception.id %}"
+                   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-300">
+                    Edit
+                </a>
+                <!-- DELETE BUTTON -->
+                <button onclick="openDeleteModal()"
+                        class="inline-flex items-center rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-700">
+                    Delete
                 </button>
-            </form>
-
+            </div>
         </div>
-
+    </section>
+    <!-- DELETE MODAL -->
+    <div id="deleteModal"
+         class="fixed inset-0 hidden items-center justify-center bg-black/40">
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
+            <h2 class="text-lg font-semibold text-slate-900">Delete Exception</h2>
+            <p class="mt-2 text-sm text-slate-600">
+                Are you sure you want to delete this exception? This action cannot be undone.
+            </p>
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeDeleteModal()"
+                        class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
+                    Cancel
+                </button>
+                <form method="post"
+                      action="{% url 'doctors.schedule.exceptions.delete' exception.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
+                        Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- MODAL SCRIPT -->
-<script>
+    <!-- MODAL SCRIPT -->
+    <script>
 function openDeleteModal() {
     document.getElementById('deleteModal').classList.remove('hidden');
     document.getElementById('deleteModal').classList.add('flex');
@@ -126,6 +89,5 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('flex');
     document.getElementById('deleteModal').classList.add('hidden');
 }
-</script>
-
+    </script>
 {% endblock %}

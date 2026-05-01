@@ -260,12 +260,9 @@ class DoctorAppointmentsView(DoctorRequiredMixins, View):
     }
 
     def get(self, request):
-        current_doctor = None
+        current_doctor = get_object_or_404(DoctorProfile, user=request.user)
         base_queryset = Appointment.objects.select_related("doctor__user", "patient")
-
-        if getattr(request.user, "is_doctor", False):
-            current_doctor = get_object_or_404(DoctorProfile, user=request.user)
-            base_queryset = base_queryset.filter(doctor=current_doctor)
+        base_queryset = base_queryset.filter(doctor=current_doctor)
 
         search_query = request.GET.get("search", "").strip()
         sort = request.GET.get("sort", "date")
@@ -291,9 +288,6 @@ class DoctorAppointmentsView(DoctorRequiredMixins, View):
 
         if status:
             appointments = appointments.filter(status=status)
-
-        if doctor_id and current_doctor is None:
-            appointments = appointments.filter(doctor_id=doctor_id)
 
         if patient_id:
             appointments = appointments.filter(patient_id=patient_id)
@@ -359,12 +353,6 @@ class DoctorAppointmentView(DoctorRequiredMixins, View):
             Appointment.objects.select_related("doctor__user", "patient"),
             id=appointment_id,
         )
-
-        if getattr(request.user, "is_doctor", False):
-            doctor = get_object_or_404(DoctorProfile, user=request.user)
-            if appointment.doctor != doctor:
-                messages.error(request, "You do not have permission to view this.")
-                return redirect("appointments")
 
         reschedule_requests = (
             RescheduleRequest.objects.filter(appointment=appointment)
@@ -516,12 +504,20 @@ class StaffConfirmRescheduleAppointmentView(DoctorRequiredMixins, View):
 
         new_time_str = new_time.strftime("%I:%M %p")
 
-        if not any(slot["label"].startswith(new_time_str) for slot in available_slots):
+        slot_found = False
+
+        for slot in available_slots:
+            if slot["label"].startswith(new_time_str):
+                slot_found = True
+                break
+
+        if not slot_found:
             messages.error(
                 request,
                 "The requested slot is no longer available. Please ask the patient to submit a new reschedule request with an available slot.",
             )
             return redirect("appointments.appointment", appointment_id=appointment.id)
+
         appointment.appointment_date = new_date
         appointment.start_time = new_time
         appointment.end_time = end_time
@@ -529,7 +525,7 @@ class StaffConfirmRescheduleAppointmentView(DoctorRequiredMixins, View):
 
         try:
             appointment.save()
-        except IntegrityError:
+        except Exception:
             messages.error(
                 request,
                 "This requested slot is no longer available. Please reschedule to another slot.",
@@ -587,11 +583,6 @@ class StaffRejectRescheduleAppointmentView(DoctorRequiredMixins, View):
             )
         elif appointment.status == "confirmed":
             messages.success(request, "Reschedule request rejected successfully.")
-        else:
-            messages.warning(
-                request,
-                "Reschedule request rejected, but the appointment status was unchanged.",
-            )
 
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
@@ -611,7 +602,7 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
             try:
                 selected_date = datetime.strptime(date_query, "%Y-%m-%d").date()
                 available_slots = get_available_slots(appointment.doctor, selected_date)
-            except ValueError:
+            except Exception:
                 selected_date = None
 
         form = AppointmentRescheduleForm()
@@ -636,6 +627,20 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
 
         if not form.is_valid():
             messages.error(request, "Please correct the errors below.")
+            selected_date = form.cleaned_data.get("new_date")
+            available_slots = get_available_slots(appointment.doctor, selected_date)
+            return render(
+                request,
+                "appointments/staff-reschedule.html",
+                {
+                    "form": form,
+                    "current_role": "Staff",
+                    "selected_date": selected_date,
+                    "available_slots": available_slots,
+                    "appointment": appointment,
+                    "doctor": appointment.doctor,
+                },
+            )
 
         else:
             new_date = form.cleaned_data["new_date"]
@@ -660,8 +665,19 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
                     request,
                     "The selected slot is no longer available. Please choose another slot.",
                 )
-                return redirect(
-                    "appointments.appointment", appointment_id=appointment.id
+                selected_date = form.cleaned_data.get("new_date")
+                available_slots = get_available_slots(appointment.doctor, selected_date)
+                return render(
+                    request,
+                    "appointments/staff-reschedule.html",
+                    {
+                        "form": form,
+                        "current_role": "Staff",
+                        "selected_date": selected_date,
+                        "available_slots": available_slots,
+                        "appointment": appointment,
+                        "doctor": appointment.doctor,
+                    },
                 )
 
             AppointmentReschedule.objects.create(
@@ -677,6 +693,6 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
             RescheduleRequest.objects.filter(
                 appointment=appointment,
                 status="pending",
-            ).delete()
+            ).update(status="rejected")
 
             return redirect("appointments.appointment", appointment_id=appointment.id)

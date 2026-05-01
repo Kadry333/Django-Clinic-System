@@ -10,7 +10,7 @@ class IsPatient(BasePermission):
 
 
 class IsDoctor(BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request):
         return (
             request.user.is_authenticated
             and request.user.groups.filter(name="doctor").exists()

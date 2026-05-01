@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-=j8+(l76gzix=81z0#h7qpo_qworn@@^st%+$-4c&^ph0y^6=q"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,14 +37,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'doctors.apps.DoctorsConfig',
-    'patients.apps.PatientsConfig',
-    'accounts.apps.AccountsConfig',
-    'analytics.apps.AnalyticsConfig',
-    'appointments.apps.AppointmentsConfig',
-    'consultations.apps.ConsultationsConfig',
-    'notifications.apps.NotificationsConfig',
-    'receptionists.apps.ReceptionistsConfig',
+    "doctors.apps.DoctorsConfig",
+    "patients.apps.PatientsConfig",
+    "accounts.apps.AccountsConfig",
+    "analytics.apps.AnalyticsConfig",
+    "appointments.apps.AppointmentsConfig",
+    "consultations.apps.ConsultationsConfig",
+    "notifications.apps.NotificationsConfig",
+    "receptionists.apps.ReceptionistsConfig",
     "django_extensions",
     "rest_framework",
 ]
@@ -153,17 +153,15 @@ DATABASES = {
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
