@@ -14,7 +14,7 @@
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {% include "components/cards.html" with title="Total Appointments" value=total_appointments subtitle="All time" icon="AP" %}
         {% include "components/cards.html" with title="No-show Rate" value=no_show_rate|stringformat:".2f"|add:"%" subtitle="Target: <5%" icon="NS" %}
-        {% include "components/cards.html" with title="Total Revenue" value="$"|add:total_revenue|stringformat:"s" subtitle="Completed visits" icon="OK" %}
+        {% include "components/cards.html" with title="Total Revenue" value=total_revenue|floatformat:2 subtitle="Completed visits" icon="OK" %}
         {% include "components/cards.html" with title="Active Doctors" value=active_doctors subtitle="Medical staff" icon="DR" %}
     </div>
 
