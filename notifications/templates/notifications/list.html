@@ -5,7 +5,7 @@
 
 {% block page_actions %}
 {% if nav_notifications_unread_count %}
-<form method="post" action="{% url 'notifications:mark_all_as_read' %}">
+<form method="post" action="{% url 'notifications:mark.all.as.read' %}">
     {% csrf_token %}
     <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
         Mark All as Read
