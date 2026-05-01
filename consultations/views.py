@@ -74,7 +74,7 @@ def consultation_submit_view(request, queue_id):
 def summary_view(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
     consultation = get_object_or_404(
-        Consultation.objects.prefetch_related('prescriptions', 'medicaltest_set'), 
+        Consultation.objects.prefetch_related('prescription_set', 'medicaltest_set'), 
         appointment=appointment
     )
 
