@@ -38,10 +38,13 @@
     </div>
 
     {% if notifications %}
-    <div class="space-y-4">
-        {% for notification in notifications %}
-            {% include "notifications/partials/item.html" with notification=notification compact=False %}
-        {% endfor %}
+    <div class="rounded-panel border border-slate-200 bg-white shadow-soft overflow-hidden">
+        <div class="space-y-4 p-5">
+            {% for notification in notifications %}
+                {% include "notifications/partials/item.html" with notification=notification compact=False %}
+            {% endfor %}
+        </div>
+        {% include "components/pagination.html" %}
     </div>
     {% else %}
     <div class="rounded-panel border border-slate-200 bg-white px-6 py-12 text-center shadow-soft">
