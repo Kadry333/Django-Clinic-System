@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from accounts.models import User
 from doctors.models import DoctorProfile
-
+from receptionists.models import ReceptionistProfile
 
 class Command(BaseCommand):
     help = 'Creates initial staff accounts for testing'
@@ -31,6 +31,7 @@ class Command(BaseCommand):
         receptionist.last_name  = 'Mohamed'
         receptionist.save()
         receptionist.groups.add(Group.objects.get(name='receptionist'))
+        ReceptionistProfile.objects.get_or_create(user=receptionist)
         self.stdout.write(self.style.SUCCESS('Receptionist created'))
 
         admin, created = User.objects.get_or_create(email='admin@clinicms.com')

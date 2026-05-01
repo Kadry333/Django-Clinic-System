@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Receptionist Profile | ClinicMS{% endblock %}
+{% block page_name %}Receptionist Profile{% endblock %}
+{% block page_actions %}
+    <a href="{% url 'receptionist.edit' receptionist.id %}"
+       class="inline-flex items-center rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800">
+        Edit receptionist
+    </a>
+    <button type="button"
+            data-url="{% url 'receptionist.delete' receptionist.id %}"
+            data-name="{{ receptionist.user.get_full_name|default:receptionist.user.email }}"
+            onclick="openDeleteModal(this)"
+            class="inline-flex items-center rounded-2xl bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+        Delete
+    </button>
+{% endblock %}
+{% block content %}
+    <section class="space-y-6">
+        <div class="rounded-panel border border-slate-200 bg-white p-6 shadow-soft">
+            <div class="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-teal-50 text-lg font-bold text-primary">
+                        {{ receptionist.user.first_name|default:receptionist.user.email|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Receptionist Profile</p>
+                        <h1 class="mt-2 text-2xl font-semibold text-slate-900">
+                            {{ receptionist.user.get_full_name|default:receptionist.user.email }}
+                        </h1>
+                        <p class="mt-2 text-sm text-slate-500">{{ receptionist.user.email }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'receptionist.list' %}"
+                   class="inline-flex items-center rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:text-primary">
+                    Back to receptionists
+                </a>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-3">
+                <div class="rounded-3xl bg-slate-50 p-4">
+                    <p class="text-sm font-medium text-slate-500">Full name</p>
+                    <p class="mt-2 text-sm font-semibold text-slate-900">
+                        {{ receptionist.user.get_full_name|default:"-" }}
+                    </p>
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-4">
+                    <p class="text-sm font-medium text-slate-500">Email</p>
+                    <p class="mt-2 break-all text-sm font-semibold text-slate-900">{{ receptionist.user.email }}</p>
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-4">
+                    <p class="text-sm font-medium text-slate-500">Phone</p>
+                    <p class="mt-2 text-sm font-semibold text-slate-900">{{ receptionist.user.phone|default:"-" }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-2">
+                <div class="rounded-3xl border border-slate-200 p-5">
+                    <p class="text-sm font-medium text-slate-500">Profile ID</p>
+                    <p class="mt-2 text-2xl font-semibold text-slate-900">#{{ receptionist.id }}</p>
+                </div>
+                <div class="rounded-3xl border border-slate-200 p-5">
+                    <p class="text-sm font-medium text-slate-500">User ID</p>
+                    <p class="mt-2 text-2xl font-semibold text-slate-900">#{{ receptionist.user.id }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="deleteModal"
+         class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 class="text-lg font-semibold text-slate-900">Delete Receptionist</h2>
+            <p class="mt-2 text-sm text-slate-600">
+                Are you sure you want to delete
+                <span id="receptionistName" class="font-semibold text-slate-900"></span>?
+                This action cannot be undone.
+            </p>
+            <form id="deleteForm" method="post" class="mt-6 flex justify-end gap-3">
+                {% csrf_token %}
+                <button type="button"
+                        onclick="closeDeleteModal()"
+                        class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function openDeleteModal(button) {
+        const modal = document.getElementById("deleteModal");
+        const form = document.getElementById("deleteForm");
+        const name = document.getElementById("receptionistName");
+
+        form.action = button.dataset.url;
+        name.textContent = button.dataset.name;
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById("deleteModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+
+    document.getElementById("deleteModal").addEventListener("click", function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+    </script>
+{% endblock %}

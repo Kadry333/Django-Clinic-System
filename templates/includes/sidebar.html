@@ -313,31 +313,119 @@
           </span>
         </a>
       </div>
-      {% elif request.user.is_receptionist %}
-      <a
-        href="{% url 'receptionist.dashboard' %}"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium {% if request.resolver_match.url_name == 'receptionist_dashboard' %} bg-primary text-white {% else %} text-slate-600 hover:bg-slate-100 {% endif %}"
-      >
-        Dashboard
-      </a>
-      <a
-        href="{% url 'schedules' %}"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium {% if request.resolver_match.url_name == 'schedules' %} bg-primary text-white {% else %} text-slate-600 hover:bg-slate-100 {% endif %}"
-      >
-        Schedules
-      </a>
-      <a
-        href="{% url 'bookings' %}"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium {% if request.resolver_match.url_name == 'bookings' %} bg-primary text-white {% else %} text-slate-600 hover:bg-slate-100 {% endif %}"
-      >
-        Bookings
-      </a>
-      <a
-        href="{% url 'checkin_queue' %}"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium {% if request.resolver_match.url_name == 'checkin_queue' %} bg-primary text-white {% else %} text-slate-600 hover:bg-slate-100 {% endif %}"
-      >
-        Check-in Queue
-      </a>
+     {% elif request.user.is_receptionist %}
+<div class="space-y-2">
+  <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+    Receptiont
+  </p>
+
+  <!-- Dashboard -->
+  <a href="{% url 'receptionist.dashboard' %}"
+     class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition
+     {% if request.resolver_match.url_name == 'receptionist.dashboard' %}
+       border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]
+     {% else %}
+       border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white
+     {% endif %}">
+
+    <span class="flex h-10 w-10 items-center justify-center rounded-2xl
+      {% if request.resolver_match.url_name == 'receptionist.dashboard' %}
+        bg-white/10 text-white
+      {% else %}
+        bg-white/5 text-teal-200 group-hover:bg-white/10
+      {% endif %}">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3 13.125h8.25V21H3v-7.875Zm9.75-10.125H21V21h-8.25V3Zm-9.75 0h8.25v8.625H3V3Z"/>
+      </svg>
+
+    </span>
+
+    <span><span class="block">Dashboard</span></span>
+  </a>
+
+  <!-- Schedules -->
+  <a href="{% url 'schedules' %}"
+     class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition
+     {% if request.resolver_match.url_name == 'schedules' %}
+       border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]
+     {% else %}
+       border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white
+     {% endif %}">
+
+    <span class="flex h-10 w-10 items-center justify-center rounded-2xl
+      {% if request.resolver_match.url_name == 'schedules' %}
+        bg-white/10 text-white
+      {% else %}
+        bg-white/5 text-teal-200 group-hover:bg-white/10
+      {% endif %}">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M8 7V3m8 4V3m-9 8h10m-13 9h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2Z"/>
+      </svg>
+
+    </span>
+
+    <span><span class="block">Doctor Schedules</span></span>
+  </a>
+
+  <!-- Bookings -->
+  <a href="{% url 'bookings' %}"
+     class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition
+     {% if request.resolver_match.url_name == 'bookings' %}
+       border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]
+     {% else %}
+       border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white
+     {% endif %}">
+
+    <span class="flex h-10 w-10 items-center justify-center rounded-2xl
+      {% if request.resolver_match.url_name == 'bookings' %}
+        bg-white/10 text-white
+      {% else %}
+        bg-white/5 text-teal-200 group-hover:bg-white/10
+      {% endif %}">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M17 20h5V4H2v16h5m10 0v-6H7v6m10 0H7"/>
+      </svg>
+
+    </span>
+
+    <span><span class="block">Appointments</span></span>
+  </a>
+
+  <!-- Check-in Queue -->
+  <a href="{% url 'checkin_queue' %}"
+     class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition
+     {% if request.resolver_match.url_name == 'checkin_queue' %}
+       border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]
+     {% else %}
+       border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white
+     {% endif %}">
+
+    <span class="flex h-10 w-10 items-center justify-center rounded-2xl
+      {% if request.resolver_match.url_name == 'checkin_queue' %}
+        bg-white/10 text-white
+      {% else %}
+        bg-white/5 text-teal-200 group-hover:bg-white/10
+      {% endif %}">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/>
+      </svg>
+
+    </span>
+
+    <span><span class="block">Check-in Queue</span></span>
+  </a>
+
+</div>
+
+
       {% elif request.user.is_admin or request.user.is_superuser %}
       <div class="space-y-2">
         <p
@@ -436,11 +524,11 @@
           </span>
         </a>
         <a
-          href="/receptionist/"
-          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/receptionist/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
+          href="/receptionist/admin/receptionists"
+          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/receptionist/admin/receptionists/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
         >
           <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/receptionist/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/receptionist/admin/receptionists/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

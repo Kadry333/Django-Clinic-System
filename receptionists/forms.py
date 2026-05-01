@@ -1,20 +1,21 @@
 from django import forms
-from appointments.models import Appointment, AppointmentReschedule
+from appointments.models import Appointment
 from doctors.models import DoctorSchedule, DoctorScheduleException
+from accounts.models import User
+from accounts.forms import name_validator, egyptian_mobile_validator
+
+# class ConfirmAppointmentForm(forms.ModelForm):
+#     class Meta:
+#         model  = Appointment
+#         fields = ['status']
 
 
-class ConfirmAppointmentForm(forms.ModelForm):
-    class Meta:
-        model  = Appointment
-        fields = ['status']
+# class RescheduleForm(forms.ModelForm):
+#     reason = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}))
 
-
-class RescheduleForm(forms.ModelForm):
-    reason = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}))
-
-    class Meta:
-        model  = Appointment
-        fields = ['appointment_date', 'start_time', 'end_time']
+#     class Meta:
+#         model  = Appointment
+#         fields = ['appointment_date', 'start_time', 'end_time']
 
 
 class DoctorScheduleForm(forms.ModelForm):
@@ -51,5 +52,53 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
         
         
         
+
+
+
+class ReceptionistUserForm(forms.ModelForm):
+    first_name = forms.CharField(
+        min_length=3,
+        max_length=50,
+        validators=[name_validator],
+    )
+    last_name = forms.CharField(
+        min_length=3,
+        max_length=50,
+        validators=[name_validator],
+    )
+    email = forms.EmailField()
+    phone = forms.CharField(
+        max_length=11,
+        validators=[egyptian_mobile_validator],
+    )
+    password = forms.CharField(widget=forms.PasswordInput(), required=False)
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email", "phone"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not self.instance.pk:
+            self.fields["password"].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+
+        if email:
+            email = email.lower()
+
+        existing_user = User.objects.filter(email=email)
+
+        if self.instance.pk:
+            existing_user = existing_user.exclude(pk=self.instance.pk)
+
+        if existing_user.exists():
+            raise forms.ValidationError("A user with this email already exists.")
+
+        return email
+
+
         
         

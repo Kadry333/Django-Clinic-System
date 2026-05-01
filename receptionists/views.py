@@ -5,17 +5,18 @@ from django.views import View
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db import transaction
-
-from accounts.mixins import ReceptionistRequiredMixins
+from accounts.mixins import ReceptionistRequiredMixins, AdminRequiredMixins
 from appointments.models import Appointment, AppointmentReschedule, AppointmentQueue
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
-from .forms import RescheduleForm, DoctorScheduleForm, DoctorScheduleExceptionForm
+from receptionists.forms import DoctorScheduleForm, DoctorScheduleExceptionForm,ReceptionistUserForm
 from datetime import datetime, timedelta
-from django.db import IntegrityError, transaction
+# from django.db import IntegrityError, transaction
 from appointments.services import get_available_slots
 from django.db.models import Q
 from notifications.services import create_notification
 from notifications.models import Notification
+from django.contrib.auth.models import Group
+from receptionists.models import ReceptionistProfile
 
 User = get_user_model()
 
@@ -395,3 +396,125 @@ class DeleteScheduleView(ReceptionistRequiredMixins, View):
         schedule.delete()
         messages.error(request, 'Schedule deleted.')
         return redirect('schedules')
+
+
+
+class ReceptionistListView(AdminRequiredMixins, View):
+    def get(self, request):
+        search = request.GET.get("search", "").strip()
+
+        receptionists = ReceptionistProfile.objects.select_related("user").all()
+
+        if search:
+            receptionists = receptionists.filter(
+                Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(user__email__icontains=search)
+                | Q(user__phone__icontains=search)
+            )
+
+        paginator = Paginator(receptionists, 10)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+
+        return render(request, "receptionists/list.html", {
+            "receptionists": page_obj,
+            "page_obj": page_obj,
+            "search_query": search,
+            "current_role": "Admin",
+        })
+
+
+class ReceptionistCreateView(AdminRequiredMixins, View):
+    def get(self, request):
+        return render(request, "receptionists/form.html", {
+            "user_form": ReceptionistUserForm(),
+            "page_title": "Create Receptionist",
+            "page_heading": "Create Receptionist",
+            "submit_label": "Create receptionist",
+            "current_role": "Admin",
+        })
+
+    def post(self, request):
+        user_form = ReceptionistUserForm(request.POST)
+
+        if user_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password(user_form.cleaned_data["password"])
+            user.save()
+
+            receptionist_group, _ = Group.objects.get_or_create(name="receptionist")
+            user.groups.add(receptionist_group)
+
+            ReceptionistProfile.objects.create(user=user)
+
+            messages.success(request, "Receptionist created successfully.")
+            return redirect("receptionist.list")
+
+        return render(request, "receptionists/form.html", {
+            "user_form": user_form,
+            "page_title": "Create Receptionist",
+            "page_heading": "Create Receptionist",
+            "submit_label": "Create receptionist",
+            "current_role": "Admin",
+        })
+
+
+class ReceptionistDetailView(AdminRequiredMixins, View):
+    def get(self, request, receptionist_id):
+        receptionist = get_object_or_404(
+            ReceptionistProfile.objects.select_related("user"),
+            id=receptionist_id,
+        )
+
+        return render(request, "receptionists/detail.html", {
+            "receptionist": receptionist,
+            "current_role": "Admin",
+        })
+
+
+class ReceptionistEditView(AdminRequiredMixins, View):
+    def get(self, request, receptionist_id):
+        receptionist = get_object_or_404(ReceptionistProfile, id=receptionist_id)
+
+        return render(request, "receptionists/form.html", {
+            "user_form": ReceptionistUserForm(instance=receptionist.user),
+            "receptionist": receptionist,
+            "page_title": "Edit Receptionist",
+            "page_heading": "Edit Receptionist",
+            "submit_label": "Save changes",
+            "current_role": "Admin",
+        })
+
+    def post(self, request, receptionist_id):
+        receptionist = get_object_or_404(ReceptionistProfile, id=receptionist_id)
+        user_form = ReceptionistUserForm(request.POST, instance=receptionist.user)
+
+        if user_form.is_valid():
+            user = user_form.save(commit=False)
+
+            password = user_form.cleaned_data.get("password")
+            if password:
+                user.set_password(password)
+
+            user.save()
+
+            messages.success(request, "Receptionist updated successfully.")
+            return redirect("receptionist.detail", receptionist_id=receptionist.id)
+
+        return render(request, "receptionists/form.html", {
+            "user_form": user_form,
+            "receptionist": receptionist,
+            "page_title": "Edit Receptionist",
+            "page_heading": "Edit Receptionist",
+            "submit_label": "Save changes",
+            "current_role": "Admin",
+        })
+
+
+class ReceptionistDeleteView(AdminRequiredMixins, View):
+    def post(self, request, receptionist_id):
+        receptionist = get_object_or_404(ReceptionistProfile, id=receptionist_id)
+        receptionist.user.delete()
+
+        messages.success(request, "Receptionist deleted successfully.")
+        return redirect("receptionist.list")
