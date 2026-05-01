@@ -396,6 +396,27 @@
 
     <span><span class="block">Appointments</span></span>
   </a>
+  <a href="{% url 'receptionist.reschedule' %}"
+   class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.resolver_match.url_name == 'receptionist.reschedule_requests' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}">
+    
+    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-teal-300 group-hover:bg-white/15">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             class="h-5 w-5" 
+             fill="none" 
+             viewBox="0 0 24 24" 
+             stroke="currentColor" 
+             stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M16 3h5v5M8 21H3v-5M21 12a9 9 0 00-15.55-6.36L3 8m18 4a9 9 0 01-15.55 6.36L3 16" />
+        </svg>
+    </span>
+
+    <span class="min-w-0">
+        <span class="block">Reschedule Requests</span>
+        <span class="block text-xs text-slate-400">Review patient changes</span>
+    </span>
+</a>
+
 
   <!-- Check-in Queue -->
   <a href="{% url 'checkin_queue' %}"
@@ -422,6 +443,7 @@
 
     <span><span class="block">Check-in Queue</span></span>
   </a>
+  
 
 </div>
 
