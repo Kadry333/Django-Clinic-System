@@ -4,13 +4,23 @@
 {% block page_name %}Notifications{% endblock %}
 
 {% block page_actions %}
-{% if nav_notifications_unread_count %}
-<form method="post" action="{% url 'notifications:mark.all.as.read' %}">
-    {% csrf_token %}
-    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
-        Mark All as Read
-    </button>
-</form>
+{% if notifications %}
+<div class="flex items-center gap-3">
+    {% if nav_notifications_unread_count %}
+    <form method="post" action="{% url 'notifications:mark.all.as.read' %}">
+        {% csrf_token %}
+        <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+            Mark All as Read
+        </button>
+    </form>
+    {% endif %}
+    <form method="post" action="{% url 'notifications:clear.all' %}">
+        {% csrf_token %}
+        <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+            Clear All
+        </button>
+    </form>
+</div>
 {% endif %}
 {% endblock %}
 
