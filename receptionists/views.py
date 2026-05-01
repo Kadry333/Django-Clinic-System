@@ -125,6 +125,21 @@ class BookingsView(ReceptionistRequiredMixins, View):
                     if status == "requested":
                         appointment.status = "confirmed"
                         appointment.save()
+
+                        create_notification(
+                            user=appointment.patient,
+                            title="Appointment confirmed",
+                            notification_type=Notification.NotificationType.CONFIRMED,
+                            message="Your appointment has been confirmed.",
+                        )
+
+                        create_notification(
+                            user=appointment.doctor.user,
+                            title="Appointment confirmed",
+                            notification_type=Notification.NotificationType.CONFIRMED,
+                            message="You have a confirmed appointment.",
+                        )
+
                         messages.success(request, "Appointment confirmed.")
                     else:
                         messages.error(
@@ -136,14 +151,22 @@ class BookingsView(ReceptionistRequiredMixins, View):
                     if status in ["requested", "confirmed"]:
                         appointment.status = "cancelled"
                         appointment.save()
-                        messages.success(request, "Appointment cancelled.")
+
                         create_notification(
                            user=appointment.patient,
-                           title="Appointment Cancelled",
-                           message=(f"Your appointment on with Dr {appointment.doctor.user.get_full_name()} on {appointment.appointment_date} at {appointment.start_time} has been cancelled. "),
-                    
-                          notification_type=Notification.NotificationType.RESCHEDULED,
-                     )
+                           title="Appointment cancelled",
+                           notification_type=Notification.NotificationType.CANCELLED,
+                           message="Your appointment has been cancelled.",
+                        )
+
+                        create_notification(
+                            user=appointment.doctor.user,
+                            title="Appointment cancelled",
+                            notification_type=Notification.NotificationType.CANCELLED,
+                            message="The appointment has been cancelled.",
+                        )
+
+                        messages.success(request, "Appointment cancelled.")
                     else:
                         messages.error(request, "This appointment cannot be cancelled.")
 
@@ -268,7 +291,7 @@ class RescheduleView(ReceptionistRequiredMixins, View):
                 appointment.appointment_date = new_date
                 appointment.start_time = new_time
                 appointment.end_time = end_time
-                appointment.status = "CONFIRMED"
+                appointment.status = "confirmed"
                 appointment.save()
 
                 AppointmentReschedule.objects.create(
@@ -282,11 +305,16 @@ class RescheduleView(ReceptionistRequiredMixins, View):
                 )
                 create_notification(
                     user=appointment.patient,
-                    title="Appointment Rescheduled",
-                    message=(f"Your appointment on with Dr {appointment.doctor.user.get_full_name()} on {old_date} at {old_time} has been rescheduled to {new_date} at {new_time}. "
-                             f"Reason: {reason}"),
-                    
-                   notification_type=Notification.NotificationType.RESCHEDULED,
+                    title="Appointment rescheduled",
+                    notification_type=Notification.NotificationType.RESCHEDULED,
+                    message=f"Your appointment has been rescheduled to {new_date} at {new_time}.",
+                )
+
+                create_notification(
+                    user=appointment.doctor.user,
+                    title="Appointment rescheduled",
+                    notification_type=Notification.NotificationType.RESCHEDULED,
+                    message=f"The appointment has been rescheduled to {new_date} at {new_time}.",
                 )
             
 

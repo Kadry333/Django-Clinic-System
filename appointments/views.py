@@ -22,6 +22,8 @@ from django.views import View
 from appointments.forms import AppointmentRescheduleForm
 from appointments.models import Appointment, AppointmentReschedule, RescheduleRequest
 from doctors.models import DoctorProfile
+from notifications.models import Notification
+from notifications.services import create_notification, notify_receptionists
 from patients.models import PatientProfile
 
 from .services import book_appointment, get_available_slots
@@ -86,6 +88,19 @@ class PatientBookSubmitView(patientRequiredMixins, View):
                     raise Exception("Invalid date")
 
                 book_appointment(patient, doctor, selected_date, selected_time)
+
+                create_notification(
+                    user=patient,
+                    title="Appointment request submitted",
+                    notification_type=Notification.NotificationType.APPOINTMENT_REQUESTED,
+                    message="Your appointment request has been submitted.",
+                )
+
+                notify_receptionists(
+                    title="Appointment request needs review",
+                    message="A new appointment request needs review.",
+                    notification_type=Notification.NotificationType.APPOINTMENT_REQUESTED,
+                )
 
             messages.success(request, "Appointment booked successfully")
             return redirect("my_appointments")
@@ -167,6 +182,20 @@ class CancelAppointmentView(patientRequiredMixins, View):
 
                 appointment.status = "cancelled"
                 appointment.save()
+
+                create_notification(
+                    user=appointment.patient,
+                    title="Appointment cancelled",
+                    notification_type=Notification.NotificationType.CANCELLED,
+                    message="Your appointment has been cancelled.",
+                )
+
+                create_notification(
+                    user=appointment.doctor.user,
+                    title="Appointment cancelled",
+                    notification_type=Notification.NotificationType.CANCELLED,
+                    message="The appointment has been cancelled.",
+                )
 
         except Exception:
             messages.error(request, "Something went wrong. Please try again.")
@@ -391,6 +420,20 @@ class StaffCancelAppointmentView(DoctorRequiredMixins, View):
         RescheduleRequest.objects.filter(appointment=appointment).delete()
         AppointmentReschedule.objects.filter(appointment=appointment).delete()
 
+        create_notification(
+            user=appointment.patient,
+            title="Appointment cancelled",
+            notification_type=Notification.NotificationType.CANCELLED,
+            message="Your appointment has been cancelled.",
+        )
+
+        create_notification(
+            user=appointment.doctor.user,
+            title="Appointment cancelled",
+            notification_type=Notification.NotificationType.CANCELLED,
+            message="The appointment has been cancelled.",
+        )
+
         messages.success(request, "Appointment cancelled successfully.")
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
@@ -406,6 +449,20 @@ class StaffConfirmAppointmentView(DoctorRequiredMixins, View):
 
         appointment.status = "confirmed"
         appointment.save()
+
+        create_notification(
+            user=appointment.patient,
+            title="Appointment confirmed",
+            notification_type=Notification.NotificationType.CONFIRMED,
+            message="Your appointment has been confirmed.",
+        )
+
+        create_notification(
+            user=appointment.doctor.user,
+            title="Appointment confirmed",
+            notification_type=Notification.NotificationType.CONFIRMED,
+            message="You have a confirmed appointment.",
+        )
 
         messages.success(request, "Appointment confirmed successfully.")
         return redirect("appointments.appointment", appointment_id=appointment.id)
@@ -545,6 +602,20 @@ class StaffConfirmRescheduleAppointmentView(DoctorRequiredMixins, View):
         reschedule_request.status = "approved"
         reschedule_request.save()
 
+        create_notification(
+            user=appointment.patient,
+            title="Appointment rescheduled",
+            notification_type=Notification.NotificationType.RESCHEDULED,
+            message=f"Your appointment has been rescheduled to {new_date} at {new_time}.",
+        )
+
+        create_notification(
+            user=appointment.doctor.user,
+            title="Appointment rescheduled",
+            notification_type=Notification.NotificationType.RESCHEDULED,
+            message=f"The appointment has been rescheduled to {new_date} at {new_time}.",
+        )
+
         messages.success(request, "Reschedule request confirmed successfully.")
         return redirect("appointments.appointment", appointment_id=appointment.id)
 
@@ -577,6 +648,21 @@ class StaffRejectRescheduleAppointmentView(DoctorRequiredMixins, View):
                 status="pending",
             ).delete()
             AppointmentReschedule.objects.filter(appointment=appointment).delete()
+
+            create_notification(
+                user=appointment.patient,
+                title="Appointment cancelled",
+                notification_type=Notification.NotificationType.CANCELLED,
+                message="Your appointment has been cancelled.",
+            )
+
+            create_notification(
+                user=appointment.doctor.user,
+                title="Appointment cancelled",
+                notification_type=Notification.NotificationType.CANCELLED,
+                message="The appointment has been cancelled.",
+            )
+
             messages.success(
                 request,
                 "Reschedule request rejected and appointment cancelled successfully.",
@@ -694,5 +780,19 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
                 appointment=appointment,
                 status="pending",
             ).update(status="rejected")
+
+            create_notification(
+                user=appointment.patient,
+                title="Appointment rescheduled",
+                notification_type=Notification.NotificationType.RESCHEDULED,
+                message=f"Your appointment has been rescheduled to {new_date} at {new_time}.",
+            )
+
+            create_notification(
+                user=appointment.doctor.user,
+                title="Appointment rescheduled",
+                notification_type=Notification.NotificationType.RESCHEDULED,
+                message=f"The appointment has been rescheduled to {new_date} at {new_time}.",
+            )
 
             return redirect("appointments.appointment", appointment_id=appointment.id)

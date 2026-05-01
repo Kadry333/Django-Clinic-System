@@ -54,7 +54,8 @@
                 System healthy
             </div>
 
-            <!-- Notifications -->
+        <!-- Notifications -->
+            {% if request.user.is_authenticated and not request.user.is_admin and not request.user.is_superuser %}
             <div class="relative">
                 <button type="button"
                         class="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-600 transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-primary hover:shadow-soft"
@@ -65,15 +66,16 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.389 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/>
                     </svg>
-                    <!-- ✅ Fixed: single line -->
+
                     {% include "notifications/partials/unread_badge.html" with unread_count=nav_notifications_unread_count %}
                 </button>
 
                 {% include "notifications/partials/dropdown.html" %}
             </div>
+            {% endif %}
 
             <!-- User info -->
-            <a href="{% if request.user.is_authenticated %}{% url 'profile' %}{% else %}#{% endif %}" 
+            <a href="{% if request.user.is_authenticated %}{% if request.user.is_patient %}/patients/profile/{% else %}{% url 'profile' %}{% endif %}{% else %}#{% endif %}" 
                class="hidden min-w-0 text-right sm:block group transition-all hover:opacity-70">
                 <span class="block truncate text-sm font-semibold text-slate-900 group-hover:text-primary">
                     {% if request.user.is_authenticated %}
@@ -102,7 +104,7 @@
             </a>
 
             <!-- Avatar -->
-            <a href="{% if request.user.is_authenticated %}{% url 'profile' %}{% else %}#{% endif %}"
+            <a href="{% if request.user.is_authenticated %}{% if request.user.is_patient %}/patients/profile/{% else %}{% url 'profile' %}{% endif %}{% else %}#{% endif %}"
                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-100 via-teal-50 to-emerald-100 text-sm font-semibold text-primary ring-1 ring-teal-100 transition-all hover:scale-105 active:scale-95">
                 {% if request.user.is_authenticated %}
                     {{ request.user.get_full_name|slice:":1"|upper }}
