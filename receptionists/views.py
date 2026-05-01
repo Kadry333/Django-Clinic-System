@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db import transaction
 from accounts.mixins import ReceptionistRequiredMixins, AdminRequiredMixins
-from appointments.models import Appointment, AppointmentReschedule, AppointmentQueue
+from appointments.models import Appointment, AppointmentReschedule, AppointmentQueue, RescheduleRequest
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
 from receptionists.forms import DoctorScheduleForm, DoctorScheduleExceptionForm,ReceptionistUserForm
 from datetime import datetime, timedelta
@@ -518,3 +518,96 @@ class ReceptionistDeleteView(AdminRequiredMixins, View):
 
         messages.success(request, "Receptionist deleted successfully.")
         return redirect("receptionist.list")
+
+
+class RescheduleRequestsView(ReceptionistRequiredMixins, View):
+    def get(self, request):
+        requests = RescheduleRequest.objects.select_related(
+            "appointment__patient",
+            "appointment__doctor__user",
+        ).filter(status="pending").order_by("-created_at")
+
+        return render(request, "receptionists/reschedule_requests.html", {
+            "requests": requests,
+        })
+
+    def post(self, request):
+        request_id = request.POST.get("request_id")
+        action = request.POST.get("action")
+
+        reschedule_request = get_object_or_404(
+            RescheduleRequest,
+            id=request_id,
+            status="pending",
+        )
+
+        appointment = reschedule_request.appointment
+
+        if action == "reject":
+            reschedule_request.status = "rejected"
+            reschedule_request.save()
+
+            messages.success(
+                request,
+                "Request rejected. Original appointment time unchanged.",
+            )
+            create_notification(
+                    user=appointment.patient,
+                    title="Appointment rescheduled rejected",
+                    notification_type=Notification.NotificationType.RESCHEDULED,
+                    message=f"Your appointment Reschedule request has been rejected.",
+                )
+            return redirect("receptionist.reschedule")
+
+        if action == "approve":
+            new_date = reschedule_request.preferred_date
+            new_time = reschedule_request.preferred_time
+
+            if not new_date or not new_time:
+                messages.error(request, "The request is missing date or time.")
+                return redirect("receptionist.reschedule")
+
+            available_slots = get_available_slots(appointment.doctor, new_date)
+
+            if new_time.strftime("%H:%M") not in [slot["start"] for slot in available_slots]:
+                messages.error(request, "This slot is no longer available.")
+                return redirect("receptionist.reschedule")
+
+            old_date = appointment.appointment_date
+            old_time = appointment.start_time
+
+            new_end_time = (
+                datetime.combine(new_date, new_time)
+                + timedelta(minutes=appointment.doctor.session_duration)
+            ).time()
+
+            appointment.appointment_date = new_date
+            appointment.start_time = new_time
+            appointment.end_time = new_end_time
+            appointment.status = "confirmed"
+            appointment.save()
+            create_notification(
+                    user=appointment.patient,
+                    title="Appointment rescheduled approved",
+                    notification_type=Notification.NotificationType.RESCHEDULED,
+                    message=f"Your appointment has been rescheduled to {new_date} at {new_time}.",
+                )
+
+            AppointmentReschedule.objects.create(
+                appointment=appointment,
+                old_date=old_date,
+                old_time=old_time,
+                new_date=new_date,
+                new_time=new_time,
+                changed_by=request.user,
+                reason=reschedule_request.reason,
+            )
+
+            reschedule_request.status = "approved"
+            reschedule_request.save()
+
+            messages.success(request, "Reschedule request approved.")
+            return redirect("receptionist.reschedule")
+
+        messages.error(request, "Invalid action.")
+        return redirect("receptionist.reschedule")

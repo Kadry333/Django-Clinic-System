@@ -14,6 +14,7 @@ urlpatterns = [
     path("admin/receptionists/<int:receptionist_id>/", views.ReceptionistDetailView.as_view(), name="receptionist.detail"),
     path("admin/receptionists/<int:receptionist_id>/edit/", views.ReceptionistEditView.as_view(), name="receptionist.edit"),
     path("admin/receptionists/<int:receptionist_id>/delete/", views.ReceptionistDeleteView.as_view(), name="receptionist.delete"),
+    path('reschedule/', views.RescheduleRequestsView.as_view(), name='receptionist.reschedule'),
 
 ]
 
