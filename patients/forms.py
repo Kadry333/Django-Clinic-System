@@ -1,15 +1,6 @@
 from django import forms
-from django.core.validators import RegexValidator
+from accounts.forms import egyptian_mobile_validator, name_validator
 from accounts.models import User
-name_validator = RegexValidator(
-    regex=r"^[a-zA-Z\s]+$",
-    message="Use letters and spaces only.",
-)
-
-mobile_validator = RegexValidator(
-    regex=r"^01[0125][0-9]{8}$",
-    message="Enter a valid Egyptian mobile number.",
-)
 
 
 class PatientProfileForm(forms.ModelForm):
@@ -25,12 +16,9 @@ class PatientProfileForm(forms.ModelForm):
     )
     phone = forms.CharField(
         max_length=11,
-        validators=[mobile_validator],
+        validators=[egyptian_mobile_validator],
     )
 
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email", "phone"]
-
-
-
