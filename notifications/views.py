@@ -3,7 +3,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views.generic import ListView, View
 
 from notifications.models import Notification
-from notifications.forms import MarkNotificationAsReadForm
+from notifications.forms import ClearNotificationForm, MarkNotificationAsReadForm
 
 
 class NotificationListView(LoginRequiredMixin, ListView):
@@ -38,5 +38,27 @@ class MarkAllNotificationsAsReadView(LoginRequiredMixin, View):
             user=request.user,
             is_read=False
         ).update(is_read=True)
+
+        return redirect("notifications:list")
+
+
+class ClearNotificationView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        form = ClearNotificationForm(request.POST)
+
+        if form.is_valid():
+            notification = get_object_or_404(
+                Notification,
+                id=form.cleaned_data["notification_id"],
+                user=request.user
+            )
+            notification.delete()
+
+        return redirect("notifications:list")
+
+
+class ClearAllNotificationsView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        Notification.objects.filter(user=request.user).delete()
 
         return redirect("notifications:list")
