@@ -72,9 +72,6 @@ class DoctorScheduleForm(forms.ModelForm):
         if start >= end:
             raise forms.ValidationError("Start time must be before end time.")
 
-        if not self.doctor:
-            return cleaned_data
-
         session_duration = self.doctor.session_duration
 
         start_date = datetime.combine(datetime.today(), start)
