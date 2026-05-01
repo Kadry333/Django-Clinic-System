@@ -1,16 +1,16 @@
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
 from django.views.generic import ListView, TemplateView, UpdateView
-from accounts.mixins import patientRequiredMixins,AdminRequiredMixins
+
+from accounts.mixins import AdminRequiredMixins, patientRequiredMixins
 from consultations.models import Consultation
 from notifications.models import Notification
 from notifications.services import create_notification
 from patients.forms import PatientProfileForm
-from django.contrib.auth import get_user_model
-from django.db.models import Q  
-from django.core.paginator import Paginator
-
-
 
 
 class PatientProfileView(patientRequiredMixins, TemplateView):
@@ -48,7 +48,7 @@ class PatientProfileUpdateView(patientRequiredMixins, UpdateView):
 
         messages.success(self.request, "Your profile has been updated successfully.")
         return redirect("patients:profile")
-    
+
 
 class PatientConsultationSummaryView(patientRequiredMixins, ListView):
     model = Consultation
@@ -74,7 +74,6 @@ class PatientConsultationSummaryView(patientRequiredMixins, ListView):
         context = super().get_context_data(**kwargs)
         context["current_role"] = "Patient"
         return context
-    
 
 
 class AdminPatientsView(AdminRequiredMixins, TemplateView):
@@ -87,9 +86,11 @@ class AdminPatientsView(AdminRequiredMixins, TemplateView):
 
         search_query = self.request.GET.get("search", "").strip()
 
-        patients = User.objects.filter(
-            groups__name="patient"
-        ).distinct().order_by("first_name", "last_name", "email")
+        patients = (
+            User.objects.filter(groups__name="patient")
+            .distinct()
+            .order_by("first_name", "last_name", "email")
+        )
 
         if search_query:
             patients = patients.filter(
@@ -130,3 +131,22 @@ class AdminPatientProfileUpdateView(AdminRequiredMixins, UpdateView):
         messages.success(self.request, "Patient profile has been updated successfully.")
         return redirect("patients:admin")
 
+
+class AdminPatientDeleteView(AdminRequiredMixins, View):
+    def post(self, request, pk):
+        User = get_user_model()
+
+        patient = get_object_or_404(
+            User.objects.filter(groups__name="patient").distinct(),
+            pk=pk,
+        )
+
+        patient_name = patient.get_full_name() or patient.email
+        patient.delete()
+
+        messages.success(
+            request,
+            f"Patient '{patient_name}' was deleted successfully.",
+        )
+
+        return redirect("patients:admin")

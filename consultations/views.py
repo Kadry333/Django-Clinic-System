@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from notifications.services import create_notification
 from notifications.models import Notification
 
 from appointments.models import AppointmentQueue, Appointment
@@ -60,11 +61,11 @@ def consultation_submit_view(request, queue_id):
     appointment.status = "completed"
     appointment.save()
 
-    Notification.objects.create(
+    create_notification(
         user=appointment.patient,
         title="Consultation summary ready",
-        message="Your consultation summary is now available.",
         notification_type=Notification.NotificationType.CONSULTATION_READY,
+        message="Your consultation summary is ready.",
     )
 
     messages.success(request, "Consultation completed")

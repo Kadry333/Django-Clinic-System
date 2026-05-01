@@ -376,11 +376,11 @@
           </span>
         </a>
         <a
-          href="/users/"
-          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/users/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
+          href="{% url 'patients:admin' %}"
+          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/patients/admin/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
         >
           <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/users/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/patients/admin/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -398,19 +398,49 @@
             </svg>
           </span>
           <span class="min-w-0">
-            <span class="block">Users</span>
+            <span class="block">Patients</span>
             <span
-              class="block text-xs {% if request.path == '/users/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
-              >Manage staff and patient access</span
+              class="block text-xs {% if request.path == '/patients/admin/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
+              >Manage Patients</span
             >
           </span>
         </a>
         <a
-          href="/receptionist/manage"
-          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/users/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
+          href="/doctors/admin/doctors/"
+          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/doctors/admin/doctors/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
         >
           <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/users/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/doctors/admin/doctors/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M18 18.72a8.965 8.965 0 0 0-6-2.22 8.965 8.965 0 0 0-6 2.22m12 0a9 9 0 1 0-12 0m12 0A9 9 0 0 1 12 21a9 9 0 0 1-6-2.28M15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              />
+            </svg>
+          </span>
+          <span class="min-w-0">
+            <span class="block">Doctors</span>
+            <span
+              class="block text-xs {% if request.path == '/doctors/admin/doctors/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
+              >Manage Doctors</span
+            >
+          </span>
+        </a>
+        <a
+          href="/receptionist/"
+          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/receptionist/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
+        >
+          <span
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/receptionist/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -430,7 +460,7 @@
           <span class="min-w-0">
             <span class="block">Receptionist</span>
             <span
-              class="block text-xs {% if request.path == '/users/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
+              class="block text-xs {% if request.path == '/receptionist/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
               >Manage Receptionists</span
             >
           </span>
