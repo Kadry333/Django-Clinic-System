@@ -109,9 +109,7 @@
                                         <div class="space-y-2">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <p class="text-sm font-semibold text-slate-900">
-                                                    Requested by {{
-                                                    request_item.requested_by.get_full_name|default:request_item.requested_by.email
-                                                    }}
+                                                    Requested by {{ request_item.requested_by.get_full_name|default:request_item.requested_by.email }}
                                                 </p>
                                                 <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
                                                     {{ request_item.get_status_display }}
@@ -119,16 +117,11 @@
                                             </div>
                                             <p class="text-sm text-slate-600">
                                                 Preferred slot:
-                                                <span class="font-medium text-slate-900">{{ request_item.preferred_date|date:"M d,
-                                                Y" }}</span>
+                                                <span class="font-medium text-slate-900">{{ request_item.preferred_date|date:"M d, Y" }}</span>
                                                 at
-                                                <span class="font-medium text-slate-900">{{ request_item.preferred_time|time:"g:i A"
-                                                }}</span>
+                                                <span class="font-medium text-slate-900">{{ request_item.preferred_time|time:"g:i A" }}</span>
                                             </p>
-                                            <p class="text-sm text-slate-500">
-                                                Submitted on {{ request_item.created_at|date:"M d, Y
-                                                g:i A" }}
-                                            </p>
+                                            <p class="text-sm text-slate-500">Submitted on {{ request_item.created_at|date:"M d, Y g:i A" }}</p>
                                             <p class="text-sm text-slate-600">
                                                 {% if request_item.reason %}
                                                     {{ request_item.reason }}
