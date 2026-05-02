@@ -12,7 +12,8 @@ class Command(BaseCommand):
         doctor, created = User.objects.get_or_create(email='doctor@clinicms.com')
         doctor.set_password('password123#')
         doctor.first_name = 'Ahmed'
-        doctor.last_name  = 'Ali'
+        doctor.last_name = 'Ali'
+        doctor.phone = '0103456789'
         doctor.save()
         doctor.groups.add(Group.objects.get(name='doctor'))
         DoctorProfile.objects.get_or_create(
@@ -29,6 +30,7 @@ class Command(BaseCommand):
         receptionist.set_password('password123#')
         receptionist.first_name = 'Sara'
         receptionist.last_name  = 'Mohamed'
+        receptionist.phone = '0113456789'
         receptionist.save()
         receptionist.groups.add(Group.objects.get(name='receptionist'))
         ReceptionistProfile.objects.get_or_create(user=receptionist)
@@ -38,6 +40,7 @@ class Command(BaseCommand):
         admin.set_password('password123#')
         admin.first_name = 'Omar'
         admin.last_name  = 'Hassan'
+        admin.phone = '0153456789'
         admin.is_staff   = True
         admin.save()
         admin.groups.add(Group.objects.get(name='admin'))

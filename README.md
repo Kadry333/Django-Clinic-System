@@ -214,95 +214,91 @@ clinic_system/
    python manage.py migrate
    ```
 
-6. **Create a Superuser (Admin Account)**
+6. **create groups**
    ```bash
-   python manage.py createsuperuser
-   ```
-   Follow the prompts to set username, email, and password.
+   python manage.py create_groups
 
-7. **Run the Development Server**
+7. **create staff for testing**
+   ```bash
+   python manage.py create_staff
+
+
+## Sample Users
+
+After running the last command, you can use the following placeholder accounts for testing:
+
+### Admin
+- **Username**: `admin`
+- **Email**: `admin@clinicms.com`
+- **Password**: `password123#`
+
+### Doctor
+- **Email**: `doctor@clinicms.com`
+- **Password**: `password123#`
+
+### Receptionist
+- **Email**: `receptionist@clinicms.com`
+- **Password**: `password123#`
+
+
+8. **Run the Development Server**
    ```bash
    python manage.py runserver
    ```
    The application will be accessible at `http://127.0.0.1:8000/`
 
+
 ## Environment Variables
 
-Create a `.env` file in the project root to configure environment-specific settings:
+To set up your environment variables:
+
+### 1. Create `.env` file
+
+Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+> On Windows (PowerShell):
+
+```powershell
+copy .env.example .env
+```
+
+---
+
+### 2. Generate a Django Secret Key
+
+Run the following command:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Copy the generated key and replace the value of:
 
 ```env
-DEBUG=True
 SECRET_KEY=your-secret-key-here
-ALLOWED_HOSTS=127.0.0.1,localhost
-DATABASE_URL=sqlite:///db.sqlite3
+```
 
-# Email Configuration (optional)
-EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@example.com
-EMAIL_HOST_PASSWORD=your-password
+---
+
+### 3. Update Environment Variables
+
+Open the `.env` file and configure it and add your database credentials:
+
+
+
 
 # Appointment Settings
 APPOINTMENT_BUFFER_TIME_MINUTES=15
 ```
 
-## Sample Users
 
-After creating the superuser, you can use the following placeholder accounts for testing:
 
-### Admin
-- **Username**: `admin`
-- **Email**: `admin@clinic.com`
-- **Password**: `AdminPass123!`
-- **Created via**: `python manage.py createsuperuser`
 
-### Doctor
-- **Username**: `dr_ahmed`
-- **Email**: `dr.ahmed@clinic.com`
-- **Password**: `DoctorPass123!`
-- **Created via**: Django admin panel or management command
 
-### Receptionist
-- **Username**: `receptionist_fatima`
-- **Email**: `receptionist.fatima@clinic.com`
-- **Password**: `ReceptionistPass123!`
-- **Created via**: Django admin panel or management command
-
-### Patient
-- **Username**: `patient_john`
-- **Email**: `patient.john@clinic.com`
-- **Password**: `PatientPass123!`
-- **Created via**: User registration form
-
-**Note**: Replace the placeholder passwords with secure passwords in production environments.
-
-## Running Tests
-
-Execute the test suite to ensure system integrity:
-
-```bash
-# Run all tests
-python manage.py test
-
-# Run tests for a specific app
-python manage.py test accounts
-python manage.py test appointments
-python manage.py test patients
-python manage.py test doctors
-python manage.py test receptionists
-python manage.py test consultations
-python manage.py test notifications
-python manage.py test analytics
-
-# Run tests with verbose output
-python manage.py test --verbosity=2
-
-# Run tests with coverage report (if coverage is installed)
-coverage run --source='.' manage.py test
-coverage report
-```
 
 ## API Endpoints
 
@@ -338,13 +334,32 @@ curl -X GET http://localhost:8000/api/appointments/ \
   -H "Authorization: Bearer <token>"
 ```
 
+## Password Reset
+
+In development, password reset links are printed in the terminal instead of being sent by email.
+
+Make sure you have:
+
+```env
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+```
+
+Then:
+
+* Go to "Forgot Password"
+* Enter your email
+* Check the terminal and use the reset link
+
+> Note: The email must exist in the database.
+
+
 
 ## Team Members
 
 The Clinic Appointment System was developed by the following team members:
 
 - **Amr Shokry**: Appointments Staff Management & Doctor Operations
-- **Mawada Hassan**: Analytics & Patient Profile Management
+- **Mawada Hassan**: Analytics & Users Profile Management
 - **Ahmed ElEmam**: Notifications System & Patient Features
 - **Kareem Kadry**: Authentication & Receptionist Operations
 - **Ramadan Mohamed**: Appointment Client Interface & Daily Queue Management
