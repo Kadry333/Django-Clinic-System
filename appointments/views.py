@@ -26,7 +26,7 @@ from notifications.models import Notification
 from notifications.services import create_notification, notify_receptionists
 from patients.models import PatientProfile
 
-from .services import book_appointment, get_available_slots
+from .services import book_appointment, get_available_slots, get_duration_minutes
 from .utils import generate_slots
 
 User = get_user_model()
@@ -356,6 +356,11 @@ class DoctorAppointmentsView(DoctorRequiredMixins, View):
             "first_name", "last_name", "email"
         )
 
+        for appointment in appointments:
+            appointment.duration_minutes = get_duration_minutes(
+                appointment.start_time, appointment.end_time
+            )
+
         paginator = Paginator(appointments, 10)
         page_obj = paginator.get_page(request.GET.get("page", 1))
 
@@ -389,6 +394,10 @@ class DoctorAppointmentView(DoctorRequiredMixins, View):
         appointment = get_object_or_404(
             Appointment.objects.select_related("doctor__user", "patient"),
             id=appointment_id,
+        )
+
+        appointment.duration_minutes = get_duration_minutes(
+            appointment.start_time, appointment.end_time
         )
 
         consultation = Consultation.objects.filter(appointment=appointment).first()
@@ -485,6 +494,7 @@ class StaffMarkCheckinAppointmentView(DoctorRequiredMixins, View):
     @transaction.atomic
     def post(self, request, appointment_id):
         from appointments.models import AppointmentQueue
+
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
         if appointment.status != "confirmed":
@@ -499,7 +509,7 @@ class StaffMarkCheckinAppointmentView(DoctorRequiredMixins, View):
         # Create Queue Record
         AppointmentQueue.objects.get_or_create(
             appointment=appointment,
-            defaults={'check_in_time': now, 'status': 'waiting'}
+            defaults={"check_in_time": now, "status": "waiting"},
         )
 
         messages.success(request, "Appointment checked in successfully.")
@@ -731,6 +741,24 @@ class StaffRescheduleAppointmentView(DoctorRequiredMixins, View):
     def post(self, request, appointment_id):
         appointment = get_object_or_404(Appointment, id=appointment_id)
         form = AppointmentRescheduleForm(request.POST)
+
+        if appointment.status not in ["requested", "confirmed"]:
+            messages.error(
+                request,
+                "The appointment cannot be rescheduled because it is not in a reschedulable status.",
+            )
+            return render(
+                request,
+                "appointments/staff-reschedule.html",
+                {
+                    "form": form,
+                    "current_role": "Staff",
+                    "selected_date": selected_date,
+                    "available_slots": available_slots,
+                    "appointment": appointment,
+                    "doctor": appointment.doctor,
+                },
+            )
 
         if not form.is_valid():
             messages.error(request, "Please correct the errors below.")

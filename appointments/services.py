@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.db import transaction
 from django.utils import timezone
 from doctors.models import DoctorSchedule, DoctorScheduleException
@@ -80,6 +80,12 @@ def get_available_slots(doctor, selected_date):
         5: "sat",
         6: "sun",
     }
+
+    now = timezone.localtime()
+    today = now.date()
+
+    if selected_date < today:
+        return []
     booked_slots = Appointment.objects.filter(
         doctor=doctor,
         appointment_date=selected_date,
@@ -111,13 +117,17 @@ def get_available_slots(doctor, selected_date):
     for schedule in schedules:
         start_time = schedule.start_time
         end_time = schedule.end_time
-
-        current = datetime.combine(selected_date, start_time)
-        end_datetime = datetime.combine(selected_date, end_time)
+        current = timezone.make_aware(datetime.combine(selected_date, start_time))
+        end_datetime = timezone.make_aware(datetime.combine(selected_date, end_time))
 
         while current + timedelta(minutes=session_duration) <= end_datetime:
             slot_start = current.time()
             slot_end = (current + timedelta(minutes=session_duration)).time()
+            slot_start_datetime = current
+
+            if selected_date == today and slot_start_datetime <= now:
+                current += timedelta(minutes=session_duration + buffer_time)
+                continue
 
             is_overlapping = False
 
@@ -138,3 +148,10 @@ def get_available_slots(doctor, selected_date):
             current += timedelta(minutes=session_duration + buffer_time)
 
     return slots
+
+
+def get_duration_minutes(start_time, end_time):
+    return (
+        datetime.combine(date.today(), end_time)
+        - datetime.combine(date.today(), start_time)
+    ).seconds // 60
