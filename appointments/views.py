@@ -383,10 +383,16 @@ class DoctorAppointmentsView(DoctorRequiredMixins, View):
 
 class DoctorAppointmentView(DoctorRequiredMixins, View):
     def get(self, request, appointment_id):
+        from consultations.models import Consultation
+        from appointments.models import AppointmentQueue
+
         appointment = get_object_or_404(
             Appointment.objects.select_related("doctor__user", "patient"),
             id=appointment_id,
         )
+
+        consultation = Consultation.objects.filter(appointment=appointment).first()
+        queue_item = AppointmentQueue.objects.filter(appointment=appointment).first()
 
         reschedule_requests = (
             RescheduleRequest.objects.filter(appointment=appointment)
@@ -405,6 +411,8 @@ class DoctorAppointmentView(DoctorRequiredMixins, View):
             {
                 "current_role": "Doctor",
                 "appointment": appointment,
+                "consultation": consultation,
+                "queue_id": queue_item.id if queue_item else None,
                 "reschedule_requests": reschedule_requests,
                 "reschedule_history": reschedule_history,
             },
@@ -476,15 +484,23 @@ class StaffConfirmAppointmentView(DoctorRequiredMixins, View):
 class StaffMarkCheckinAppointmentView(DoctorRequiredMixins, View):
     @transaction.atomic
     def post(self, request, appointment_id):
+        from appointments.models import AppointmentQueue
         appointment = get_object_or_404(Appointment, id=appointment_id)
 
         if appointment.status != "confirmed":
             messages.error(request, "Only confirmed appointments can be checked in.")
             return redirect("appointments.appointment", appointment_id=appointment.id)
 
+        now = timezone.now()
         appointment.status = "checked_in"
-        appointment.check_in_time = timezone.now()
+        appointment.check_in_time = now
         appointment.save()
+
+        # Create Queue Record
+        AppointmentQueue.objects.get_or_create(
+            appointment=appointment,
+            defaults={'check_in_time': now, 'status': 'waiting'}
+        )
 
         messages.success(request, "Appointment checked in successfully.")
         return redirect("appointments.appointment", appointment_id=appointment.id)

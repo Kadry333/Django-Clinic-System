@@ -22,19 +22,35 @@ from .forms import (
 
 class DoctorDashboardView(DoctorRequiredMixins, View):
     def get(self, request):
+        from appointments.models import Appointment
         doctor = DoctorProfile.objects.get(user=request.user)
         today = timezone.localtime(timezone.now()).date()
+        
         queue = (
             AppointmentQueue.objects.select_related("appointment__patient")
             .filter(appointment__doctor=doctor, appointment__appointment_date=today)
             .order_by("check_in_time")
         )
+        
+        pending_requests = Appointment.objects.filter(
+            doctor=doctor, 
+            status='requested'
+        ).select_related('patient').order_by('appointment_date', 'start_time')
+
+        upcoming_today = Appointment.objects.filter(
+            doctor=doctor,
+            appointment_date=today,
+            status='confirmed'
+        ).select_related('patient').order_by('start_time')
+
         return render(
             request,
             "doctors/dashboard.html",
             {
                 "current_role": "Doctor",
                 "queue": queue,
+                "pending_requests": pending_requests,
+                "upcoming_today": upcoming_today,
             },
         )
 

@@ -282,36 +282,6 @@
             >
           </span>
         </a>
-        <a
-          href="/consultations/doctor/"
-          class="group flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium transition {% if request.path == '/consultations/doctor/' %}border-teal-300/30 bg-gradient-to-r from-teal-500/25 to-emerald-400/15 text-white shadow-[0_10px_24px_rgba(13,148,136,0.2)]{% else %}border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white{% endif %}"
-        >
-          <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {% if request.path == '/consultations/doctor/' %}bg-white/10 text-white{% else %}bg-white/5 text-teal-200 group-hover:bg-white/10{% endif %}"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 12h6m-6 4h3m-5.25 4.5h10.5A2.25 2.25 0 0 0 19.5 18.25V5.75A2.25 2.25 0 0 0 17.25 3.5H6.75A2.25 2.25 0 0 0 4.5 5.75v12.5A2.25 2.25 0 0 0 6.75 20.5Z"
-              />
-            </svg>
-          </span>
-          <span class="min-w-0">
-            <span class="block">Consultation</span>
-            <span
-              class="block text-xs {% if request.path == '/consultations/doctor/' %}text-teal-50/80{% else %}text-slate-400{% endif %}"
-              >Open clinical notes and summaries</span
-            >
-          </span>
-        </a>
       </div>
      {% elif request.user.is_receptionist %}
 <div class="space-y-2">
