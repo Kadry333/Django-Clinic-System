@@ -13,20 +13,6 @@ from accounts.forms import egyptian_mobile_validator, name_validator
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), required=False)
 
-    first_name = forms.CharField(
-        min_length=3,
-        max_length=50,
-        validators=[name_validator],
-    )
-
-    last_name = forms.CharField(
-        min_length=3,
-        max_length=50,
-        validators=[name_validator],
-    )
-
-    phone = forms.CharField(max_length=11, validators=[egyptian_mobile_validator])
-
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email", "phone"]
@@ -36,31 +22,6 @@ class UserForm(forms.ModelForm):
 
         if not self.instance.pk:
             self.fields["password"].required = True
-
-    def clean_email(self):
-        email = self.cleaned_data["email"]
-        existingUser = User.objects.filter(email=email)
-
-        if self.instance and self.instance.pk:
-            existingUser = existingUser.exclude(pk=self.instance.pk)
-
-        if existingUser.exists():
-            raise forms.ValidationError("A user with this email already exists.")
-
-        return email
-
-    def clean_phone(self):
-        phone = self.cleaned_data["phone"]
-
-        existing_user = User.objects.filter(phone=phone)
-
-        if self.instance and self.instance.pk:
-            existing_user = existing_user.exclude(pk=self.instance.pk)
-
-        if existing_user.exists():
-            raise forms.ValidationError("This phone number is already in use.")
-
-        return phone
 
 
 class DoctorProfileForm(forms.ModelForm):
