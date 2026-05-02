@@ -189,6 +189,13 @@
                         <span class="font-medium text-slate-900" x-text="selected || '—'"></span>
                     </div>
 
+                    <div class="flex justify-between">
+                        <span>Fee</span>
+                        <span class="font-medium text-slate-900"> {% if doctor %} {{ doctor.session_fee }} EGP {% else %} — {% endif %}  </span>
+                    </div>
+
+
+
                 </div>
             </div>
         </div>

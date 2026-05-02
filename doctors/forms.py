@@ -25,10 +25,7 @@ class UserForm(forms.ModelForm):
         validators=[name_validator],
     )
 
-    phone = forms.CharField(
-        max_length=11,
-        validators=[egyptian_mobile_validator],
-    )
+    phone = forms.CharField(max_length=11, validators=[egyptian_mobile_validator])
 
     class Meta:
         model = User
@@ -52,11 +49,24 @@ class UserForm(forms.ModelForm):
 
         return email
 
+    def clean_phone(self):
+        phone = self.cleaned_data["phone"]
+
+        existing_user = User.objects.filter(phone=phone)
+
+        if self.instance and self.instance.pk:
+            existing_user = existing_user.exclude(pk=self.instance.pk)
+
+        if existing_user.exists():
+            raise forms.ValidationError("This phone number is already in use.")
+
+        return phone
+
 
 class DoctorProfileForm(forms.ModelForm):
     class Meta:
         model = DoctorProfile
-        fields = ["specialization", "session_duration", "buffer_time"]
+        fields = ["specialization", "session_duration", "buffer_time", "session_fee"]
 
 
 class DoctorScheduleForm(forms.ModelForm):
@@ -153,6 +163,8 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
         is_day_off = cleaned_data.get("is_day_off")
 
         if is_day_off:
+            cleaned_data["start_time"] = None
+            cleaned_data["end_time"] = None
             return cleaned_data
 
         if date and date < timezone.localdate():
@@ -193,6 +205,9 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
                     raise forms.ValidationError(
                         f"Must be within working hours: {valid_ranges}"
                     )
-
+            else:
+                raise forms.ValidationError(
+                    "Start time and end time are required if not a day off."
+                )
         if start_time and end_time and start_time >= end_time:
             raise forms.ValidationError("Start time must be before end time.")

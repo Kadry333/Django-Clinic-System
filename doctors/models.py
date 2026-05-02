@@ -23,6 +23,14 @@ class DoctorProfile(models.Model):
         ],
     )
 
+    session_fee = models.IntegerField(
+        default=400,
+        validators=[
+            MinValueValidator(5),
+            MaxValueValidator(10000),
+        ],
+    )
+
     def __str__(self):
         return self.user.username
 

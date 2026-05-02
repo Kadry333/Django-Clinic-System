@@ -10,47 +10,45 @@ User = settings.AUTH_USER_MODEL
 class Appointment(models.Model):
 
     STATUS_CHOICES = [
-        ('requested', 'Requested'),
-        ('confirmed', 'Confirmed'),
-        ('checked_in', 'Checked In'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-        ('no_show', 'No Show'),
+        ("requested", "Requested"),
+        ("confirmed", "Confirmed"),
+        ("checked_in", "Checked In"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+        ("no_show", "No Show"),
     ]
 
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_appointments')
+    patient = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="patient_appointments"
+    )
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE)
-    
-    fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    fee = models.IntegerField(default=0)
 
     appointment_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='requested')
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="requested"
+    )
     check_in_time = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
-            constraints = [
-                UniqueConstraint(
-            fields=['doctor', 'appointment_date', 'start_time'],
-            condition=Q(status__in=['requested', 'confirmed', 'checked_in']),
-            name='unique_active_doctor_slot'
-        ),
-                 UniqueConstraint(
-            fields=['patient', 'appointment_date', 'start_time'],
-            condition=Q(status__in=['requested', 'confirmed', 'checked_in']),
-            name='unique_active_patient_slot'
-        ),
-        
-       
-    ]
-
-
-
-
+        constraints = [
+            UniqueConstraint(
+                fields=["doctor", "appointment_date", "start_time"],
+                condition=Q(status__in=["requested", "confirmed", "checked_in"]),
+                name="unique_active_doctor_slot",
+            ),
+            UniqueConstraint(
+                fields=["patient", "appointment_date", "start_time"],
+                condition=Q(status__in=["requested", "confirmed", "checked_in"]),
+                name="unique_active_patient_slot",
+            ),
+        ]
 
 
 class AppointmentReschedule(models.Model):
@@ -62,14 +60,11 @@ class AppointmentReschedule(models.Model):
     changed_by = models.ForeignKey(User, on_delete=models.CASCADE)
     reason = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    
-    
-    
+
+
 class AppointmentQueue(models.Model):
     appointment = models.OneToOneField(
-        "appointments.Appointment",
-        on_delete=models.CASCADE
+        "appointments.Appointment", on_delete=models.CASCADE
     )
 
     check_in_time = models.DateTimeField()
@@ -81,26 +76,27 @@ class AppointmentQueue(models.Model):
             ("in_progress", "In Progress"),
             ("done", "Done"),
         ],
-        default="waiting"
+        default="waiting",
     )
-    started_at     = models.DateTimeField(null=True, blank=True) 
+    started_at = models.DateTimeField(null=True, blank=True)
 
     def waiting_time(self):
         return int((timezone.now() - self.check_in_time).total_seconds() / 60)
 
     def __str__(self):
         return f"{self.appointment} - {self.status}"
-    
 
 
 class RescheduleRequest(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
     ]
 
-    appointment = models.ForeignKey("appointments.Appointment", on_delete=models.CASCADE)
+    appointment = models.ForeignKey(
+        "appointments.Appointment", on_delete=models.CASCADE
+    )
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     preferred_date = models.DateField(null=True, blank=True)
@@ -108,6 +104,5 @@ class RescheduleRequest(models.Model):
 
     reason = models.TextField(blank=True)
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
-
