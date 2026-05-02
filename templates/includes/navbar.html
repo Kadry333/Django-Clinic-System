@@ -19,40 +19,22 @@
                     <span class="relative">CM</span>
                 </span>
                 <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                        <p class="truncate text-sm font-semibold tracking-tight text-slate-900">ClinicMS</p>
-                        <span class="hidden rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-primary md:inline-flex">Live UI</span>
-                    </div>
+                    
                     <p class="truncate text-xs text-slate-500">Modern clinic workspace</p>
                 </div>
             </a>
         </div>
 
-        <!-- Search -->
-        <div class="hidden flex-1 justify-center px-4 lg:flex">
-            <div class="w-full max-w-2xl">
-                <label class="group relative block">
-                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition group-focus-within:text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>
-                        </svg>
-                    </span>
-                    <input type="text"
-                           placeholder="Search appointments, patients, or reports"
-                           class="h-11 w-full rounded-2xl border border-slate-200/80 bg-slate-50/90 pl-11 pr-28 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-teal-300 focus:bg-white focus:ring-4 focus:ring-teal-50"/>
-                    <span class="pointer-events-none absolute inset-y-0 right-3 hidden items-center rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400 xl:flex">Search</span>
-                </label>
-            </div>
-        </div>
+
 
         <!-- Right side -->
         <div class="flex shrink-0 items-center gap-2 sm:gap-3" x-data="{ notificationOpen: false }">
 
             <!-- System status -->
-            <div class="hidden items-center rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50 to-emerald-50 px-3 py-2 text-xs font-medium text-primary md:flex">
+            <!-- <div class="hidden items-center rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50 to-emerald-50 px-3 py-2 text-xs font-medium text-primary md:flex">
                 <span class="mr-2 h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
                 System healthy
-            </div>
+            </div> -->
 
         <!-- Notifications -->
             {% if request.user.is_authenticated and not request.user.is_admin and not request.user.is_superuser %}
