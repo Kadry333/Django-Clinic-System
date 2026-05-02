@@ -7,10 +7,28 @@ from datetime import datetime, timedelta
 
 from accounts.models import User
 from doctors.models import DoctorProfile, DoctorSchedule, DoctorScheduleException
+from accounts.forms import egyptian_mobile_validator, name_validator
 
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), required=False)
+
+    first_name = forms.CharField(
+        min_length=3,
+        max_length=50,
+        validators=[name_validator],
+    )
+
+    last_name = forms.CharField(
+        min_length=3,
+        max_length=50,
+        validators=[name_validator],
+    )
+
+    phone = forms.CharField(
+        max_length=11,
+        validators=[egyptian_mobile_validator],
+    )
 
     class Meta:
         model = User
