@@ -63,6 +63,7 @@ def book_appointment(patient, doctor, date, start_time):
             doctor=doctor,
             appointment_date=date,
             start_time=start_time,
+            fee=doctor.session_fee,
             end_time=end_dt.time(),
             status="requested",
         )

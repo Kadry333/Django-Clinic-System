@@ -124,6 +124,22 @@
                                     {% endif %}
                                 </a>
                             </th>
+                                <th class="px-5 py-3 text-left font-semibold text-slate-600">
+                                <a href="?search={{ search_query|urlencode }}&sort=session_fee&direction={% if current_sort == 'session_fee' and current_direction == 'asc' %}desc{% else %}asc{% endif %}"
+                                   class="inline-flex items-center gap-2 transition hover:text-primary">
+                                    Session Fee
+                                    {% if current_sort == "session_fee" %}
+                                        <span class="text-xs text-primary">
+                                            {% if current_direction == "asc" %}
+                                                ^
+                                            {% else %}
+                                                v
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </a>
+                            </th>
+
                             <th class="px-5 py-3 text-left font-semibold text-slate-600">Actions</th>
                         </tr>
                     </thead>
@@ -161,6 +177,11 @@
                                     <a href="{% url 'doctors.detail' doctor.id %}"
                                        class="transition hover:text-primary">{{ doctor.buffer_time }} min</a>
                                 </td>
+                                <td class="px-5 py-4 text-slate-600">
+                                    <a href="{% url 'doctors.detail' doctor.id %}"
+                                       class="transition hover:text-primary">{{ doctor.session_fee }} EGP</a>
+                                </td>
+
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <a href="{% url 'doctors.detail' doctor.id %}"

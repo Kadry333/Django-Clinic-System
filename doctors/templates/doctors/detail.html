@@ -54,7 +54,7 @@
                         <p class="mt-2 text-sm font-semibold text-slate-900">#{{ doctor.id }}</p>
                     </div>
                 </div>
-                <div class="mt-6 grid gap-4 md:grid-cols-2">
+                <div class="mt-6 grid gap-4 md:grid-cols-3">
                     <div class="rounded-3xl border border-slate-200 p-5">
                         <p class="text-sm font-medium text-slate-500">Session duration</p>
                         <p class="mt-2 text-2xl font-semibold text-slate-900">{{ doctor.session_duration }} min</p>
@@ -63,6 +63,12 @@
                         <p class="text-sm font-medium text-slate-500">Buffer time</p>
                         <p class="mt-2 text-2xl font-semibold text-slate-900">{{ doctor.buffer_time }} min</p>
                     </div>
+                        <div class="rounded-3xl border border-slate-200 p-5">
+        <p class="text-sm font-medium text-slate-500">Session fee</p>
+        <p class="mt-2 text-2xl font-semibold text-slate-900">
+            {{ doctor.session_fee }} EGP
+        </p>
+    </div>
                 </div>
             </div>
         </section>

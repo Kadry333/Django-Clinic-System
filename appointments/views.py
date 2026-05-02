@@ -41,6 +41,7 @@ class PatientBookView(patientRequiredMixins, View):
 
         doctor_id = request.GET.get("doctor_id")
         date_str = request.GET.get("date")
+        doctor = None
 
         if doctor_id and date_str:
             try:
@@ -61,6 +62,7 @@ class PatientBookView(patientRequiredMixins, View):
             {
                 "current_role": "Patient",
                 "doctors": doctors,
+                "doctor": doctor,
                 "slots": slots,
                 "error": error,
                 "today": date.today().isoformat(),

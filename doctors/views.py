@@ -23,25 +23,29 @@ from .forms import (
 class DoctorDashboardView(DoctorRequiredMixins, View):
     def get(self, request):
         from appointments.models import Appointment
+
         doctor = DoctorProfile.objects.get(user=request.user)
         today = timezone.localtime(timezone.now()).date()
-        
+
         queue = (
             AppointmentQueue.objects.select_related("appointment__patient")
             .filter(appointment__doctor=doctor, appointment__appointment_date=today)
             .order_by("check_in_time")
         )
-        
-        pending_requests = Appointment.objects.filter(
-            doctor=doctor, 
-            status='requested'
-        ).select_related('patient').order_by('appointment_date', 'start_time')
 
-        upcoming_today = Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=today,
-            status='confirmed'
-        ).select_related('patient').order_by('start_time')
+        pending_requests = (
+            Appointment.objects.filter(doctor=doctor, status="requested")
+            .select_related("patient")
+            .order_by("appointment_date", "start_time")
+        )
+
+        upcoming_today = (
+            Appointment.objects.filter(
+                doctor=doctor, appointment_date=today, status="confirmed"
+            )
+            .select_related("patient")
+            .order_by("start_time")
+        )
 
         return render(
             request,
@@ -83,6 +87,7 @@ class ScheduleView(DoctorRequiredMixins, View):
             },
         )
 
+
 class DoctorsListView(AdminRequiredMixins, View):
     sort_map = {
         "name": ("user__first_name", "user__last_name"),
@@ -90,6 +95,7 @@ class DoctorsListView(AdminRequiredMixins, View):
         "specialization": ("specialization",),
         "session_duration": ("session_duration",),
         "buffer_time": ("buffer_time",),
+        "session_fee": ("session_fee",),
     }
 
     def get(self, request):
@@ -121,7 +127,7 @@ class DoctorsListView(AdminRequiredMixins, View):
 
         doctors = doctors.order_by(*ordering)
 
-        paginator = Paginator(doctors, 2)
+        paginator = Paginator(doctors, 10)
         page_obj = paginator.get_page(request.GET.get("page", 1))
 
         return render(
@@ -387,7 +393,7 @@ class DoctorScheduleExceptionView(DoctorRequiredMixins, View):
             sort = f"{sort}"
         exceptions = exceptions.order_by(sort)
 
-        paginator = Paginator(exceptions, 1)
+        paginator = Paginator(exceptions, 10)
         page_number = request.GET.get("page", 1)
         page_obj = paginator.get_page(page_number)
 

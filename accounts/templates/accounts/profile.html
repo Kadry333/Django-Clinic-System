@@ -151,11 +151,12 @@
                 {% if doctor_form %}
                 <div class="pt-4 border-t border-slate-100 space-y-6">
                     <h4 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Professional Details</h4>
-                    <div class="space-y-1">
+                    <div class="grid grid-cols-2 gap-4">
+                                            <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Specialization</label>
                         {{ doctor_form.specialization }}
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Session Duration (Min)</label>
                             {{ doctor_form.session_duration }}
@@ -164,6 +165,12 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Buffer Time (Min)</label>
                             {{ doctor_form.buffer_time }}
                         </div>
+                            <div class="space-y-1 ">
+        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">
+            Session Fee (EGP)
+        </label>
+        {{ doctor_form.session_fee }}
+    </div>
                     </div>
                 </div>
                 {% endif %}
