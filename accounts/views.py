@@ -97,14 +97,25 @@ class ProfileView(LoginRequiredMixin, View):
             if profile_instance:
                 doctor_form = DoctorProfileForm(request.POST, instance=profile_instance)
 
-        if form.is_valid():
+        is_user_valid = form.is_valid()
+        is_doctor_valid = doctor_form.is_valid() if doctor_form else True
+
+        if is_user_valid and is_doctor_valid:
             form.save()
-            if doctor_form and doctor_form.is_valid():
+            if doctor_form:
                 doctor_form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile')
         
+        profile_data = None
+        if user.is_doctor:
+            profile_data = DoctorProfile.objects.filter(user=user).first()
+        elif user.is_patient:
+            profile_data = PatientProfile.objects.filter(user=user).first()
+            
         return render(request, 'accounts/profile.html', {
+            'user': user,
             'form': form,
-            'doctor_form': doctor_form
+            'doctor_form': doctor_form,
+            'profile_data': profile_data
         })

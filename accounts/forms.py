@@ -3,6 +3,8 @@ from django import forms
 from accounts.models import User
 from doctors.models import DoctorProfile
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+import re
 
 name_validator = RegexValidator(
     regex=r"^[a-zA-Z\s]+$",
@@ -48,6 +50,20 @@ class UserUpdateForm(forms.ModelForm):
                 }
             )
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').lower().strip()
+        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
+            raise ValidationError("This email is already in use by another account.")
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '')
+        if not re.match(r"^01[0125][0-9]{8}$", phone):
+            raise ValidationError("Enter a valid Egyptian mobile number.")
+        if User.objects.exclude(pk=self.instance.pk).filter(phone=phone).exists():
+            raise ValidationError("This phone number is already registered.")
+        return phone
+
 
 class DoctorProfileForm(forms.ModelForm):
     class Meta:
@@ -68,3 +84,15 @@ class DoctorProfileForm(forms.ModelForm):
                     "class": "w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all"
                 }
             )
+
+    def clean_session_duration(self):
+        duration = self.cleaned_data.get('session_duration')
+        if duration and duration <= 0:
+            raise ValidationError("Duration must be a positive number.")
+        return duration
+
+    def clean_session_fee(self):
+        fee = self.cleaned_data.get('session_fee')
+        if fee is not None and fee < 0:
+            raise ValidationError("Fee cannot be negative.")
+        return fee

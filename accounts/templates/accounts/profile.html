@@ -2,7 +2,7 @@
 {% block title %}My Profile | ClinicMS{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto animate-in fade-in duration-700" x-data="{ editModal: false }">
+<div class="max-w-5xl mx-auto animate-in fade-in duration-700" x-data="{ editModal: {% if form.errors or doctor_form.errors %}true{% else %}false{% endif %} }">
 
     <div class="relative bg-white rounded-[2rem] p-8 shadow-soft border border-slate-100 mb-8 overflow-hidden">
         <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
@@ -133,44 +133,67 @@
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">First Name</label>
                         {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-[10px] text-red-500 font-bold ml-2">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Last Name</label>
                         {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-[10px] text-red-500 font-bold ml-2">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Email Address</label>
                     {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-[10px] text-red-500 font-bold ml-2">{{ form.email.errors.0 }}</p>
+                    {% endif %}
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Phone Number</label>
                     {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <p class="text-[10px] text-red-500 font-bold ml-2">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
                 </div>
 
                 {% if doctor_form %}
                 <div class="pt-4 border-t border-slate-100 space-y-6">
                     <h4 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Professional Details</h4>
                     <div class="grid grid-cols-2 gap-4">
-                                            <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Specialization</label>
-                        {{ doctor_form.specialization }}
-                    </div>
-
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Specialization</label>
+                            {{ doctor_form.specialization }}
+                            {% if doctor_form.specialization.errors %}
+                                <p class="text-[10px] text-red-500 font-bold ml-2">{{ doctor_form.specialization.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Session Duration (Min)</label>
                             {{ doctor_form.session_duration }}
+                            {% if doctor_form.session_duration.errors %}
+                                <p class="text-[10px] text-red-500 font-bold ml-2">{{ doctor_form.session_duration.errors.0 }}</p>
+                            {% endif %}
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Buffer Time (Min)</label>
                             {{ doctor_form.buffer_time }}
+                            {% if doctor_form.buffer_time.errors %}
+                                <p class="text-[10px] text-red-500 font-bold ml-2">{{ doctor_form.buffer_time.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                            <div class="space-y-1 ">
-        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">
-            Session Fee (EGP)
-        </label>
-        {{ doctor_form.session_fee }}
-    </div>
+                        <div class="space-y-1 ">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">
+                                Session Fee (EGP)
+                            </label>
+                            {{ doctor_form.session_fee }}
+                            {% if doctor_form.session_fee.errors %}
+                                <p class="text-[10px] text-red-500 font-bold ml-2">{{ doctor_form.session_fee.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endif %}
