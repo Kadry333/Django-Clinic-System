@@ -4,6 +4,8 @@ from accounts.mixins import (
     AdminRequiredMixins,
 )
 
+from consultations.models import Consultation
+from appointments.models import AppointmentQueue
 
 from datetime import date, datetime, timedelta
 from http.client import HTTPResponse
@@ -390,9 +392,6 @@ class DoctorAppointmentsView(DoctorRequiredMixins, View):
 
 class DoctorAppointmentView(DoctorRequiredMixins, View):
     def get(self, request, appointment_id):
-        from consultations.models import Consultation
-        from appointments.models import AppointmentQueue
-
         appointment = get_object_or_404(
             Appointment.objects.select_related("doctor__user", "patient"),
             id=appointment_id,
@@ -508,7 +507,6 @@ class StaffMarkCheckinAppointmentView(DoctorRequiredMixins, View):
         appointment.check_in_time = now
         appointment.save()
 
-        # Create Queue Record
         AppointmentQueue.objects.get_or_create(
             appointment=appointment,
             defaults={"check_in_time": now, "status": "waiting"},

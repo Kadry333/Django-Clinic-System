@@ -132,7 +132,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     try:
                         new_time = datetime.strptime(new_time_str, fmt).time()
                         break
-                    except ValueError:
+                    except Exception:
                         continue
 
                 if not new_time:
