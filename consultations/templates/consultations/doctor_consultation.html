@@ -5,9 +5,25 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('prescriptions', () => ({
-            items: [{ drug: '', dosage: '', duration: '' }],
-            tests: [{ name: '' }],
-            add() { this.items.push({ drug: '', dosage: '', duration: '' }) },
+            items: [
+                {% if consultation and consultation.prescription_set.exists %}
+                    {% for p in consultation.prescription_set.all %}
+                        { drug: '{{ p.drug_name|escapejs }}', dosage: '{{ p.dosage|escapejs }}', duration: '{{ p.duration|escapejs }}', instructions: '{{ p.instructions|escapejs }}' }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                {% else %}
+                    { drug: '', dosage: '', duration: '', instructions: '' }
+                {% endif %}
+            ],
+            tests: [
+                {% if consultation and consultation.medicaltest_set.exists %}
+                    {% for t in consultation.medicaltest_set.all %}
+                        { name: '{{ t.test_name|escapejs }}' }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                {% else %}
+                    { name: '' }
+                {% endif %}
+            ],
+            add() { this.items.push({ drug: '', dosage: '', duration: '', instructions: '' }) },
             addTest() { this.tests.push({ name: '' }) },
             removeItem(index) { if (this.items.length > 1) this.items.splice(index, 1) },
             removeTest(index) { if (this.tests.length > 1) this.tests.splice(index, 1) },
@@ -40,7 +56,7 @@
                     <label class="mb-2 block text-sm font-medium text-slate-700">Diagnosis</label>
                     <textarea name="diagnosis" rows="3"
                               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
-                              placeholder="Enter diagnosis"></textarea>
+                              placeholder="Enter diagnosis">{{ consultation.diagnosis|default:'' }}</textarea>
                 </div>
 
                 {# Notes #}
@@ -48,7 +64,7 @@
                     <label class="mb-2 block text-sm font-medium text-slate-700">Clinical notes</label>
                     <textarea name="notes" rows="5" required
                               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
-                              placeholder="Consultation notes"></textarea>
+                              placeholder="Consultation notes">{{ consultation.notes|default:'' }}</textarea>
                 </div>
 
                 {# Prescriptions #}
@@ -62,7 +78,7 @@
                     </div>
                     <div class="space-y-3">
                         <template x-for="(item, index) in items" :key="index">
-                            <div class="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
+                            <div class="grid gap-3 md:grid-cols-[1.5fr_1fr_1fr_1.5fr_auto] items-start">
                                 <input type="text" name="drug_name[]"
                                        x-model="item.drug"
                                        class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
@@ -75,6 +91,10 @@
                                        x-model="item.duration"
                                        class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
                                        placeholder="Duration">
+                                <input type="text" name="instructions[]"
+                                       x-model="item.instructions"
+                                       class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-teal-50"
+                                       placeholder="Instructions (e.g. Before food)">
                                 <button type="button" @click="removeItem(index)"
                                         class="rounded-2xl border border-rose-200 px-3 py-3 text-xs text-rose-500 hover:bg-rose-50 transition">
                                     ✕

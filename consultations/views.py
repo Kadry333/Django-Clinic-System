@@ -9,12 +9,15 @@ from consultations.models import Consultation, Prescription, MedicalTest
 
 def consultation_form_view(request, queue_id):
     q = get_object_or_404(AppointmentQueue, id=queue_id)
+    # Fetch existing consultation if any
+    consultation = Consultation.objects.filter(appointment=q.appointment).first()
 
     return render(
         request,
         "consultations/doctor_consultation.html",
         {
             "queue": q,
+            "consultation": consultation,
             "current_role": "Doctor",
         },
     )
@@ -30,30 +33,40 @@ def consultation_submit_view(request, queue_id):
     diagnosis = request.POST.get("diagnosis")
     notes = request.POST.get("notes")
 
-    consultation = Consultation.objects.create(
+    consultation, created = Consultation.objects.update_or_create(
         appointment=appointment,
-        diagnosis=diagnosis,
-        notes=notes,
+        defaults={
+            'diagnosis': diagnosis,
+            'notes': notes,
+        }
     )
 
     drugs = request.POST.getlist("drug_name[]")
     doses = request.POST.getlist("dosage[]")
     durations = request.POST.getlist("duration[]")
+    instructions = request.POST.getlist("instructions[]")
 
-    for i in range(len(drugs)):
-        if drugs[i]:
+    consultation.prescription_set.all().delete()
+
+    for name, dose, duration, instr in zip(drugs, doses, durations, instructions):
+        if name and name.strip(): 
             Prescription.objects.create(
                 consultation=consultation,
-                drug_name=drugs[i],
-                dosage=doses[i],
-                duration=durations[i],
+                drug_name=name.strip(),
+                dosage=dose.strip() if dose else "",
+                duration=duration.strip() if duration else "",
+                instructions=instr.strip() if instr else "",
             )
 
-    tests = request.POST.getlist("test_name[]")
+    test_names = request.POST.getlist("test_name[]")
+    consultation.medicaltest_set.all().delete()
 
-    for t in tests:
-        if t:
-            MedicalTest.objects.create(consultation=consultation, test_name=t)
+    for t_name in test_names:
+        if t_name and t_name.strip():
+            MedicalTest.objects.create(
+                consultation=consultation, 
+                test_name=t_name.strip()
+            )
 
     q.status = "done"
     q.save()
@@ -91,11 +104,3 @@ def summary_view(request, appointment_id):
 
 
 
-def doctor_consultation_view(request):
-    return render(
-        request,
-        "consultations/doctor_consultation.html",
-        {
-            "current_role": "Doctor",
-        },
-    )

@@ -13,6 +13,7 @@ class Prescription(models.Model):
     drug_name = models.CharField(max_length=255)
     dosage = models.CharField(max_length=100)
     duration = models.CharField(max_length=100)
+    instructions = models.TextField(blank=True, null=True)
     
     
 class MedicalTest(models.Model):
