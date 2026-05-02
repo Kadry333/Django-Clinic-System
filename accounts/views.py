@@ -3,7 +3,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth import login, logout
-from accounts.forms import RegisterForm, LoginForm, UserUpdateForm
+from accounts.forms import RegisterForm, LoginForm, UserUpdateForm, DoctorProfileForm
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from doctors.models import DoctorProfile
@@ -69,8 +69,12 @@ class ProfileView(LoginRequiredMixin, View):
         user = request.user
         form = UserUpdateForm(instance=user)
         profile_data = None
+        doctor_form = None
+
         if user.is_doctor:
             profile_data = DoctorProfile.objects.filter(user=user).first()
+            if profile_data:
+                doctor_form = DoctorProfileForm(instance=profile_data)
         elif user.is_patient:
             profile_data = PatientProfile.objects.filter(user=user).first()
         elif user.is_receptionist:
@@ -79,14 +83,28 @@ class ProfileView(LoginRequiredMixin, View):
         return render(request, 'accounts/profile.html', {
             'user': user,
             'profile_data': profile_data,
-            'form': form
+            'form': form,
+            'doctor_form':doctor_form
         })
 
     def post(self, request):
-        form = UserUpdateForm(request.POST, instance=request.user)
+        user = request.user
+        form = UserUpdateForm(request.POST, instance=user)
+        doctor_form = None
+        
+        if user.is_doctor:
+            profile_instance = DoctorProfile.objects.filter(user=user).first()
+            if profile_instance:
+                doctor_form = DoctorProfileForm(request.POST, instance=profile_instance)
+
         if form.is_valid():
             form.save()
+            if doctor_form and doctor_form.is_valid():
+                doctor_form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile')
         
-        return render(request, 'accounts/profile.html', {'form': form})
+        return render(request, 'accounts/profile.html', {
+            'form': form,
+            'doctor_form': doctor_form
+        })
