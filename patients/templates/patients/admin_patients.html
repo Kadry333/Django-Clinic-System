@@ -2,6 +2,14 @@
 
 {% block title %}Patients | ClinicMS{% endblock %}
 {% block page_name %}Patients Directory{% endblock %}
+{% block page_actions %}
+<a
+    href="{% url 'patients:admin.patient.create' %}"
+    class="inline-flex items-center rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+>
+    Add patient
+</a>
+{% endblock %}
 
 {% block content %}
 <section class="space-y-6" x-data="{ deleteModalOpen: false, deleteAction: '', deletePatientName: '' }">

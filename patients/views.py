@@ -1,8 +1,9 @@
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import ListView, TemplateView, UpdateView
 
@@ -10,7 +11,7 @@ from accounts.mixins import AdminRequiredMixins, patientRequiredMixins
 from consultations.models import Consultation
 from notifications.models import Notification
 from notifications.services import create_notification
-from patients.forms import PatientProfileForm
+from patients.forms import AdminPatientCreateForm, PatientProfileForm
 
 
 class PatientProfileView(patientRequiredMixins, TemplateView):
@@ -112,11 +113,49 @@ class AdminPatientsView(AdminRequiredMixins, TemplateView):
         return context
 
 
+class AdminPatientCreateView(AdminRequiredMixins, View):
+    template_name = "patients/profile_edit.html"
+
+    def get(self, request):
+        form = AdminPatientCreateForm()
+        return self.render_form(request, form)
+
+    def post(self, request):
+        form = AdminPatientCreateForm(request.POST)
+
+        if form.is_valid():
+            patient = form.save()
+
+            patient_group, created = Group.objects.get_or_create(name="patient")
+            patient.groups.add(patient_group)
+
+            messages.success(request, "Patient account created successfully.")
+            return redirect("patients:admin.patient.detail", pk=patient.pk)
+
+        return self.render_form(request, form)
+
+    def render_form(self, request, form):
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "current_role": "Admin",
+                "page_title": "Create Patient",
+                "page_name": "Create Patient",
+                "page_heading": "Create a patient account",
+                "page_description": "Add a new patient account with the same validation rules used during patient registration.",
+                "submit_label": "Create patient",
+            },
+        )
+
+
 class AdminPatientDetailView(AdminRequiredMixins, TemplateView):
     template_name = "patients/admin_patient_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         User = get_user_model()
 
         patient = get_object_or_404(
@@ -141,6 +180,11 @@ class AdminPatientProfileUpdateView(AdminRequiredMixins, UpdateView):
         context = super().get_context_data(**kwargs)
         context["current_role"] = "Admin"
         context["patient"] = self.object
+        context["page_title"] = "Edit Patient"
+        context["page_name"] = "Edit Patient"
+        context["page_heading"] = "Update patient account details"
+        context["page_description"] = "Edit the personal information connected to this patient account."
+        context["submit_label"] = "Save changes"
         return context
 
     def form_valid(self, form):
