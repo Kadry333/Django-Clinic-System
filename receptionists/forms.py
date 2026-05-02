@@ -56,26 +56,11 @@ class DoctorScheduleExceptionForm(forms.ModelForm):
 
 
 class ReceptionistUserForm(forms.ModelForm):
-    first_name = forms.CharField(
-        min_length=3,
-        max_length=50,
-        validators=[name_validator],
-    )
-    last_name = forms.CharField(
-        min_length=3,
-        max_length=50,
-        validators=[name_validator],
-    )
-    email = forms.EmailField()
-    phone = forms.CharField(
-        max_length=11,
-        validators=[egyptian_mobile_validator],
-    )
     password = forms.CharField(widget=forms.PasswordInput(), required=False)
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "phone"]
+        fields = ["first_name", "last_name", "email", "phone", "password"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
