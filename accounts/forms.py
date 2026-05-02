@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
 from accounts.models import User
+from doctors.models import DoctorProfile
 from django.core.validators import RegexValidator
 
 name_validator = RegexValidator(
@@ -41,6 +42,23 @@ class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({
+                'class': 'w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all'
+            })
+
+class DoctorProfileForm(forms.ModelForm):
+    class Meta:
+        model = DoctorProfile
+        fields = ['specialization', 'session_duration', 'buffer_time']
+        labels = {
+            'specialization': 'Specialization',
+            'session_duration': 'Session Duration (Min)',
+            'buffer_time': 'Buffer Time (Min)'
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
